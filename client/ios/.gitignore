@@ -1,0 +1,12 @@
+/Pods
+/OpenSesame.xcodeproj/xcuserdata/
+/OpenSesame.xcodeproj/project.xcworkspace/xcuserdata/
+/OpenSesame.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+/OpenSesame.xcworkspace/xcuserdata
+/OpenSesame.xcworkspace/xcshareddata/swiftpm/Package.resolved
+/out
+/private_keys
+/xcodebuild.log
+/OpenSesame/Assets.xcassets/.DS_Store
+/OpenSesame/Assets.xcassets/dailyBot.imageset/.DS_Store
+/scripts/build_and_publish_app.sh

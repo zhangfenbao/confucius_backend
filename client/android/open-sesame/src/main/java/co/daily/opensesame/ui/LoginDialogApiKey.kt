@@ -1,0 +1,121 @@
+package co.daily.opensesame.ui
+
+import ai.rtvi.client.result.Result
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import co.daily.opensesame.Preferences
+import co.daily.opensesame.api.DataApiRestApi
+import co.daily.opensesame.ui.theme.LocalAppTheme
+import co.daily.opensesame.ui.theme.StyledText
+
+@Composable
+fun LoginDialogApiKey(
+    onDismiss: () -> Unit,
+    onLoggedIn: (url: String, token: String) -> Unit
+) {
+    val theme = LocalAppTheme.current.dialog
+
+    var url by remember { mutableStateOf(Preferences.backendUrl.value ?: "") }
+    var apiKey by remember { mutableStateOf("") }
+    val errors = remember { mutableStateListOf<String>() }
+    var loading by remember { mutableStateOf(false) }
+
+    val attemptLogin: () -> Unit = {
+        loading = true
+
+        try {
+            val api = DataApiRestApi(url, apiKey)
+
+            api.getWorkspaces().withCallback {
+
+                loading = false
+
+                when (it) {
+                    is Result.Err -> errors.add(it.error.description)
+                    is Result.Ok -> onLoggedIn(url, apiKey)
+                }
+            }
+
+        } catch(e: Exception) {
+            errors.add(e.toString())
+        }
+    }
+
+    if (loading) {
+        LoadingDialog()
+    }
+
+    errors.firstOrNull()?.let { error ->
+        ErrorDialog(onDismissRequest = errors::removeFirstOrNull, error)
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        title = "Log in",
+        buttons = {
+            DialogButton(
+                onClick = onDismiss,
+                text = "Cancel"
+            )
+            Space()
+            DialogButton(
+                onClick = attemptLogin,
+                text = "Log in"
+            )
+        }
+    ) {
+
+
+        Spacer(Modifier.height(12.dp))
+
+        theme.message.StyledText("Backend URL")
+
+        DialogInputBox(
+            onUpdated = { url = it },
+            requestFocus = true,
+            value = url,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                autoCorrectEnabled = false,
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Next
+            )
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        theme.message.StyledText("API token")
+
+        DialogInputBox(
+            onUpdated = { apiKey = it },
+            value = apiKey,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                autoCorrectEnabled = false,
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Go
+            ),
+            keyboardActions = KeyboardActions(onGo = { attemptLogin() })
+        )
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewLoginDialog() {
+    LoginDialogApiKey({}, {_,_ ->})
+}

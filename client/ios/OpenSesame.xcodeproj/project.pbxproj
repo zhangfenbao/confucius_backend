@@ -1,0 +1,1173 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		90031FA72C616EE700408370 /* OpenSesameApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90031FA62C616EE700408370 /* OpenSesameApp.swift */; };
+		90031FAB2C616EE800408370 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 90031FAA2C616EE800408370 /* Assets.xcassets */; };
+		90031FDC2C6D5DD700408370 /* ToastModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90031FDB2C6D5DD700408370 /* ToastModifier.swift */; };
+		9047E7DC2CA99D6C00385A86 /* RTVIClientIOSDaily in Frameworks */ = {isa = PBXBuildFile; productRef = 9047E7DB2CA99D6C00385A86 /* RTVIClientIOSDaily */; };
+		9047E7E02CAB15FB00385A86 /* OpenSesameAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7DF2CAB15FB00385A86 /* OpenSesameAPI.swift */; };
+		9047E7E42CAB2EBD00385A86 /* OpenSesameWorkspacesAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7E32CAB2EBD00385A86 /* OpenSesameWorkspacesAPI.swift */; };
+		9047E7E82CAB4F9200385A86 /* OpenSesameConversationsAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7E72CAB4F9200385A86 /* OpenSesameConversationsAPI.swift */; };
+		9047E7EA2CAC297200385A86 /* OpenSesameMessagesAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7E92CAC297200385A86 /* OpenSesameMessagesAPI.swift */; };
+		9047E7EE2CACD99700385A86 /* LiveMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7ED2CACD99700385A86 /* LiveMessage.swift */; };
+		9047E7F32CAD8A2800385A86 /* ViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7F22CAD8A2800385A86 /* ViewExtensions.swift */; };
+		9047E7F52CAD954300385A86 /* TTSProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7F42CAD954300385A86 /* TTSProvider.swift */; };
+		9047E7F72CADBEAA00385A86 /* SelectTTSProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7F62CADBEAA00385A86 /* SelectTTSProvider.swift */; };
+		9047E7FC2CAE1CC600385A86 /* OpenSesameMockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7FB2CAE1CC600385A86 /* OpenSesameMockModel.swift */; };
+		9047E7FE2CAEDDA700385A86 /* InfoComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9047E7FD2CAEDDA700385A86 /* InfoComponent.swift */; };
+		904B45A92C98AB9F00E05D0D /* ActivityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 904B45A82C98AB9F00E05D0D /* ActivityKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		904B45AA2C98BE0E00E05D0D /* ActivityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 904B45A82C98AB9F00E05D0D /* ActivityKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		904B45AC2C99AEA500E05D0D /* OpenSesameIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904B45AB2C99AEA500E05D0D /* OpenSesameIcons.swift */; };
+		904B45AE2C99C42900E05D0D /* SecureFieldWithPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904B45AD2C99C42900E05D0D /* SecureFieldWithPlaceholder.swift */; };
+		907FD32D2C9A237D004DAEA9 /* WorkspacesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD32C2C9A237D004DAEA9 /* WorkspacesView.swift */; };
+		907FD33C2C9AFFF5004DAEA9 /* Workspaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD33B2C9AFFF5004DAEA9 /* Workspaces.swift */; };
+		907FD33E2C9B0023004DAEA9 /* Conversations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD33D2C9B0023004DAEA9 /* Conversations.swift */; };
+		907FD3402C9B0038004DAEA9 /* Messages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD33F2C9B0038004DAEA9 /* Messages.swift */; };
+		907FD3442C9B0DB9004DAEA9 /* RTVIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3432C9B0DB9004DAEA9 /* RTVIManager.swift */; };
+		907FD3472C9B1282004DAEA9 /* OpenSesameError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3462C9B1282004DAEA9 /* OpenSesameError.swift */; };
+		907FD34B2C9B7EF2004DAEA9 /* WorkspaceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD34A2C9B7EF2004DAEA9 /* WorkspaceItem.swift */; };
+		907FD34E2C9C5318004DAEA9 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD34D2C9C5318004DAEA9 /* ChatView.swift */; };
+		907FD3512C9C5D4E004DAEA9 /* HeaderToolBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3502C9C5D4E004DAEA9 /* HeaderToolBar.swift */; };
+		907FD3532C9C5EC2004DAEA9 /* BottonPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3522C9C5EC2004DAEA9 /* BottonPanel.swift */; };
+		907FD3552C9C6162004DAEA9 /* FloatingComponent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3542C9C6162004DAEA9 /* FloatingComponent.swift */; };
+		907FD3572C9DB1A5004DAEA9 /* TrayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3562C9DB1A5004DAEA9 /* TrayView.swift */; };
+		907FD35A2CA1AF3B004DAEA9 /* OpenSesameHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3592CA1AF3B004DAEA9 /* OpenSesameHelper.swift */; };
+		907FD35C2CA1B0EC004DAEA9 /* ConversationRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD35B2CA1B0EC004DAEA9 /* ConversationRow.swift */; };
+		907FD35F2CA2EC5D004DAEA9 /* RTVIClientIOSDaily in Frameworks */ = {isa = PBXBuildFile; productRef = 907FD35E2CA2EC5D004DAEA9 /* RTVIClientIOSDaily */; };
+		907FD3642CA34B1E004DAEA9 /* WorkspaceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3632CA34B1E004DAEA9 /* WorkspaceView.swift */; };
+		907FD3662CA48D8E004DAEA9 /* SelectLanguage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3652CA48D8E004DAEA9 /* SelectLanguage.swift */; };
+		907FD3682CA49CDE004DAEA9 /* SelectPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3672CA49CDE004DAEA9 /* SelectPickerView.swift */; };
+		907FD36A2CA49FD7004DAEA9 /* SelectVoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3692CA49FD7004DAEA9 /* SelectVoice.swift */; };
+		907FD36C2CA58AB0004DAEA9 /* SelectLLMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD36B2CA58AB0004DAEA9 /* SelectLLMProvider.swift */; };
+		907FD36E2CA58ABF004DAEA9 /* SelectPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD36D2CA58ABF004DAEA9 /* SelectPrompt.swift */; };
+		907FD3702CA58ACB004DAEA9 /* SelectStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD36F2CA58ACB004DAEA9 /* SelectStorage.swift */; };
+		907FD3722CA59144004DAEA9 /* CreatePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3712CA59144004DAEA9 /* CreatePickerView.swift */; };
+		907FD3792CA59D67004DAEA9 /* PromptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3782CA59D67004DAEA9 /* PromptView.swift */; };
+		907FD37B2CA5A1C7004DAEA9 /* LLMView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD37A2CA5A1C7004DAEA9 /* LLMView.swift */; };
+		907FD37D2CA5AB3B004DAEA9 /* LLMModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD37C2CA5AB3B004DAEA9 /* LLMModel.swift */; };
+		907FD37F2CA5AB58004DAEA9 /* LLMProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD37E2CA5AB58004DAEA9 /* LLMProvider.swift */; };
+		907FD3822CA5AC1D004DAEA9 /* RTVIDefaultData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3812CA5AC1D004DAEA9 /* RTVIDefaultData.swift */; };
+		907FD3842CA5ADF5004DAEA9 /* Language.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3832CA5ADF5004DAEA9 /* Language.swift */; };
+		907FD3862CA5AEA1004DAEA9 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3852CA5AEA1004DAEA9 /* Storage.swift */; };
+		907FD3882CA5AF0F004DAEA9 /* Voice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3872CA5AF0F004DAEA9 /* Voice.swift */; };
+		907FD38A2CA5D572004DAEA9 /* SelectLLMModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907FD3892CA5D572004DAEA9 /* SelectLLMModel.swift */; };
+		90AB8E502CB6CC2900AE37B3 /* RTVIClientIOSDaily in Frameworks */ = {isa = PBXBuildFile; productRef = 90AB8E4F2CB6CC2900AE37B3 /* RTVIClientIOSDaily */; };
+		90AB8E552CB7086500AE37B3 /* BotSpeakingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB8E542CB7086500AE37B3 /* BotSpeakingView.swift */; };
+		90AB8E572CB71E7000AE37B3 /* ConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB8E562CB71E7000AE37B3 /* ConfirmationView.swift */; };
+		90AB8E5D2CB80F7700AE37B3 /* RTVIClientIOSDaily in Frameworks */ = {isa = PBXBuildFile; productRef = 90AB8E5C2CB80F7700AE37B3 /* RTVIClientIOSDaily */; };
+		90AB8E602CB83BA700AE37B3 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = 90AB8E5F2CB83BA700AE37B3 /* MarkdownUI */; };
+		90AB8E622CB9737500AE37B3 /* QRCodeScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB8E612CB9737500AE37B3 /* QRCodeScannerView.swift */; };
+		90AB8E642CB9D92200AE37B3 /* QrcodeInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB8E632CB9D92200AE37B3 /* QrcodeInfo.swift */; };
+		90AB8E662CBD48AA00AE37B3 /* OpenSesameUsersAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB8E652CBD48AA00AE37B3 /* OpenSesameUsersAPI.swift */; };
+		90AB8E682CBD521200AE37B3 /* SessionTokenResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90AB8E672CBD521200AE37B3 /* SessionTokenResponse.swift */; };
+		90AB8E6A2CBD566B00AE37B3 /* open-sesame.ppn in Resources */ = {isa = PBXBuildFile; fileRef = 90AB8E692CBD566B00AE37B3 /* open-sesame.ppn */; };
+		90ABB98E2C735ED6000D9CC7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB98D2C735ED6000D9CC7 /* ContentView.swift */; };
+		90ABB9902C736A8B000D9CC7 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB98F2C736A8B000D9CC7 /* WaveformView.swift */; };
+		90ABB9932C73820D000D9CC7 /* MicrophoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB9922C73820D000D9CC7 /* MicrophoneView.swift */; };
+		90ABB9982C738356000D9CC7 /* OpenSesameColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB9972C738356000D9CC7 /* OpenSesameColors.swift */; };
+		90ABB99D2C73C2D1000D9CC7 /* OpenSesameModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB99C2C73C2D1000D9CC7 /* OpenSesameModel.swift */; };
+		90ABB9A32C74E1CE000D9CC7 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB9A22C74E1CE000D9CC7 /* SettingsView.swift */; };
+		90ABB9A62C74EA8A000D9CC7 /* SettingsPreference.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB9A52C74EA8A000D9CC7 /* SettingsPreference.swift */; };
+		90ABB9A82C74EAB1000D9CC7 /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90ABB9A72C74EAB1000D9CC7 /* SettingsManager.swift */; };
+		90DDBAF92CB0308C00528240 /* OpenSesameLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DDBAF82CB0308C00528240 /* OpenSesameLogger.swift */; };
+		90DDBAFB2CB0682E00528240 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DDBAFA2CB0682E00528240 /* OnboardingView.swift */; };
+		90DDBAFE2CB06D1000528240 /* OnboardingServerSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DDBAFD2CB06D1000528240 /* OnboardingServerSettings.swift */; };
+		90DDBB002CB074DB00528240 /* OnboardingApiKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90DDBAFF2CB074DB00528240 /* OnboardingApiKeys.swift */; };
+		90DDBB0F2CB4614500528240 /* RTVIClientIOSDaily in Frameworks */ = {isa = PBXBuildFile; productRef = 90DDBB0E2CB4614500528240 /* RTVIClientIOSDaily */; };
+		90E0463A2C87990A00A2DCA9 /* SiriAppShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046392C87990A00A2DCA9 /* SiriAppShortcuts.swift */; };
+		90E046472C87BE6500A2DCA9 /* StartDailyBotIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046462C87BE6500A2DCA9 /* StartDailyBotIntent.swift */; };
+		90E046562C88E00E00A2DCA9 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90E046552C88E00E00A2DCA9 /* WidgetKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		90E046582C88E00E00A2DCA9 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 90E046572C88E00E00A2DCA9 /* SwiftUI.framework */; };
+		90E046632C88E01000A2DCA9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 90E046622C88E01000A2DCA9 /* Assets.xcassets */; };
+		90E0466D2C88E2E900A2DCA9 /* ActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E0466C2C88E2E900A2DCA9 /* ActivityManager.swift */; };
+		90E046742C88F33900A2DCA9 /* OpenSesameStatusLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046702C88F33900A2DCA9 /* OpenSesameStatusLiveActivity.swift */; };
+		90E046752C88F33900A2DCA9 /* OpenSesameStatusAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046712C88F33900A2DCA9 /* OpenSesameStatusAttributes.swift */; };
+		90E046772C88F98D00A2DCA9 /* OpenSesameStatusExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 90E046532C88E00E00A2DCA9 /* OpenSesameStatusExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		90E0467F2C88FCFE00A2DCA9 /* OpenSesameStatusBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046762C88F7AF00A2DCA9 /* OpenSesameStatusBundle.swift */; };
+		90E046802C88FCFE00A2DCA9 /* OpenSesameStatusAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046712C88F33900A2DCA9 /* OpenSesameStatusAttributes.swift */; };
+		90E046812C88FCFE00A2DCA9 /* OpenSesameStatusLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046702C88F33900A2DCA9 /* OpenSesameStatusLiveActivity.swift */; };
+		90E046832C8915C000A2DCA9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046822C8915C000A2DCA9 /* AppDelegate.swift */; };
+		90E046A42C8A7A1400A2DCA9 /* WakeWordManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046A32C8A7A1400A2DCA9 /* WakeWordManager.swift */; };
+		90E046AA2C8B3AC200A2DCA9 /* RTVIClientIOSDaily in Frameworks */ = {isa = PBXBuildFile; productRef = 90E046A92C8B3AC200A2DCA9 /* RTVIClientIOSDaily */; };
+		90E046AC2C8B410600A2DCA9 /* RTVIHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90E046AB2C8B410600A2DCA9 /* RTVIHelper.swift */; };
+		90E046AF2C8B9D7400A2DCA9 /* beep.wav in Resources */ = {isa = PBXBuildFile; fileRef = 90E046AE2C8B9D7400A2DCA9 /* beep.wav */; };
+		E5117AE2420A0EF00CF9D712 /* libPods-OpenSesame.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4E40EE671A5B97352E578810 /* libPods-OpenSesame.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		90E046782C88F98D00A2DCA9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 90031F9B2C616EE700408370 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 90E046522C88E00E00A2DCA9;
+			remoteInfo = OpenSesameStatusExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		90E0467A2C88F98E00A2DCA9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				90E046772C88F98D00A2DCA9 /* OpenSesameStatusExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4E40EE671A5B97352E578810 /* libPods-OpenSesame.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OpenSesame.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		6714A87BFA34C0CFA84B97FE /* Pods-OpenSesame.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OpenSesame.debug.xcconfig"; path = "Target Support Files/Pods-OpenSesame/Pods-OpenSesame.debug.xcconfig"; sourceTree = "<group>"; };
+		90031FA32C616EE700408370 /* OpenSesame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OpenSesame.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		90031FA62C616EE700408370 /* OpenSesameApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameApp.swift; sourceTree = "<group>"; };
+		90031FAA2C616EE800408370 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		90031FD62C63FD6A00408370 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		90031FDB2C6D5DD700408370 /* ToastModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastModifier.swift; sourceTree = "<group>"; };
+		9047E7DF2CAB15FB00385A86 /* OpenSesameAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameAPI.swift; sourceTree = "<group>"; };
+		9047E7E32CAB2EBD00385A86 /* OpenSesameWorkspacesAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameWorkspacesAPI.swift; sourceTree = "<group>"; };
+		9047E7E72CAB4F9200385A86 /* OpenSesameConversationsAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameConversationsAPI.swift; sourceTree = "<group>"; };
+		9047E7E92CAC297200385A86 /* OpenSesameMessagesAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameMessagesAPI.swift; sourceTree = "<group>"; };
+		9047E7ED2CACD99700385A86 /* LiveMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveMessage.swift; sourceTree = "<group>"; };
+		9047E7F22CAD8A2800385A86 /* ViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewExtensions.swift; sourceTree = "<group>"; };
+		9047E7F42CAD954300385A86 /* TTSProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSProvider.swift; sourceTree = "<group>"; };
+		9047E7F62CADBEAA00385A86 /* SelectTTSProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectTTSProvider.swift; sourceTree = "<group>"; };
+		9047E7FB2CAE1CC600385A86 /* OpenSesameMockModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenSesameMockModel.swift; sourceTree = "<group>"; };
+		9047E7FD2CAEDDA700385A86 /* InfoComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoComponent.swift; sourceTree = "<group>"; };
+		904B45A82C98AB9F00E05D0D /* ActivityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ActivityKit.framework; path = System/Library/Frameworks/ActivityKit.framework; sourceTree = SDKROOT; };
+		904B45AB2C99AEA500E05D0D /* OpenSesameIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameIcons.swift; sourceTree = "<group>"; };
+		904B45AD2C99C42900E05D0D /* SecureFieldWithPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureFieldWithPlaceholder.swift; sourceTree = "<group>"; };
+		907FD32C2C9A237D004DAEA9 /* WorkspacesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspacesView.swift; sourceTree = "<group>"; };
+		907FD33B2C9AFFF5004DAEA9 /* Workspaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspaces.swift; sourceTree = "<group>"; };
+		907FD33D2C9B0023004DAEA9 /* Conversations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversations.swift; sourceTree = "<group>"; };
+		907FD33F2C9B0038004DAEA9 /* Messages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Messages.swift; sourceTree = "<group>"; };
+		907FD3432C9B0DB9004DAEA9 /* RTVIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTVIManager.swift; sourceTree = "<group>"; };
+		907FD3462C9B1282004DAEA9 /* OpenSesameError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameError.swift; sourceTree = "<group>"; };
+		907FD34A2C9B7EF2004DAEA9 /* WorkspaceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceItem.swift; sourceTree = "<group>"; };
+		907FD34D2C9C5318004DAEA9 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		907FD3502C9C5D4E004DAEA9 /* HeaderToolBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeaderToolBar.swift; sourceTree = "<group>"; };
+		907FD3522C9C5EC2004DAEA9 /* BottonPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottonPanel.swift; sourceTree = "<group>"; };
+		907FD3542C9C6162004DAEA9 /* FloatingComponent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingComponent.swift; sourceTree = "<group>"; };
+		907FD3562C9DB1A5004DAEA9 /* TrayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrayView.swift; sourceTree = "<group>"; };
+		907FD3592CA1AF3B004DAEA9 /* OpenSesameHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameHelper.swift; sourceTree = "<group>"; };
+		907FD35B2CA1B0EC004DAEA9 /* ConversationRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationRow.swift; sourceTree = "<group>"; };
+		907FD3632CA34B1E004DAEA9 /* WorkspaceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkspaceView.swift; sourceTree = "<group>"; };
+		907FD3652CA48D8E004DAEA9 /* SelectLanguage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectLanguage.swift; sourceTree = "<group>"; };
+		907FD3672CA49CDE004DAEA9 /* SelectPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectPickerView.swift; sourceTree = "<group>"; };
+		907FD3692CA49FD7004DAEA9 /* SelectVoice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectVoice.swift; sourceTree = "<group>"; };
+		907FD36B2CA58AB0004DAEA9 /* SelectLLMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectLLMProvider.swift; sourceTree = "<group>"; };
+		907FD36D2CA58ABF004DAEA9 /* SelectPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectPrompt.swift; sourceTree = "<group>"; };
+		907FD36F2CA58ACB004DAEA9 /* SelectStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectStorage.swift; sourceTree = "<group>"; };
+		907FD3712CA59144004DAEA9 /* CreatePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreatePickerView.swift; sourceTree = "<group>"; };
+		907FD3782CA59D67004DAEA9 /* PromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptView.swift; sourceTree = "<group>"; };
+		907FD37A2CA5A1C7004DAEA9 /* LLMView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMView.swift; sourceTree = "<group>"; };
+		907FD37C2CA5AB3B004DAEA9 /* LLMModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMModel.swift; sourceTree = "<group>"; };
+		907FD37E2CA5AB58004DAEA9 /* LLMProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMProvider.swift; sourceTree = "<group>"; };
+		907FD3812CA5AC1D004DAEA9 /* RTVIDefaultData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTVIDefaultData.swift; sourceTree = "<group>"; };
+		907FD3832CA5ADF5004DAEA9 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
+		907FD3852CA5AEA1004DAEA9 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		907FD3872CA5AF0F004DAEA9 /* Voice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Voice.swift; sourceTree = "<group>"; };
+		907FD3892CA5D572004DAEA9 /* SelectLLMModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectLLMModel.swift; sourceTree = "<group>"; };
+		90AB8E542CB7086500AE37B3 /* BotSpeakingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BotSpeakingView.swift; sourceTree = "<group>"; };
+		90AB8E562CB71E7000AE37B3 /* ConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfirmationView.swift; sourceTree = "<group>"; };
+		90AB8E612CB9737500AE37B3 /* QRCodeScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRCodeScannerView.swift; sourceTree = "<group>"; };
+		90AB8E632CB9D92200AE37B3 /* QrcodeInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QrcodeInfo.swift; sourceTree = "<group>"; };
+		90AB8E652CBD48AA00AE37B3 /* OpenSesameUsersAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameUsersAPI.swift; sourceTree = "<group>"; };
+		90AB8E672CBD521200AE37B3 /* SessionTokenResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTokenResponse.swift; sourceTree = "<group>"; };
+		90AB8E692CBD566B00AE37B3 /* open-sesame.ppn */ = {isa = PBXFileReference; lastKnownFileType = file; path = "open-sesame.ppn"; sourceTree = "<group>"; };
+		90ABB98D2C735ED6000D9CC7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		90ABB98F2C736A8B000D9CC7 /* WaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformView.swift; sourceTree = "<group>"; };
+		90ABB9922C73820D000D9CC7 /* MicrophoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MicrophoneView.swift; sourceTree = "<group>"; };
+		90ABB9972C738356000D9CC7 /* OpenSesameColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameColors.swift; sourceTree = "<group>"; };
+		90ABB99C2C73C2D1000D9CC7 /* OpenSesameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameModel.swift; sourceTree = "<group>"; };
+		90ABB9A22C74E1CE000D9CC7 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		90ABB9A52C74EA8A000D9CC7 /* SettingsPreference.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPreference.swift; sourceTree = "<group>"; };
+		90ABB9A72C74EAB1000D9CC7 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
+		90DDBAF82CB0308C00528240 /* OpenSesameLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameLogger.swift; sourceTree = "<group>"; };
+		90DDBAFA2CB0682E00528240 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		90DDBAFD2CB06D1000528240 /* OnboardingServerSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingServerSettings.swift; sourceTree = "<group>"; };
+		90DDBAFF2CB074DB00528240 /* OnboardingApiKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingApiKeys.swift; sourceTree = "<group>"; };
+		90E046392C87990A00A2DCA9 /* SiriAppShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriAppShortcuts.swift; sourceTree = "<group>"; };
+		90E0463B2C879D9000A2DCA9 /* OpenSesame.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OpenSesame.entitlements; sourceTree = "<group>"; };
+		90E046462C87BE6500A2DCA9 /* StartDailyBotIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartDailyBotIntent.swift; sourceTree = "<group>"; };
+		90E046532C88E00E00A2DCA9 /* OpenSesameStatusExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenSesameStatusExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		90E046552C88E00E00A2DCA9 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		90E046572C88E00E00A2DCA9 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		90E046622C88E01000A2DCA9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		90E046642C88E01000A2DCA9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		90E0466C2C88E2E900A2DCA9 /* ActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityManager.swift; sourceTree = "<group>"; };
+		90E046702C88F33900A2DCA9 /* OpenSesameStatusLiveActivity.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenSesameStatusLiveActivity.swift; sourceTree = "<group>"; };
+		90E046712C88F33900A2DCA9 /* OpenSesameStatusAttributes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OpenSesameStatusAttributes.swift; sourceTree = "<group>"; };
+		90E046762C88F7AF00A2DCA9 /* OpenSesameStatusBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenSesameStatusBundle.swift; sourceTree = "<group>"; };
+		90E046822C8915C000A2DCA9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		90E046A32C8A7A1400A2DCA9 /* WakeWordManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WakeWordManager.swift; sourceTree = "<group>"; };
+		90E046AB2C8B410600A2DCA9 /* RTVIHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTVIHelper.swift; sourceTree = "<group>"; };
+		90E046AE2C8B9D7400A2DCA9 /* beep.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = beep.wav; sourceTree = "<group>"; };
+		C0138CDC151C501783869E30 /* Pods-OpenSesame.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OpenSesame.release.xcconfig"; path = "Target Support Files/Pods-OpenSesame/Pods-OpenSesame.release.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		90031FA02C616EE700408370 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90DDBB0F2CB4614500528240 /* RTVIClientIOSDaily in Frameworks */,
+				9047E7DC2CA99D6C00385A86 /* RTVIClientIOSDaily in Frameworks */,
+				904B45AA2C98BE0E00E05D0D /* ActivityKit.framework in Frameworks */,
+				90AB8E602CB83BA700AE37B3 /* MarkdownUI in Frameworks */,
+				907FD35F2CA2EC5D004DAEA9 /* RTVIClientIOSDaily in Frameworks */,
+				90AB8E5D2CB80F7700AE37B3 /* RTVIClientIOSDaily in Frameworks */,
+				90E046AA2C8B3AC200A2DCA9 /* RTVIClientIOSDaily in Frameworks */,
+				E5117AE2420A0EF00CF9D712 /* libPods-OpenSesame.a in Frameworks */,
+				90AB8E502CB6CC2900AE37B3 /* RTVIClientIOSDaily in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90E046502C88E00E00A2DCA9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				904B45A92C98AB9F00E05D0D /* ActivityKit.framework in Frameworks */,
+				90E046582C88E00E00A2DCA9 /* SwiftUI.framework in Frameworks */,
+				90E046562C88E00E00A2DCA9 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		90031F9A2C616EE700408370 = {
+			isa = PBXGroup;
+			children = (
+				90031FA52C616EE700408370 /* OpenSesame */,
+				90E046592C88E00E00A2DCA9 /* OpenSesameStatus */,
+				90E046542C88E00E00A2DCA9 /* Frameworks */,
+				90031FA42C616EE700408370 /* Products */,
+				CFE21BAA569638BF12B4F0F2 /* Pods */,
+			);
+			sourceTree = "<group>";
+		};
+		90031FA42C616EE700408370 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				90031FA32C616EE700408370 /* OpenSesame.app */,
+				90E046532C88E00E00A2DCA9 /* OpenSesameStatusExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		90031FA52C616EE700408370 /* OpenSesame */ = {
+			isa = PBXGroup;
+			children = (
+				90031FAA2C616EE800408370 /* Assets.xcassets */,
+				90E0463B2C879D9000A2DCA9 /* OpenSesame.entitlements */,
+				90031FD62C63FD6A00408370 /* Info.plist */,
+				907FD3312C9AFA58004DAEA9 /* api */,
+				907FD3452C9B1208004DAEA9 /* errors */,
+				90ABB99B2C73C2C5000D9CC7 /* managers */,
+				90E046AD2C8B9D2E00A2DCA9 /* resources */,
+				90E046382C8798F200A2DCA9 /* shortcuts */,
+				9047E7D62CA7478D00385A86 /* theme */,
+				907FD33A2C9AFFD3004DAEA9 /* types */,
+				90E046B52C921C9400A2DCA9 /* util */,
+				90031FDD2C6D61E000408370 /* views */,
+				90E046822C8915C000A2DCA9 /* AppDelegate.swift */,
+				90031FA62C616EE700408370 /* OpenSesameApp.swift */,
+				90ABB99C2C73C2D1000D9CC7 /* OpenSesameModel.swift */,
+			);
+			path = OpenSesame;
+			sourceTree = "<group>";
+		};
+		90031FDD2C6D61E000408370 /* views */ = {
+			isa = PBXGroup;
+			children = (
+				90DDBAFC2CB06C4B00528240 /* onboarding */,
+				90ABB99E2C73C3A9000D9CC7 /* components */,
+				907FD34F2C9C5D1A004DAEA9 /* main */,
+				90ABB9A42C74EA52000D9CC7 /* settings */,
+				907FD3582CA1AE42004DAEA9 /* tray */,
+				907FD32B2C9A2301004DAEA9 /* workspaces */,
+				90ABB98D2C735ED6000D9CC7 /* ContentView.swift */,
+			);
+			path = views;
+			sourceTree = "<group>";
+		};
+		9047E7D62CA7478D00385A86 /* theme */ = {
+			isa = PBXGroup;
+			children = (
+				90ABB9972C738356000D9CC7 /* OpenSesameColors.swift */,
+				904B45AB2C99AEA500E05D0D /* OpenSesameIcons.swift */,
+			);
+			path = theme;
+			sourceTree = "<group>";
+		};
+		907FD32B2C9A2301004DAEA9 /* workspaces */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3742CA59CF8004DAEA9 /* llm */,
+				907FD3732CA59CF0004DAEA9 /* prompt */,
+				907FD3762CA59D27004DAEA9 /* storage */,
+				907FD3752CA59D20004DAEA9 /* tts */,
+				907FD3632CA34B1E004DAEA9 /* WorkspaceView.swift */,
+				907FD32C2C9A237D004DAEA9 /* WorkspacesView.swift */,
+				907FD34A2C9B7EF2004DAEA9 /* WorkspaceItem.swift */,
+			);
+			path = workspaces;
+			sourceTree = "<group>";
+		};
+		907FD3312C9AFA58004DAEA9 /* api */ = {
+			isa = PBXGroup;
+			children = (
+				9047E7DF2CAB15FB00385A86 /* OpenSesameAPI.swift */,
+				9047E7E72CAB4F9200385A86 /* OpenSesameConversationsAPI.swift */,
+				9047E7E92CAC297200385A86 /* OpenSesameMessagesAPI.swift */,
+				9047E7E32CAB2EBD00385A86 /* OpenSesameWorkspacesAPI.swift */,
+				90AB8E652CBD48AA00AE37B3 /* OpenSesameUsersAPI.swift */,
+			);
+			path = api;
+			sourceTree = "<group>";
+		};
+		907FD33A2C9AFFD3004DAEA9 /* types */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3832CA5ADF5004DAEA9 /* Language.swift */,
+				9047E7ED2CACD99700385A86 /* LiveMessage.swift */,
+				907FD37C2CA5AB3B004DAEA9 /* LLMModel.swift */,
+				907FD37E2CA5AB58004DAEA9 /* LLMProvider.swift */,
+				90AB8E632CB9D92200AE37B3 /* QrcodeInfo.swift */,
+				90ABB9A52C74EA8A000D9CC7 /* SettingsPreference.swift */,
+				907FD3852CA5AEA1004DAEA9 /* Storage.swift */,
+				907FD33B2C9AFFF5004DAEA9 /* Workspaces.swift */,
+				907FD33D2C9B0023004DAEA9 /* Conversations.swift */,
+				907FD33F2C9B0038004DAEA9 /* Messages.swift */,
+				9047E7F42CAD954300385A86 /* TTSProvider.swift */,
+				907FD3872CA5AF0F004DAEA9 /* Voice.swift */,
+				90AB8E672CBD521200AE37B3 /* SessionTokenResponse.swift */,
+			);
+			path = types;
+			sourceTree = "<group>";
+		};
+		907FD3452C9B1208004DAEA9 /* errors */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3462C9B1282004DAEA9 /* OpenSesameError.swift */,
+			);
+			path = errors;
+			sourceTree = "<group>";
+		};
+		907FD34F2C9C5D1A004DAEA9 /* main */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3522C9C5EC2004DAEA9 /* BottonPanel.swift */,
+				907FD34D2C9C5318004DAEA9 /* ChatView.swift */,
+				907FD3502C9C5D4E004DAEA9 /* HeaderToolBar.swift */,
+				907FD3542C9C6162004DAEA9 /* FloatingComponent.swift */,
+			);
+			path = main;
+			sourceTree = "<group>";
+		};
+		907FD3582CA1AE42004DAEA9 /* tray */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3562C9DB1A5004DAEA9 /* TrayView.swift */,
+				907FD35B2CA1B0EC004DAEA9 /* ConversationRow.swift */,
+			);
+			path = tray;
+			sourceTree = "<group>";
+		};
+		907FD3732CA59CF0004DAEA9 /* prompt */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3782CA59D67004DAEA9 /* PromptView.swift */,
+				907FD36D2CA58ABF004DAEA9 /* SelectPrompt.swift */,
+			);
+			path = prompt;
+			sourceTree = "<group>";
+		};
+		907FD3742CA59CF8004DAEA9 /* llm */ = {
+			isa = PBXGroup;
+			children = (
+				907FD37A2CA5A1C7004DAEA9 /* LLMView.swift */,
+				907FD3892CA5D572004DAEA9 /* SelectLLMModel.swift */,
+				907FD36B2CA58AB0004DAEA9 /* SelectLLMProvider.swift */,
+			);
+			path = llm;
+			sourceTree = "<group>";
+		};
+		907FD3752CA59D20004DAEA9 /* tts */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3652CA48D8E004DAEA9 /* SelectLanguage.swift */,
+				907FD3692CA49FD7004DAEA9 /* SelectVoice.swift */,
+				9047E7F62CADBEAA00385A86 /* SelectTTSProvider.swift */,
+			);
+			path = tts;
+			sourceTree = "<group>";
+		};
+		907FD3762CA59D27004DAEA9 /* storage */ = {
+			isa = PBXGroup;
+			children = (
+				907FD36F2CA58ACB004DAEA9 /* SelectStorage.swift */,
+			);
+			path = storage;
+			sourceTree = "<group>";
+		};
+		90ABB99B2C73C2C5000D9CC7 /* managers */ = {
+			isa = PBXGroup;
+			children = (
+				90E0466C2C88E2E900A2DCA9 /* ActivityManager.swift */,
+				907FD3432C9B0DB9004DAEA9 /* RTVIManager.swift */,
+				90ABB9A72C74EAB1000D9CC7 /* SettingsManager.swift */,
+				90E046A32C8A7A1400A2DCA9 /* WakeWordManager.swift */,
+			);
+			path = managers;
+			sourceTree = "<group>";
+		};
+		90ABB99E2C73C3A9000D9CC7 /* components */ = {
+			isa = PBXGroup;
+			children = (
+				907FD3712CA59144004DAEA9 /* CreatePickerView.swift */,
+				9047E7FD2CAEDDA700385A86 /* InfoComponent.swift */,
+				90ABB9922C73820D000D9CC7 /* MicrophoneView.swift */,
+				904B45AD2C99C42900E05D0D /* SecureFieldWithPlaceholder.swift */,
+				907FD3672CA49CDE004DAEA9 /* SelectPickerView.swift */,
+				90031FDB2C6D5DD700408370 /* ToastModifier.swift */,
+				9047E7F22CAD8A2800385A86 /* ViewExtensions.swift */,
+				90ABB98F2C736A8B000D9CC7 /* WaveformView.swift */,
+				90AB8E542CB7086500AE37B3 /* BotSpeakingView.swift */,
+				90AB8E562CB71E7000AE37B3 /* ConfirmationView.swift */,
+			);
+			path = components;
+			sourceTree = "<group>";
+		};
+		90ABB9A42C74EA52000D9CC7 /* settings */ = {
+			isa = PBXGroup;
+			children = (
+				90ABB9A22C74E1CE000D9CC7 /* SettingsView.swift */,
+			);
+			path = settings;
+			sourceTree = "<group>";
+		};
+		90DDBAFC2CB06C4B00528240 /* onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				90DDBAFA2CB0682E00528240 /* OnboardingView.swift */,
+				90DDBAFD2CB06D1000528240 /* OnboardingServerSettings.swift */,
+				90DDBAFF2CB074DB00528240 /* OnboardingApiKeys.swift */,
+				90AB8E612CB9737500AE37B3 /* QRCodeScannerView.swift */,
+			);
+			path = onboarding;
+			sourceTree = "<group>";
+		};
+		90E046382C8798F200A2DCA9 /* shortcuts */ = {
+			isa = PBXGroup;
+			children = (
+				90E046462C87BE6500A2DCA9 /* StartDailyBotIntent.swift */,
+				90E046392C87990A00A2DCA9 /* SiriAppShortcuts.swift */,
+			);
+			path = shortcuts;
+			sourceTree = "<group>";
+		};
+		90E046542C88E00E00A2DCA9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				904B45A82C98AB9F00E05D0D /* ActivityKit.framework */,
+				90E046552C88E00E00A2DCA9 /* WidgetKit.framework */,
+				90E046572C88E00E00A2DCA9 /* SwiftUI.framework */,
+				4E40EE671A5B97352E578810 /* libPods-OpenSesame.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		90E046592C88E00E00A2DCA9 /* OpenSesameStatus */ = {
+			isa = PBXGroup;
+			children = (
+				90E046762C88F7AF00A2DCA9 /* OpenSesameStatusBundle.swift */,
+				90E046712C88F33900A2DCA9 /* OpenSesameStatusAttributes.swift */,
+				90E046702C88F33900A2DCA9 /* OpenSesameStatusLiveActivity.swift */,
+				90E046622C88E01000A2DCA9 /* Assets.xcassets */,
+				90E046642C88E01000A2DCA9 /* Info.plist */,
+			);
+			path = OpenSesameStatus;
+			sourceTree = "<group>";
+		};
+		90E046AD2C8B9D2E00A2DCA9 /* resources */ = {
+			isa = PBXGroup;
+			children = (
+				90AB8E692CBD566B00AE37B3 /* open-sesame.ppn */,
+				90E046AE2C8B9D7400A2DCA9 /* beep.wav */,
+			);
+			path = resources;
+			sourceTree = "<group>";
+		};
+		90E046B52C921C9400A2DCA9 /* util */ = {
+			isa = PBXGroup;
+			children = (
+				90DDBAF82CB0308C00528240 /* OpenSesameLogger.swift */,
+				907FD3592CA1AF3B004DAEA9 /* OpenSesameHelper.swift */,
+				9047E7FB2CAE1CC600385A86 /* OpenSesameMockModel.swift */,
+				907FD3812CA5AC1D004DAEA9 /* RTVIDefaultData.swift */,
+				90E046AB2C8B410600A2DCA9 /* RTVIHelper.swift */,
+			);
+			path = util;
+			sourceTree = "<group>";
+		};
+		CFE21BAA569638BF12B4F0F2 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				6714A87BFA34C0CFA84B97FE /* Pods-OpenSesame.debug.xcconfig */,
+				C0138CDC151C501783869E30 /* Pods-OpenSesame.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		90031FA22C616EE700408370 /* OpenSesame */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 90031FC72C616EE900408370 /* Build configuration list for PBXNativeTarget "OpenSesame" */;
+			buildPhases = (
+				391A2D23106C8D6F44941CD3 /* [CP] Check Pods Manifest.lock */,
+				90031F9F2C616EE700408370 /* Sources */,
+				90031FA02C616EE700408370 /* Frameworks */,
+				90031FA12C616EE700408370 /* Resources */,
+				90E0467A2C88F98E00A2DCA9 /* Embed Foundation Extensions */,
+				ACB869D0091EFFA84E80406A /* [CP] Embed Pods Frameworks */,
+				5541640944D9BEF70DFD05F5 /* [CP] Copy Pods Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				90E046792C88F98D00A2DCA9 /* PBXTargetDependency */,
+			);
+			name = OpenSesame;
+			packageProductDependencies = (
+				90E046A92C8B3AC200A2DCA9 /* RTVIClientIOSDaily */,
+				907FD35E2CA2EC5D004DAEA9 /* RTVIClientIOSDaily */,
+				9047E7DB2CA99D6C00385A86 /* RTVIClientIOSDaily */,
+				90DDBB0E2CB4614500528240 /* RTVIClientIOSDaily */,
+				90AB8E4F2CB6CC2900AE37B3 /* RTVIClientIOSDaily */,
+				90AB8E5C2CB80F7700AE37B3 /* RTVIClientIOSDaily */,
+				90AB8E5F2CB83BA700AE37B3 /* MarkdownUI */,
+			);
+			productName = OpenSesame;
+			productReference = 90031FA32C616EE700408370 /* OpenSesame.app */;
+			productType = "com.apple.product-type.application";
+		};
+		90E046522C88E00E00A2DCA9 /* OpenSesameStatusExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 90E046682C88E01000A2DCA9 /* Build configuration list for PBXNativeTarget "OpenSesameStatusExtension" */;
+			buildPhases = (
+				90E0464F2C88E00E00A2DCA9 /* Sources */,
+				90E046502C88E00E00A2DCA9 /* Frameworks */,
+				90E046512C88E00E00A2DCA9 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OpenSesameStatusExtension;
+			productName = OpenSesameStatusExtension;
+			productReference = 90E046532C88E00E00A2DCA9 /* OpenSesameStatusExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		90031F9B2C616EE700408370 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					90031FA22C616EE700408370 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					90E046522C88E00E00A2DCA9 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = 90031F9E2C616EE700408370 /* Build configuration list for PBXProject "OpenSesame" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 90031F9A2C616EE700408370;
+			packageReferences = (
+				90AB8E5B2CB80F7700AE37B3 /* XCRemoteSwiftPackageReference "rtvi-client-ios-daily" */,
+				90AB8E5E2CB83BA700AE37B3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+			);
+			productRefGroup = 90031FA42C616EE700408370 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				90031FA22C616EE700408370 /* OpenSesame */,
+				90E046522C88E00E00A2DCA9 /* OpenSesameStatusExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		90031FA12C616EE700408370 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90AB8E6A2CBD566B00AE37B3 /* open-sesame.ppn in Resources */,
+				90E046AF2C8B9D7400A2DCA9 /* beep.wav in Resources */,
+				90031FAB2C616EE800408370 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90E046512C88E00E00A2DCA9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90E046632C88E01000A2DCA9 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		391A2D23106C8D6F44941CD3 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-OpenSesame-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5541640944D9BEF70DFD05F5 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-OpenSesame/Pods-OpenSesame-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-OpenSesame/Pods-OpenSesame-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-OpenSesame/Pods-OpenSesame-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		ACB869D0091EFFA84E80406A /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-OpenSesame/Pods-OpenSesame-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-OpenSesame/Pods-OpenSesame-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-OpenSesame/Pods-OpenSesame-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		90031F9F2C616EE700408370 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90ABB99D2C73C2D1000D9CC7 /* OpenSesameModel.swift in Sources */,
+				907FD33C2C9AFFF5004DAEA9 /* Workspaces.swift in Sources */,
+				9047E7F52CAD954300385A86 /* TTSProvider.swift in Sources */,
+				907FD33E2C9B0023004DAEA9 /* Conversations.swift in Sources */,
+				90DDBAF92CB0308C00528240 /* OpenSesameLogger.swift in Sources */,
+				907FD35C2CA1B0EC004DAEA9 /* ConversationRow.swift in Sources */,
+				90E046752C88F33900A2DCA9 /* OpenSesameStatusAttributes.swift in Sources */,
+				907FD36A2CA49FD7004DAEA9 /* SelectVoice.swift in Sources */,
+				90E046832C8915C000A2DCA9 /* AppDelegate.swift in Sources */,
+				90ABB9A62C74EA8A000D9CC7 /* SettingsPreference.swift in Sources */,
+				907FD37D2CA5AB3B004DAEA9 /* LLMModel.swift in Sources */,
+				90E046AC2C8B410600A2DCA9 /* RTVIHelper.swift in Sources */,
+				90AB8E682CBD521200AE37B3 /* SessionTokenResponse.swift in Sources */,
+				9047E7E82CAB4F9200385A86 /* OpenSesameConversationsAPI.swift in Sources */,
+				90DDBAFB2CB0682E00528240 /* OnboardingView.swift in Sources */,
+				907FD35A2CA1AF3B004DAEA9 /* OpenSesameHelper.swift in Sources */,
+				907FD32D2C9A237D004DAEA9 /* WorkspacesView.swift in Sources */,
+				904B45AC2C99AEA500E05D0D /* OpenSesameIcons.swift in Sources */,
+				907FD3792CA59D67004DAEA9 /* PromptView.swift in Sources */,
+				907FD3472C9B1282004DAEA9 /* OpenSesameError.swift in Sources */,
+				907FD3662CA48D8E004DAEA9 /* SelectLanguage.swift in Sources */,
+				90AB8E642CB9D92200AE37B3 /* QrcodeInfo.swift in Sources */,
+				907FD34B2C9B7EF2004DAEA9 /* WorkspaceItem.swift in Sources */,
+				907FD3642CA34B1E004DAEA9 /* WorkspaceView.swift in Sources */,
+				907FD3842CA5ADF5004DAEA9 /* Language.swift in Sources */,
+				904B45AE2C99C42900E05D0D /* SecureFieldWithPlaceholder.swift in Sources */,
+				90E046742C88F33900A2DCA9 /* OpenSesameStatusLiveActivity.swift in Sources */,
+				90ABB9982C738356000D9CC7 /* OpenSesameColors.swift in Sources */,
+				907FD3512C9C5D4E004DAEA9 /* HeaderToolBar.swift in Sources */,
+				907FD3552C9C6162004DAEA9 /* FloatingComponent.swift in Sources */,
+				907FD38A2CA5D572004DAEA9 /* SelectLLMModel.swift in Sources */,
+				90AB8E622CB9737500AE37B3 /* QRCodeScannerView.swift in Sources */,
+				90E0463A2C87990A00A2DCA9 /* SiriAppShortcuts.swift in Sources */,
+				907FD36C2CA58AB0004DAEA9 /* SelectLLMProvider.swift in Sources */,
+				907FD37B2CA5A1C7004DAEA9 /* LLMView.swift in Sources */,
+				90ABB98E2C735ED6000D9CC7 /* ContentView.swift in Sources */,
+				90E0466D2C88E2E900A2DCA9 /* ActivityManager.swift in Sources */,
+				90ABB9A32C74E1CE000D9CC7 /* SettingsView.swift in Sources */,
+				907FD3862CA5AEA1004DAEA9 /* Storage.swift in Sources */,
+				90ABB9932C73820D000D9CC7 /* MicrophoneView.swift in Sources */,
+				90AB8E662CBD48AA00AE37B3 /* OpenSesameUsersAPI.swift in Sources */,
+				90ABB9A82C74EAB1000D9CC7 /* SettingsManager.swift in Sources */,
+				90E046A42C8A7A1400A2DCA9 /* WakeWordManager.swift in Sources */,
+				907FD3572C9DB1A5004DAEA9 /* TrayView.swift in Sources */,
+				9047E7FC2CAE1CC600385A86 /* OpenSesameMockModel.swift in Sources */,
+				90031FDC2C6D5DD700408370 /* ToastModifier.swift in Sources */,
+				9047E7EA2CAC297200385A86 /* OpenSesameMessagesAPI.swift in Sources */,
+				907FD3442C9B0DB9004DAEA9 /* RTVIManager.swift in Sources */,
+				90AB8E572CB71E7000AE37B3 /* ConfirmationView.swift in Sources */,
+				907FD37F2CA5AB58004DAEA9 /* LLMProvider.swift in Sources */,
+				907FD3682CA49CDE004DAEA9 /* SelectPickerView.swift in Sources */,
+				90DDBAFE2CB06D1000528240 /* OnboardingServerSettings.swift in Sources */,
+				9047E7E02CAB15FB00385A86 /* OpenSesameAPI.swift in Sources */,
+				90DDBB002CB074DB00528240 /* OnboardingApiKeys.swift in Sources */,
+				9047E7E42CAB2EBD00385A86 /* OpenSesameWorkspacesAPI.swift in Sources */,
+				907FD3882CA5AF0F004DAEA9 /* Voice.swift in Sources */,
+				9047E7F72CADBEAA00385A86 /* SelectTTSProvider.swift in Sources */,
+				90031FA72C616EE700408370 /* OpenSesameApp.swift in Sources */,
+				90E046472C87BE6500A2DCA9 /* StartDailyBotIntent.swift in Sources */,
+				907FD3402C9B0038004DAEA9 /* Messages.swift in Sources */,
+				907FD36E2CA58ABF004DAEA9 /* SelectPrompt.swift in Sources */,
+				9047E7F32CAD8A2800385A86 /* ViewExtensions.swift in Sources */,
+				9047E7EE2CACD99700385A86 /* LiveMessage.swift in Sources */,
+				907FD3822CA5AC1D004DAEA9 /* RTVIDefaultData.swift in Sources */,
+				907FD3532C9C5EC2004DAEA9 /* BottonPanel.swift in Sources */,
+				907FD34E2C9C5318004DAEA9 /* ChatView.swift in Sources */,
+				9047E7FE2CAEDDA700385A86 /* InfoComponent.swift in Sources */,
+				90AB8E552CB7086500AE37B3 /* BotSpeakingView.swift in Sources */,
+				907FD3702CA58ACB004DAEA9 /* SelectStorage.swift in Sources */,
+				90ABB9902C736A8B000D9CC7 /* WaveformView.swift in Sources */,
+				907FD3722CA59144004DAEA9 /* CreatePickerView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		90E0464F2C88E00E00A2DCA9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				90E0467F2C88FCFE00A2DCA9 /* OpenSesameStatusBundle.swift in Sources */,
+				90E046802C88FCFE00A2DCA9 /* OpenSesameStatusAttributes.swift in Sources */,
+				90E046812C88FCFE00A2DCA9 /* OpenSesameStatusLiveActivity.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		90E046792C88F98D00A2DCA9 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 90E046522C88E00E00A2DCA9 /* OpenSesameStatusExtension */;
+			targetProxy = 90E046782C88F98D00A2DCA9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		90031FC52C616EE900408370 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		90031FC62C616EE900408370 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		90031FC82C616EE900408370 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6714A87BFA34C0CFA84B97FE /* Pods-OpenSesame.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = OpenSesame/OpenSesame.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = EEBGKV9N3N;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = arm64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenSesame/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is necessary for transmitting video in a call";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone is necessary for transmitting audio in a call";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.daily.OpenSesame;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Open_Sesame_Dev;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		90031FC92C616EE900408370 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C0138CDC151C501783869E30 /* Pods-OpenSesame.release.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = OpenSesame/OpenSesame.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = EEBGKV9N3N;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = arm64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenSesame/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is necessary for transmitting video in a call";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Microphone is necessary for transmitting audio in a call";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.daily.OpenSesame;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Open_Sesame_Release;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		90E046692C88E01000A2DCA9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = EEBGKV9N3N;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = arm64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenSesameStatus/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenSesameStatus;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.daily.OpenSesame.extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Open_Sesame_Extension_Dev;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		90E0466A2C88E01000A2DCA9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = EEBGKV9N3N;
+				"EXCLUDED_ARCHS[sdk=macosx*]" = arm64;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenSesameStatus/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenSesameStatus;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.daily.OpenSesame.extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Open_Sesame_Extension_Release;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		90031F9E2C616EE700408370 /* Build configuration list for PBXProject "OpenSesame" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90031FC52C616EE900408370 /* Debug */,
+				90031FC62C616EE900408370 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		90031FC72C616EE900408370 /* Build configuration list for PBXNativeTarget "OpenSesame" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90031FC82C616EE900408370 /* Debug */,
+				90031FC92C616EE900408370 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		90E046682C88E01000A2DCA9 /* Build configuration list for PBXNativeTarget "OpenSesameStatusExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				90E046692C88E01000A2DCA9 /* Debug */,
+				90E0466A2C88E01000A2DCA9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		90AB8E5B2CB80F7700AE37B3 /* XCRemoteSwiftPackageReference "rtvi-client-ios-daily" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/rtvi-ai/rtvi-client-ios-daily";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
+		90AB8E5E2CB83BA700AE37B3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.4.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9047E7DB2CA99D6C00385A86 /* RTVIClientIOSDaily */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RTVIClientIOSDaily;
+		};
+		907FD35E2CA2EC5D004DAEA9 /* RTVIClientIOSDaily */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RTVIClientIOSDaily;
+		};
+		90AB8E4F2CB6CC2900AE37B3 /* RTVIClientIOSDaily */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RTVIClientIOSDaily;
+		};
+		90AB8E5C2CB80F7700AE37B3 /* RTVIClientIOSDaily */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 90AB8E5B2CB80F7700AE37B3 /* XCRemoteSwiftPackageReference "rtvi-client-ios-daily" */;
+			productName = RTVIClientIOSDaily;
+		};
+		90AB8E5F2CB83BA700AE37B3 /* MarkdownUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 90AB8E5E2CB83BA700AE37B3 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
+			productName = MarkdownUI;
+		};
+		90DDBB0E2CB4614500528240 /* RTVIClientIOSDaily */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RTVIClientIOSDaily;
+		};
+		90E046A92C8B3AC200A2DCA9 /* RTVIClientIOSDaily */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = RTVIClientIOSDaily;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 90031F9B2C616EE700408370 /* Project object */;
+}

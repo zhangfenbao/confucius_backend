@@ -1,0 +1,24 @@
+PODS:
+  - ios-voice-processor (1.1.0)
+  - Porcupine-iOS (3.0.1):
+    - ios-voice-processor (~> 1.1.0)
+  - SwiftySound (1.3.0)
+
+DEPENDENCIES:
+  - Porcupine-iOS (~> 3.0.1)
+  - SwiftySound
+
+SPEC REPOS:
+  trunk:
+    - ios-voice-processor
+    - Porcupine-iOS
+    - SwiftySound
+
+SPEC CHECKSUMS:
+  ios-voice-processor: 8e32d7f980a06d392d128ef1cd19cf6ddcaca3c1
+  Porcupine-iOS: 6d69509fa587f3ac0be1adfefb48e0c6ce029fff
+  SwiftySound: b6d7355bc15f5eef1a52695ad40e9ac5597d907b
+
+PODFILE CHECKSUM: 239616290dd00a3170c6a4f7b7d82d392c52dbe9
+
+COCOAPODS: 1.15.2

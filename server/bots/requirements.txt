@@ -1,0 +1,2 @@
+python-deepcompare
+pipecat-ai[daily,anthropic,cartesia,deepgram,openai,silero,together,websocket,elevenlabs,playht,azure]==0.0.45

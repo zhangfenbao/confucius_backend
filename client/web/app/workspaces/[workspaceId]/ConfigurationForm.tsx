@@ -1,0 +1,361 @@
+"use client";
+
+import PageRefresher from "@/components/PageRefresher";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
+import { LLMMessageRole, LLMProvider } from "@/lib/llm";
+import { MessageCreateModel, WorkspaceModel } from "@/lib/sesameApi";
+import { InteractionMode, TTSService, voiceOptions } from "@/lib/voice";
+import { getWorkspaceStructuredData } from "@/lib/workspaces";
+import equal from "fast-deep-equal";
+import { LoaderCircle, SaveIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useCallback, useMemo, useState } from "react";
+import APIKeysSection from "./APIKeysSection";
+import ConfigurationSection from "./ConfigurationSection";
+import VoiceSettingsSection from "./VoiceSettingsSection";
+import WorkspaceOptionsSection from "./WorkspaceOptionsSection";
+
+interface Props {
+  workspace: Pick<WorkspaceModel, "config" | "title" | "workspace_id">;
+}
+
+export interface WorkspaceFormConfig {
+  apiKeys: Array<{
+    service: string;
+    apiKey: string;
+  }>;
+  configuration: {
+    model: {
+      llmProvider: LLMProvider;
+      selectedModel: string;
+    };
+    prompt: Array<{
+      content: {
+        role: LLMMessageRole;
+        content: string;
+      };
+      extra_metadata?: MessageCreateModel["extra_metadata"];
+    }>;
+    run_on_config: boolean;
+  };
+  voiceSettings: {
+    mainLanguage: string;
+    defaultVoice: {
+      ttsProvider: TTSService;
+      selectedVoice: string;
+    };
+    interactionMode: InteractionMode;
+  };
+  workspaceOptions: {
+    name: string;
+  };
+}
+
+export default function ConfigurationForm({ workspace }: Props) {
+  const { push, refresh } = useRouter();
+  const { toast } = useToast();
+  const structuredData = getWorkspaceStructuredData(workspace.config);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const defaultState = useMemo<WorkspaceFormConfig>(
+    () => ({
+      apiKeys: Object.entries(structuredData.apiKeys).map(([service, key]) => ({
+        apiKey: key,
+        service,
+      })),
+      configuration: {
+        model: {
+          llmProvider: structuredData.llm.service,
+          selectedModel: structuredData.llm.model.value,
+        },
+        prompt:
+          Array.isArray(structuredData.llm.messages) &&
+          structuredData.llm.messages.length > 0
+            ? structuredData.llm.messages
+            : [
+                {
+                  content: {
+                    role: "system",
+                    content: "",
+                  },
+                  extra_metadata: null,
+                },
+              ],
+        run_on_config: structuredData.llm.run_on_config,
+      },
+      voiceSettings: {
+        mainLanguage: structuredData.tts.language,
+        defaultVoice: {
+          ttsProvider: structuredData.tts.service,
+          selectedVoice: structuredData.tts.voice,
+        },
+        interactionMode: structuredData.tts.interactionMode,
+      },
+      workspaceOptions: {
+        name: workspace.title,
+      },
+    }),
+    [structuredData, workspace]
+  );
+
+  const [formState, setFormState] = useState<WorkspaceFormConfig>(defaultState);
+
+  const hasLocalChanges = !equal(defaultState, formState);
+
+  const handlePageRefresh = useCallback(() => {
+    if (!hasLocalChanges || workspace.workspace_id === "new") return;
+    toast({
+      title: "Workspace configuration changed",
+      description:
+        "This workspace's configuration has changed and there are unsaved changes.",
+      action: (
+        <ToastAction
+          altText="Refresh data"
+          onClick={() => {
+            window.location.reload();
+          }}
+        >
+          Refresh data
+        </ToastAction>
+      ),
+    });
+  }, [hasLocalChanges, toast, workspace.workspace_id]);
+
+  const handleSubmit = async (ev: FormEvent<HTMLFormElement>) => {
+    ev.preventDefault();
+
+    setIsSaving(true);
+
+    const voice = voiceOptions.find(
+      (v) => v.voiceId === formState.voiceSettings.defaultVoice.selectedVoice
+    );
+
+    const updatedWorkspace: Pick<
+      WorkspaceModel,
+      "config" | "title" | "workspace_id"
+    > = {
+      workspace_id: workspace.workspace_id,
+      config: {
+        api_keys: formState.apiKeys.reduce<Record<string, string>>(
+          (o, config) => {
+            o[config.service] = config.apiKey;
+            return o;
+          },
+          {}
+        ),
+        default_llm_context: formState.configuration.prompt,
+        services: {
+          llm: formState.configuration.model.llmProvider,
+          tts: formState.voiceSettings.defaultVoice.ttsProvider,
+          stt: "deepgram",
+        },
+        config: [
+          {
+            service: "vad",
+            options: [
+              {
+                name: "params",
+                value: {
+                  stop_secs: 0.3,
+                },
+              },
+            ],
+          },
+          {
+            service: "tts",
+            options: [
+              {
+                name: "voice",
+                value: formState.voiceSettings.defaultVoice.selectedVoice,
+              },
+              {
+                name: "model",
+                value: voice?.ttsModel,
+              },
+              {
+                name: "language",
+                value: formState.voiceSettings.mainLanguage,
+              },
+              {
+                name: "text_filter",
+                value: {
+                  filter_code: formState.voiceSettings.interactionMode === "conversational",
+                  filter_tables: formState.voiceSettings.interactionMode === "conversational",
+                }
+              }
+            ],
+          },
+          {
+            service: "llm",
+            options: [
+              {
+                name: "model",
+                value: formState.configuration.model.selectedModel,
+              },
+              {
+                name: "run_on_config",
+                value: formState.configuration.run_on_config,
+              },
+            ],
+          },
+          {
+            service: "stt",
+            options: [
+              {
+                name: "model",
+                value: voice?.sttModel ?? "nova-2-conversationalai",
+              },
+              {
+                name: "language",
+                value: formState.voiceSettings.mainLanguage,
+              },
+            ],
+          },
+        ],
+      },
+      title: formState.workspaceOptions.name,
+    };
+
+    const isNewWorkspace = workspace.workspace_id === "new";
+
+    try {
+      const response = await fetch(
+        isNewWorkspace ? "/api/create-workspace" : "/api/update-workspace",
+        {
+          method: isNewWorkspace ? "POST" : "PUT",
+          body: JSON.stringify(updatedWorkspace),
+        }
+      );
+      if (response.ok) {
+        const json = await response.json();
+        toast({
+          title: isNewWorkspace
+            ? "Workspace created"
+            : "Workspace configuration saved",
+        });
+        push(
+          isNewWorkspace
+            ? `/${json.workspace_id}`
+            : `/workspaces/${workspace.workspace_id}`
+        );
+        refresh();
+      } else {
+        throw new Error(
+          `${response.status}: ${
+            response.statusText
+          } - ${await response.text()}`
+        );
+      }
+    } catch (e: unknown) {
+      toast({
+        variant: "destructive",
+        title: "Could not save workspace configuration",
+        description: (e as Error).toString(),
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const [isDeleting, setIsDeleting] = useState(false);
+  const handleClickDelete = async () => {
+    setIsDeleting(true);
+    const response = await fetch("/api/delete-workspace", {
+      method: "DELETE",
+      body: JSON.stringify({
+        workspace_id: workspace.workspace_id,
+      }),
+    });
+    if (response.ok) {
+      push(`/workspaces`);
+      refresh();
+    } else {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <form className="animate-appear p-4 flex flex-col gap-6" onSubmit={handleSubmit}>
+      <WorkspaceOptionsSection
+        formState={formState}
+        setFormState={setFormState}
+      />
+      <ConfigurationSection formState={formState} setFormState={setFormState} />
+      <VoiceSettingsSection formState={formState} setFormState={setFormState} />
+      <APIKeysSection formState={formState} setFormState={setFormState} />
+      <div className="flex lg:justify-end">
+        <Button
+          className="flex-grow lg:flex-grow-0 gap-2 items-center"
+          disabled={isSaving}
+          type="submit"
+        >
+          {isSaving ? (
+            <LoaderCircle size={16} className="animate-spin" />
+          ) : (
+            <SaveIcon size={16} />
+          )}
+          <span>Save</span>
+        </Button>
+      </div>
+
+      {/* Danger Zone */}
+      {workspace.workspace_id !== "new" && (
+        <>
+          <Separator />
+          <section className="flex flex-col gap-2">
+            <h3 className="text-lg font-semibold text-destructive">
+              Danger zone
+            </h3>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="destructive">Delete workspace</Button>
+              </DialogTrigger>
+              <DialogContent noCloseButton={isDeleting}>
+                <DialogHeader>
+                  <DialogTitle>Delete workspace</DialogTitle>
+                  <DialogDescription>
+                    Do you really want to delete the workspace &ldquo;
+                    {workspace.title}&rdquo;?
+                    <br />
+                    This will also delete all associated conversations.
+                  </DialogDescription>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button disabled={isDeleting} variant="secondary">
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                    <Button
+                      className="gap-2"
+                      disabled={isDeleting}
+                      onClick={handleClickDelete}
+                      variant="destructive"
+                    >
+                      {isDeleting && <LoaderCircle className="animate-spin" />}
+                      Delete
+                    </Button>
+                  </DialogFooter>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </section>
+        </>
+      )}
+
+      <PageRefresher onRefresh={handlePageRefresh} />
+    </form>
+  );
+}
