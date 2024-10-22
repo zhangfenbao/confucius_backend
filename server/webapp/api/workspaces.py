@@ -41,7 +41,6 @@ async def create_workspace(
     db.add(new_workspace)
 
     await db.commit()
-    await db.refresh(new_workspace)
 
     return WorkspaceModel.model_validate(new_workspace)
 
