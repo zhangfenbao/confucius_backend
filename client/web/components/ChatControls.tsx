@@ -1,6 +1,8 @@
 "use client";
 
+import { revalidateAll } from "@/app/actions";
 import ExpiryCountdown from "@/components/ExpiryCountdown";
+import { queryClient } from "@/components/QueryClientProvider";
 import emitter from "@/lib/eventEmitter";
 import { cn } from "@/lib/utils";
 import {
@@ -157,6 +159,15 @@ const ChatControls: React.FC<Props> = ({
     [push, rtviClient, workspaceId]
   );
 
+  const invalidateAndRedirect = async (redirect: string) => {
+    await revalidateAll();
+    await queryClient.invalidateQueries({
+      queryKey: ["conversations", workspaceId],
+      type: "all",
+    });
+    push(redirect);
+  }
+
   const handleTextSubmit = async (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
 
@@ -168,16 +179,9 @@ const ChatControls: React.FC<Props> = ({
 
     if (conversationId === "new") {
       const newConversationId = await createConversation(false);
-      let botStarted = false;
-      rtviClient.addListener("botLlmStarted", () => {
-        botStarted = true;
-      });
+      const redirectPath = `/${workspaceId}/c/${newConversationId}?a=0`;
       rtviClient.addListener("botLlmStopped", () => {
-        // Wait at most 3 seconds before redirect
-        setTimeout(() => push(`/${workspaceId}/c/${newConversationId}`), 3000);
-      });
-      rtviClient.addListener("storageItemStored", () => {
-        if (botStarted) push(`/${workspaceId}/c/${newConversationId}`);
+        invalidateAndRedirect(redirectPath);
       });
     }
     sendTextMessage(rtviClient, message);

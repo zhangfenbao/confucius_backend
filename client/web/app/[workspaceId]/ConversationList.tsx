@@ -26,7 +26,7 @@ const ConversationList = ({
   const loadingRef = useRef<HTMLDivElement>(null);
 
   const { data, fetchNextPage, isFetching, hasNextPage } = useInfiniteQuery({
-    queryKey: ["conversations", workspaceId, searchQuery],
+    queryKey: ["conversations", workspaceId, searchQuery, initialConversations],
     initialData: isSearch
       ? {
           pages: [],

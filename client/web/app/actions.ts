@@ -8,7 +8,7 @@ export async function revalidateConversations() {
 
 export async function revalidateConversation(conversationId: string) {
   revalidateTag(conversationId);
-  revalidateConversations();
+  await revalidateConversations();
 }
 
 export async function revalidateWorkspaces() {
@@ -18,4 +18,9 @@ export async function revalidateWorkspaces() {
 export async function revalidateWorkspace(workspaceId: string) {
   revalidateTag(workspaceId);
   revalidateWorkspaces();
+}
+
+export async function revalidateAll() {
+  await revalidateWorkspaces();
+  await revalidateConversations();
 }
