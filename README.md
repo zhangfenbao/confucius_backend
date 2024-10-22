@@ -30,7 +30,16 @@ source venv/bin/activate # ... or OS specific activation
 pip install -r server/dev-requirements.txt
 ```
 
-#### 2. Create a local .env
+#### 2. Create a database
+
+Sesame uses data storage for users, workspace settings and conversation history. The default schema uses PSQL.
+
+Create a new local database: `psql -U postgres -c "CREATE DATABASE sesame;"`
+
+... or alternatively, use a hosted provider such as [Render](www.render.com) or [Supabase](www.supabase.com).
+
+
+#### 3. Create a local .env
 
 ```shell
 cp server/env.example server/.env
@@ -50,7 +59,7 @@ Set these to your superuser credentials. _Note: Your database must support async
 
 > 🛑 Ensure you are using a database that accepts session mode typically available on port `5432`. If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
 
-#### 3. Create database roles and schema
+#### 4. Create database roles and schema
 
 From the root of the project, run the schema script found in [scripts/run_shema.sh](./scripts/run_schema.sh)
 
@@ -60,13 +69,13 @@ bash scripts/run_schema.sh
 
 Note: the `run_schema.sh` script requires Postgres to run. Install the necessary package for your system (e.g. `brew install postgresql` for MacOS).
 
-If the schema runs correctly, the script will print out a non-superuser URL to the terminal which you should add to your environment.
+If the schema runs correctly, the script will print out a non-superuser user and password.
 
-Add `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` in `server/.env` with the output of the script.
+Edit `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` in `server/.env` with the output of the script.
 
 For more information about database configuration, read [here](#database-setup)
 
-#### 4. Create a user
+#### 5. Create a user
 
 From the root of the project still, create a user account and password from [scripts/create_user.sh](./scripts/create_user.sh).
 
@@ -76,7 +85,7 @@ bash scripts/create_user.sh
 
 Running this script will create a user account in your database. Make a note of your username and password; the password will be encrypted and not recoverable later.
 
-#### 5. Run the Sesame server and generate access token
+#### 6. Run the Sesame server and generate access token
 
 ```shell
 cd server/
@@ -91,7 +100,7 @@ Log in with the user name and password you set in step 4.
 
 Now, create a new access token to authenticate web requests in any of the Open Sesame clients. For more information, see [authentication](./docs/authentication.md).
 
-#### 6. Create your first workspace
+#### 7. Create your first workspace
 
 Follow the [workspace creation steps](#create-your-first-workspace), and run a [client](#run-a-client-app) of your choosing.
 
@@ -108,7 +117,7 @@ _Note: Sesame bots are configured to use [Daily](https://www.daily.co) as a tran
 
 ### Database setup
 
-Sesame requires a Postgres database (support for other database types, such as SQLLite, coming soon). You may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
+Sesame requires a Postgres database (support for other database types, such as SQLite, coming soon). You may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
 
 #### 1. Update your .env
 
