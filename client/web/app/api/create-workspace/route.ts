@@ -1,4 +1,4 @@
-import { revalidateWorkspaces } from "@/app/actions";
+import { revalidateAll } from "@/app/actions";
 import { WorkspaceModel } from "@/lib/sesameApi";
 import { getApiClient } from "@/lib/sesameApiClient";
 import { NextRequest, NextResponse } from "next/server";
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (response.ok) {
       const json = await response.json();
 
-      revalidateWorkspaces();
+      await revalidateAll();
 
       return NextResponse.json(json);
     } else {

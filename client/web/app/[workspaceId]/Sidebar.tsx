@@ -1,6 +1,7 @@
 "use client";
 
 import PageTransitionLink from "@/components/PageTransitionLink";
+import QueryClientProvider, { queryClient } from "@/components/QueryClientProvider";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -12,7 +13,6 @@ import {
 import emitter from "@/lib/eventEmitter";
 import { ConversationModel, WorkspaceModel } from "@/lib/sesameApi";
 import { cn } from "@/lib/utils";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Edit, LayoutGridIcon, LoaderCircleIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -25,8 +25,6 @@ import {
 import ConversationList from "./ConversationList";
 import SearchResults from "./SearchResults";
 import SidebarTitle from "./SidebarTitle";
-
-const queryClient = new QueryClient();
 
 interface SidebarProps {
   conversations: ConversationModel[];
@@ -51,6 +49,7 @@ export default function Sidebar({
     const updateSidebar = () =>
       queryClient.invalidateQueries({
         queryKey: ["conversations", workspace?.workspace_id],
+        type: "all",
       });
     const handleResize = () => {
       if (window.innerWidth >= 1024) setIsOpen(false);
@@ -122,7 +121,7 @@ export default function Sidebar({
         onChange={(ev) => setSearch(ev.target.value)}
       />
 
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider>
         {workspace ? (
           deferredSearch ? (
             <Suspense

@@ -1,6 +1,7 @@
 "use client";
 
-import { revalidateConversations } from "@/app/actions";
+import { revalidateAll } from "@/app/actions";
+import { queryClient } from "@/components/QueryClientProvider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,7 +49,11 @@ export default function DeleteConversationModal({
         }),
       });
       if (response.ok) {
-        revalidateConversations();
+        await revalidateAll();
+        queryClient.invalidateQueries({
+          queryKey: ["conversations", workspaceId],
+          type: "all",
+        });
         push(`/${workspaceId}`);
         refresh();
         emitter.emit("updateSidebar");

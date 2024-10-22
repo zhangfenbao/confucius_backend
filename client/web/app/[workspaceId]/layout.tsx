@@ -1,6 +1,7 @@
 "use server";
 
 import ErrorPage from "@/components/ErrorPage";
+import QueryClientProvider from "@/components/QueryClientProvider";
 import { WorkspaceWithConversations } from "@/lib/sesameApi";
 import { getWorkspaces } from "@/lib/workspaces";
 import { redirect } from "next/navigation";
@@ -59,10 +60,12 @@ export default async function WorkspaceLayout({
         </main>
       </div>
 
-      <DeleteConversationModal
-        conversations={workspace.conversations}
-        workspaceId={workspaceId}
-      />
+      <QueryClientProvider>
+        <DeleteConversationModal
+          conversations={workspace.conversations}
+          workspaceId={workspaceId}
+        />
+      </QueryClientProvider>
       <DisabledInSandboxModeModal />
     </div>
   );

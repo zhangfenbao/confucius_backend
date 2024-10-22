@@ -8,8 +8,9 @@ import {
   useState,
 } from "react";
 
-import { revalidateConversation } from "@/app/actions";
+import { revalidateAll } from "@/app/actions";
 import ChatMessage from "@/components/ChatMessage";
+import { queryClient } from "@/components/QueryClientProvider";
 import emitter from "@/lib/eventEmitter";
 import { LLMMessageRole } from "@/lib/llm";
 import type { Message } from "@/lib/messages";
@@ -57,6 +58,7 @@ export default function LiveMessages({
   isBotSpeaking,
   messages,
   structuredWorkspace,
+  workspaceId,
 }: Props) {
   const { refresh } = useRouter();
   const [liveMessages, setLiveMessages] = useState<LiveMessage[]>([]);
@@ -194,9 +196,13 @@ export default function LiveMessages({
 
   useRTVIClientEvent(
     RTVIEvent.BotLlmStopped,
-    useCallback(() => {
+    useCallback(async () => {
       isTextResponse.current = false;
-      revalidateConversation(conversationId);
+      await revalidateAll();
+      queryClient.invalidateQueries({
+        queryKey: ["conversations", workspaceId],
+        type: "all",
+      });
       if (structuredWorkspace.tts.interactionMode !== "informational") return;
       if (firstBotResponseTime.current) {
         addMessageChunk({
@@ -208,7 +214,7 @@ export default function LiveMessages({
         });
         firstBotResponseTime.current = undefined;
       }
-    }, [addMessageChunk, conversationId, structuredWorkspace.tts.interactionMode])
+    }, [addMessageChunk, structuredWorkspace.tts.interactionMode, workspaceId])
   );
 
   useRTVIClientEvent(
@@ -306,6 +312,13 @@ export default function LiveMessages({
     )
   );
 
+  useRTVIClientEvent(
+    RTVIEvent.StorageItemStored,
+    useCallback(() => {
+      revalidateAll();
+    }, [])
+  );
+
   useEffect(() => {
     const handleUserTextMessage = (text: string) => {
       isTextResponse.current = true;
@@ -335,14 +348,14 @@ export default function LiveMessages({
   useEffect(() => {
     // Server-stored messages updated. Empty client state.
     setLiveMessages([]);
-  }, [messages]);
+  }, [messages.length]);
 
   useRTVIClientEvent(
     RTVIEvent.Disconnected,
-    useCallback(() => {
-      revalidateConversation(conversationId);
+    useCallback(async () => {
+      await revalidateAll();
       refresh();
-    }, [conversationId, refresh])
+    }, [refresh])
   );
 
   return liveMessages.map((m, i) => (

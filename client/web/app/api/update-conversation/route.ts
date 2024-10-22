@@ -1,4 +1,4 @@
-import { revalidateConversation } from "@/app/actions";
+import { revalidateAll } from "@/app/actions";
 import { getApiClient } from "@/lib/sesameApiClient";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,7 +17,7 @@ export async function PUT(request: NextRequest) {
 
     const json = await response.json();
 
-    revalidateConversation(conversation_id);
+    await revalidateAll();
 
     return NextResponse.json(json);
   } catch (error) {
