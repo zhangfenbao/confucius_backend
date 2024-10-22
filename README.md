@@ -97,7 +97,7 @@ You should see a URL in your terminal window to visit, for example `http://127.0
 
 <img alt="open-sesame-dashboard" width="280px" height="auto" src="./docs/sesame-dashboard.png">
 
-Log in with the user name and password you set in step 4.
+Log in with the user name and password you set in step 5.
 
 Now, create a new access token to authenticate web requests in any of the Open Sesame clients. For more information, see [authentication](./docs/authentication.md).
 
