@@ -42,7 +42,14 @@ You must set the following:
 
 Database superuser credentials (i.e. Supabase URI on port `5432`.) _Note: Must support asyncpg or equivalent asychnronous driver._
 
-See [Database setup](#database-setup) for details.
+> 🛑 Ensure you are using a database URL on a session port (typically `5432`) If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
+
+You database URL should look something like:
+
+```bash
+SESAME_DATABASE_ADMIN_URL="postgresql://postgres.ID:PASSWORD@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
+# Note port 5432, not 6543
+```
 
 #### 3. Create database roles and schema
 
