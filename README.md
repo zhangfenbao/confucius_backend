@@ -108,7 +108,7 @@ _Note: Sesame bots are configured to use [Daily](https://www.daily.co) as a tran
 
 ### Database setup
 
-Sesame works with most types of database. You may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
+Sesame requires a Postgres database (support for other database types, such as SQLLite, coming soon). You may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
 
 #### 1. Update your .env
 
@@ -124,7 +124,7 @@ Your database credentials should look something like this:
 SESAME_DATABASE_ADMIN_USER="postgres"
 SESAME_DATABASE_ADMIN_PASSWORD="password"
 SESAME_DATABASE_NAME="postgres"
-SESAME_DATABASE_HOST="egion.pooler.supabase.com"
+SESAME_DATABASE_HOST="region.pooler.supabase.com"
 # - Use a session port (typically 5432)
 SESAME_DATABASE_PORT=5432
 ```

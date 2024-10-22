@@ -30,7 +30,8 @@ def construct_database_url():
         )
 
     db_url = (
-        f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+asyncpg://://"
+        f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+"
+        f"{os.getenv('SESAME_DATABASE_ASYNC_DRIVER', 'asyncpg')}://"
         f"{os.getenv('SESAME_DATABASE_USER', 'postgres')}:"
         f"{os.getenv('SESAME_DATABASE_PASSWORD', 'postgres')}@"
         f"{os.getenv('SESAME_DATABASE_HOST', 'localhost')}:"
@@ -38,21 +39,10 @@ def construct_database_url():
         f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"
     )
 
-    if db_url.startswith("postgresql://"):
-        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
-
     return db_url
 
 
 DATABASE_URL = construct_database_url()
-
-if not DATABASE_URL:
-    raise ValueError(
-        "SESAME_DATABASE_URL is not set. Please set it in your .env file or environment variables."
-    )
-
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
 engine = create_async_engine(
     DATABASE_URL,
