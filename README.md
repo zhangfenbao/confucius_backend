@@ -32,11 +32,11 @@ pip install -r server/dev-requirements.txt
 
 #### 2. Create a database
 
-Sesame uses data storage for users, workspace settings and conversation history. The default schema uses PSQL.
+Sesame uses data storage for users, workspace settings and conversation history. The current default schema assumes Postgres.
 
 Create a new local database: `psql -U postgres -c "CREATE DATABASE sesame;"`
 
-... or alternatively, use a hosted provider such as [Render](www.render.com) or [Supabase](www.supabase.com).
+... or alternatively, use a hosted database provider such as [Render](www.render.com) or [Supabase](www.supabase.com).
 
 
 #### 3. Create a local .env
@@ -48,14 +48,15 @@ cp server/env.example server/.env
 You must set the following:
 
 ```bash
-SESAME_DATABASE_ADMIN_USER
-SESAME_DATABASE_ADMIN_PASSWORD
-SESAME_DATABASE_NAME
-SESAME_DATABASE_HOST
-SESAME_DATABASE_PORT
+SESAME_APP_SECRET # For data encryption
+SESAME_DATABASE_ADMIN_USER # Privileged database user
+SESAME_DATABASE_ADMIN_PASSWORD # Privileged user password
+SESAME_DATABASE_NAME # E.g. sesame
+SESAME_DATABASE_HOST # E.g. localhost
+SESAME_DATABASE_PORT # E.g. 5432
 ```
 
-Set these to your superuser credentials. _Note: Your database must support asyncpg or equivalent asychnronous driver._
+_Note: Your database must support asyncpg or equivalent asychnronous driver._
 
 > 🛑 Ensure you are using a database that accepts session mode typically available on port `5432`. If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
 
@@ -100,9 +101,17 @@ Log in with the user name and password you set in step 4.
 
 Now, create a new access token to authenticate web requests in any of the Open Sesame clients. For more information, see [authentication](./docs/authentication.md).
 
-#### 7. Create your first workspace
+#### 7. Run the tests to check your configuration
+
+```bash
+cd server/
+PYTHONPATH=. pytest tests/ -s -v
+```
+
+#### 8. Create your first workspace
 
 Follow the [workspace creation steps](#create-your-first-workspace), and run a [client](#run-a-client-app) of your choosing.
+
 
 ## Overview
 
