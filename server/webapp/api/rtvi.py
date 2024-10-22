@@ -46,6 +46,7 @@ async def stream_action(
         )
 
     async def generate():
+        print("USER ID", user.user_id)
         async with get_authenticated_db_context(user) as db:
             config, conversation = await _get_config_and_conversation(params.conversation_id, db)
             messages = [msg.content for msg in conversation.messages]

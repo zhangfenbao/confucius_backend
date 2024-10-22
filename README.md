@@ -38,18 +38,17 @@ cp server/env.example server/.env
 
 You must set the following:
 
-`SESAME_DATABASE_ADMIN_URL`
-
-Database superuser credentials (i.e. Supabase URI on port `5432`.) _Note: Must support asyncpg or equivalent asychnronous driver._
-
-> 🛑 Ensure you are using a database URL on a session port (typically `5432`) If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
-
-You database URL should look something like:
-
 ```bash
-SESAME_DATABASE_ADMIN_URL="postgresql://postgres.ID:PASSWORD@aws-0-us-west-1.pooler.supabase.com:5432/postgres"
-# Note port 5432, not 6543
+SESAME_DATABASE_ADMIN_USER
+SESAME_DATABASE_ADMIN_PASSWORD
+SESAME_DATABASE_NAME
+SESAME_DATABASE_HOST
+SESAME_DATABASE_PORT
 ```
+
+Set these to your superuser credentials. _Note: Your database must support asyncpg or equivalent asychnronous driver._
+
+> 🛑 Ensure you are using a database that accepts session mode typically available on port `5432`. If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
 
 #### 3. Create database roles and schema
 
@@ -63,9 +62,7 @@ Note: the `run_schema.sh` script requires Postgres to run. Install the necessary
 
 If the schema runs correctly, the script will print out a non-superuser URL to the terminal which you should add to your environment.
 
-Add `SESAME_DATABASE_URL` in `server/.env` with the output of the script.
-
-> 🛑 If your admin database password includes "@" characters, the bash script may fail to correctly replace the `SESAME_DATABASE_URL` password using `sed`. In this scenario, please manually adjust.
+Add `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` in `server/.env` with the output of the script.
 
 For more information about database configuration, read [here](#database-setup)
 
@@ -111,20 +108,25 @@ _Note: Sesame bots are configured to use [Daily](https://www.daily.co) as a tran
 
 ### Database setup
 
-Sesame works with most types of database. If you are using Supabase, there are no additional setup steps required. If not, you may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
+Sesame works with most types of database. You may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
 
 #### 1. Update your .env
 
-Update`SESAME_DATABASE_ADMIN_URL` (admin) in `server/.env`.
+Update the non-optional `SESAME_DATABASE_*` variables in `server/.env`.
 
-For Supabase can find your URL here: https://supabase.com/dashboard/project/[YOUR_PROJECT]/settings/database. **Note: be sure to use the URI for `Mode: session`.**
+For Supabase, for example, you can find credentials URL here: https://supabase.com/dashboard/project/[YOUR_PROJECT]/settings/database. **Note: be sure to use the URI for `Mode: session` to get the correct port for session mode.**
 
 ![](./docs/supabaseurl.png)
 
-Your database URI should look something like this:
+Your database credentials should look something like this:
 
 ```bash
-SESAME_DATABASE_ADMIN_URL=postgresql://postgres.user:pass@region.pooler.supabase.com:5432/postgres
+SESAME_DATABASE_ADMIN_USER="postgres"
+SESAME_DATABASE_ADMIN_PASSWORD="password"
+SESAME_DATABASE_NAME="postgres"
+SESAME_DATABASE_HOST="egion.pooler.supabase.com"
+# - Use a session port (typically 5432)
+SESAME_DATABASE_PORT=5432
 ```
 
 #### 2. Apply database schema
@@ -135,7 +137,7 @@ This script will create the necessary tables, functions and triggers, as well ec
 
 #### 3. Update your .env with the public database URL
 
-Update`SESAME_DATABASE_URL` (public) in `server/.env` with the randomly generated password created by the `run_schema` script.
+Update`SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` (public) in `server/.env` with the randomly generated password created by the `run_schema` script.
 
 Alternatively, you can set this yourself in `database/schema.sql` by changing the `%%REPLACED%%` input near the bottom.
 

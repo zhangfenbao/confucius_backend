@@ -11,7 +11,40 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("SESAME_DATABASE_URL")
+
+def construct_database_url():
+    required_vars = {
+        "SESAME_DATABASE_PROTOCOL": "postgresql",
+        "SESAME_DATABASE_USER": None,
+        "SESAME_DATABASE_PASSWORD": None,
+        "SESAME_DATABASE_HOST": None,
+        "SESAME_DATABASE_PORT": "5432",
+        "SESAME_DATABASE_NAME": "sesame",
+    }
+
+    missing_vars = [var for var, default in required_vars.items() if not os.getenv(var, default)]
+
+    if missing_vars:
+        raise ValueError(
+            f"Missing environment variables: {', '.join(missing_vars)}. Please set them in your .env file or environment variables."
+        )
+
+    db_url = (
+        f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+asyncpg://://"
+        f"{os.getenv('SESAME_DATABASE_USER', 'postgres')}:"
+        f"{os.getenv('SESAME_DATABASE_PASSWORD', 'postgres')}@"
+        f"{os.getenv('SESAME_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('SESAME_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"
+    )
+
+    if db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
+
+    return db_url
+
+
+DATABASE_URL = construct_database_url()
 
 if not DATABASE_URL:
     raise ValueError(
