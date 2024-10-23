@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
+from common.encryption import decrypt_with_secret
 from pipecat.processors.frameworks.rtvi import RTVIServiceConfig
 from pydantic import BaseModel, Field
 from sqlalchemy import (
@@ -15,6 +16,7 @@ from sqlalchemy import (
     Index,
     Integer,
     String,
+    UniqueConstraint,
     func,
     select,
 )
@@ -265,6 +267,69 @@ class Attachment(Base):
         return False
 
 
+class Service(Base):
+    __tablename__ = "services"
+
+    service_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    workspace_id = Column(
+        UUID(as_uuid=True), ForeignKey("workspaces.workspace_id", ondelete="CASCADE"), nullable=True
+    )
+    title = Column(String(255), nullable=False)
+    service_type = Column(String(255), nullable=False)
+    service_provider = Column(String(255), nullable=False)
+    api_key = Column(String, nullable=False)
+    options = Column(JSONB, nullable=True, default=dict)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "service_provider", name="unique_provider_per_workspace"),
+        UniqueConstraint(
+            "user_id",
+            "service_provider",
+            name="unique_provider_per_user",
+            info=dict(where="workspace_id IS NULL"),
+        ),
+        # Indexes
+        Index("idx_services_user_id", "user_id"),
+        Index("idx_services_workspace_id", "workspace_id"),
+        Index("idx_services_service_type", "service_type"),
+    )
+
+    @classmethod
+    async def get_services_by_user(cls, db: AsyncSession):
+        result = await db.execute(select(Service).order_by(Service.created_at.desc()))
+        return result.scalars().all()
+
+    @classmethod
+    async def get_services_by_provider(
+        cls, provider: str, db: AsyncSession, workspace_id: Optional[uuid.UUID] = None
+    ) -> Optional["Service"]:
+        result = await db.execute(
+            select(Service)
+            .where(Service.service_provider == provider)
+            .order_by(Service.updated_at.desc())
+        )
+        services = result.scalars().all()
+
+        if not services:
+            return None
+
+        if workspace_id:
+            workspace_service = next(
+                (service for service in services if service.workspace_id == workspace_id), None
+            )
+            service = workspace_service or services[0]
+        else:
+            service = services[0]
+
+        decrypted_key = decrypt_with_secret(service.api_key)
+        db.expunge(service)
+        service.api_key = decrypted_key
+        return service
+
+
 # ==========================
 # Pydantic Models
 # ==========================
@@ -389,6 +454,47 @@ class MessageWithConversationModel(BaseModel):
 
 class WorkspaceWithConversations(WorkspaceModel):
     conversations: List[ConversationModel]
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+class ServiceCreateModel(BaseModel):
+    title: str
+    service_type: str
+    service_provider: Optional[str] = None
+    api_key: str
+    workspace_id: Optional[uuid.UUID] = None
+    options: Optional[dict] = Field(default_factory=dict)
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+class ServiceUpdateModel(BaseModel):
+    title: Optional[str] = None
+    service_provider: Optional[str] = None
+    api_key: Optional[str] = None
+    options: Optional[dict] = None
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+
+class ServiceModel(BaseModel):
+    service_id: uuid.UUID
+    user_id: str
+    workspace_id: Optional[uuid.UUID]
+    title: str
+    service_type: str
+    service_provider: Optional[str]
+    api_key: str
+    options: Optional[dict]
+    created_at: datetime
+    updated_at: datetime
 
     model_config = {
         "from_attributes": True,

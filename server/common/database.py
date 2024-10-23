@@ -29,7 +29,7 @@ def construct_database_url():
             f"Missing environment variables: {', '.join(missing_vars)}. Please set them in your .env file or environment variables."
         )
 
-    db_url = (
+    return (
         f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+"
         f"{os.getenv('SESAME_DATABASE_ASYNC_DRIVER', 'asyncpg')}://"
         f"{os.getenv('SESAME_DATABASE_USER', 'postgres')}:"
@@ -38,8 +38,6 @@ def construct_database_url():
         f"{os.getenv('SESAME_DATABASE_PORT', '5432')}/"
         f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"
     )
-
-    return db_url
 
 
 DATABASE_URL = construct_database_url()

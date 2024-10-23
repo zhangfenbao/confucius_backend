@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import select, update
 from sqlalchemy.sql.expression import text
-from webapp.deps import get_db, get_user
+from webapp import get_db, get_user
 
 router = APIRouter(prefix="/users")
 

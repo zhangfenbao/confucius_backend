@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from webapp.deps import get_db, get_user
+from webapp import get_db, get_user
 
 router = APIRouter(prefix="/rtvi")
 
