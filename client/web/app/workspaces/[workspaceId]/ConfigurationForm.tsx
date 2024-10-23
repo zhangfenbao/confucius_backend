@@ -186,11 +186,9 @@ export default function ConfigurationForm({ workspace }: Props) {
                 name: "text_filter",
                 value: {
                   filter_code:
-                    formState.voiceSettings.interactionMode ===
-                    "conversational",
+                    formState.voiceSettings.interactionMode === "informational",
                   filter_tables:
-                    formState.voiceSettings.interactionMode ===
-                    "conversational",
+                    formState.voiceSettings.interactionMode === "informational",
                 },
               },
             ],
