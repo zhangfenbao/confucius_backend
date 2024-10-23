@@ -475,7 +475,6 @@ class ServiceCreateModel(BaseModel):
 
 class ServiceUpdateModel(BaseModel):
     title: Optional[str] = None
-    service_provider: Optional[str] = None
     api_key: Optional[str] = None
     options: Optional[dict] = None
 
