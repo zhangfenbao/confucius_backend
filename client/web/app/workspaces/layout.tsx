@@ -1,5 +1,6 @@
 "use server";
 
+import DeleteWorkspaceModal from "@/app/workspaces/DeleteWorkspaceModal";
 import ErrorPage from "@/components/ErrorPage";
 import { WorkspaceWithConversations } from "@/lib/sesameApi";
 import { getWorkspaces } from "@/lib/workspaces";
@@ -41,6 +42,8 @@ export default async function WorkspacesLayout({
           {children}
         </main>
       </div>
+
+      <DeleteWorkspaceModal />
     </div>
   );
 }

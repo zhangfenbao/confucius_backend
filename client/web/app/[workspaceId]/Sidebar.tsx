@@ -1,7 +1,9 @@
 "use client";
 
 import PageTransitionLink from "@/components/PageTransitionLink";
-import QueryClientProvider, { queryClient } from "@/components/QueryClientProvider";
+import QueryClientProvider, {
+  queryClient,
+} from "@/components/QueryClientProvider";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -13,7 +15,7 @@ import {
 import emitter from "@/lib/eventEmitter";
 import { ConversationModel, WorkspaceModel } from "@/lib/sesameApi";
 import { cn } from "@/lib/utils";
-import { Edit, LayoutGridIcon, LoaderCircleIcon } from "lucide-react";
+import { Edit, LoaderCircleIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Suspense,
@@ -96,20 +98,6 @@ export default function Sidebar({
             New chat
           </PageTransitionLink>
         )}
-
-        <PageTransitionLink
-          href="/workspaces"
-          className={cn(
-            "flex gap-3 px-3 py-2 rounded-lg transition-colors hover:bg-secondary-foreground/[.05]",
-            {
-              "bg-input": pathname.includes(`/workspaces`),
-            }
-          )}
-          onClick={() => setIsOpen(false)}
-        >
-          <LayoutGridIcon size={21} />
-          Workspaces
-        </PageTransitionLink>
       </div>
 
       <Separator />

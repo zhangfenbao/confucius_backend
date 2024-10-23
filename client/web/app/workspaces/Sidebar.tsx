@@ -1,6 +1,12 @@
 "use client";
 
 import PageTransitionLink from "@/components/PageTransitionLink";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -11,10 +17,10 @@ import {
 import emitter from "@/lib/eventEmitter";
 import { WorkspaceModel } from "@/lib/sesameApi";
 import { cn } from "@/lib/utils";
-import { SquarePenIcon, SquarePlusIcon } from "lucide-react";
+import { getWorkspaceStructuredData } from "@/lib/workspaces";
+import { EllipsisIcon, SquarePlusIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import WorkspaceSidebarCard from "./WorkspaceSidebarCard";
 
 interface SidebarProps {
   workspaces: WorkspaceModel[];
@@ -68,50 +74,68 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 
       <span className="text-xl font-semibold">Your Workspaces</span>
 
-      {hasWorkspaces ? (
-        workspaces.map((workspace) => (
-          <div
-            key={workspace.workspace_id}
-            className={cn(
-              "flex gap-0 items-center group max-w-full overflow-hidden",
-              {
-                "bg-input rounded-lg outline outline-4 outline-input":
-                  pathname.includes(workspace.workspace_id),
-              }
-            )}
-          >
-            <PageTransitionLink
-              href={`/${workspace.workspace_id}`}
-              className={cn(
-                "transition-all w-full group-focus-within:w-[calc(100%-40px)] group-hover:w-[calc(100%-40px)]",
-                {
-                  "w-[calc(100%-40px)]": pathname.includes(
-                    workspace.workspace_id
-                  ),
-                }
-              )}
-            >
-              <WorkspaceSidebarCard workspace={workspace} />
-            </PageTransitionLink>
-            <PageTransitionLink
-              href={`/workspaces/${workspace.workspace_id}`}
-              className={cn(
-                "overflow-hidden transition-all w-0 group-focus-within:w-10 group-hover:w-10 group-focus-within:px-2 group-hover:px-2 focus-visible:opacity-50 hover:opacity-50",
-                {
-                  "w-10 px-2": pathname.includes(workspace.workspace_id),
-                }
-              )}
-              onClick={() => setIsOpen(false)}
-            >
-              <SquarePenIcon size={24} />
-            </PageTransitionLink>
-          </div>
-        ))
-      ) : (
-        <h3 className="text-md font-bold mb-2 text-secondary-foreground">
-          No workspaces
-        </h3>
-      )}
+      <ul>
+        {hasWorkspaces ? (
+          workspaces.map((workspace) => {
+            const isActive = pathname.includes(workspace.workspace_id);
+            const structuredData = getWorkspaceStructuredData(workspace.config);
+            return (
+              <li
+                key={workspace.workspace_id}
+                className={cn(
+                  "grid grid-cols-[calc(100%-36px)_32px] gap-1 items-center p-2 overflow-hidden group",
+                  {
+                    "bg-input rounded-lg": isActive,
+                  }
+                )}
+              >
+                <PageTransitionLink href={`/workspaces/${workspace.workspace_id}`}>
+                  <div className="text-nowrap text-ellipsis overflow-hidden">
+                    {workspace.title}
+                  </div>
+                  <span className="capitalize text-xs font-mono">
+                    {structuredData.llm.service} (
+                    {structuredData.llm.model.label})
+                  </span>
+                </PageTransitionLink>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={cn(
+                      "flex-none group-hover:visible group-focus-within:visible aria-expanded:visible p-2",
+                      {
+                        invisible: !isActive,
+                      }
+                    )}
+                  >
+                    <EllipsisIcon size={16} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <PageTransitionLink
+                        href={`/${workspace.workspace_id}`}
+                      >
+                        Go to Workspace
+                      </PageTransitionLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => {
+                        emitter.emit("deleteWorkspace", workspace);
+                      }}
+                    >
+                      Delete…
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </li>
+            );
+          })
+        ) : (
+          <li className="text-md font-bold mb-2 text-secondary-foreground">
+            No workspaces
+          </li>
+        )}
+      </ul>
     </div>
   );
 
