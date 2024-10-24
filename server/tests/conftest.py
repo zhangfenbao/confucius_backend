@@ -1,7 +1,6 @@
 import os
 import uuid
 from typing import AsyncGenerator, Callable
-from urllib.parse import urlparse, urlunparse
 
 import psycopg2
 import pytest
@@ -12,99 +11,104 @@ from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from webapp.deps import get_db, get_user
+from webapp import get_db, get_user
 from webapp.main import app
 
 load_dotenv(override=True)
 
-DATABASE_URL = os.getenv("SESAME_DATABASE_ADMIN_URL")
-if not DATABASE_URL:
-    raise ValueError(
-        "SESAME_DATABASE_ADMIN_URL is not set. Please set it in your .env file or environment variables."
-    )
-
-if DATABASE_URL.startswith("postgresql://"):
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-
 TEST_DATABASE_NAME = "test_db"
+TEST_USER = "sesame"
+TEST_PASSWORD = "test"
 
 
-def get_database_url_with_new_db(db_name):
-    parsed_url = urlparse(DATABASE_URL)
-    new_path = f"/{db_name}"
-    return urlunparse(parsed_url._replace(path=new_path))
+def construct_database_url(db_name="", user=None, password=None):
+    required_vars = {
+        "SESAME_DATABASE_PROTOCOL": "postgresql",
+        "SESAME_DATABASE_ADMIN_USER": None,
+        "SESAME_DATABASE_ADMIN_PASSWORD": None,
+        "SESAME_DATABASE_HOST": None,
+        "SESAME_DATABASE_PORT": "5432",
+    }
 
+    missing_vars = [var for var, default in required_vars.items() if not os.getenv(var, default)]
 
-def load_schema_psycopg2(schema_file_path, db_url, username="test", password="testtest"):
-    """
-    Uses psycopg2 to apply the schema from a SQL file to the given database.
-    This avoids asyncpg's restriction on multiple commands in one statement.
-    """
-    parsed_url = urlparse(db_url)
-    host = parsed_url.hostname
-    port = parsed_url.port or 5432
-    user = parsed_url.username
-    db_password = parsed_url.password
-    db_name = parsed_url.path.lstrip("/")
+    if missing_vars:
+        raise ValueError(
+            f"Missing environment variables: {', '.join(missing_vars)}. Please set them in your .env file or environment variables."
+        )
 
-    connection = psycopg2.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=db_password,
-        dbname=db_name,
+    return (
+        f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+"
+        f"{os.getenv('SESAME_DATABASE_ASYNC_DRIVER', 'asyncpg')}://"
+        f"{user or os.getenv('SESAME_DATABASE_ADMIN_USER', 'postgres')}:"
+        f"{password or os.getenv('SESAME_DATABASE_ADMIN_PASSWORD', 'postgres')}@"
+        f"{os.getenv('SESAME_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('SESAME_DATABASE_PORT', '5432')}/{db_name}"
     )
-    cursor = connection.cursor()
-
-    with open(schema_file_path, "r") as schema_file:
-        schema_sql = schema_file.read()
-
-    schema_sql = schema_sql.replace("%%USER%%", "sesame")
-    schema_sql = schema_sql.replace("%%PASSWORD%%", "test")
-
-    cursor.execute(schema_sql)
-
-    user_id = uuid.uuid4().hex
-    ph = PasswordHasher()
-    password_hash = ph.hash(password)
-
-    insert_user_query = """
-    INSERT INTO users (user_id, username, password_hash)
-    VALUES (%s, %s, %s);
-    """
-    cursor.execute(insert_user_query, (user_id, username, password_hash))
-
-    connection.commit()
-
-    cursor.close()
-    connection.close()
 
 
 @pytest.fixture(scope="session")
 def create_test_database():
-    postgres_url = get_database_url_with_new_db("postgres")
-    sync_postgres_url = postgres_url.replace("postgresql+asyncpg://", "postgresql://")
+    async_postgres_url = construct_database_url()
+    sync_postgres_url = async_postgres_url.replace("postgresql+asyncpg://", "postgresql://")
 
     # Create test database
-    connection = psycopg2.connect(sync_postgres_url.replace("/postgres", "/postgres"))
+    try:
+        connection = psycopg2.connect(sync_postgres_url)
+        connection.autocommit = True
+        cursor = connection.cursor()
+
+        cursor.execute(f"DROP DATABASE IF EXISTS {TEST_DATABASE_NAME}")
+        cursor.execute(f"CREATE DATABASE {TEST_DATABASE_NAME}")
+
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        raise Exception(f"Unable to create schema: {str(e)}")
+
+    try:
+        connection = psycopg2.connect(
+            construct_database_url(TEST_DATABASE_NAME).replace(
+                "postgresql+asyncpg://", "postgresql://"
+            )
+        )
+        connection.autocommit = True
+        cursor = connection.cursor()
+
+        with open("../database/schema.sql", "r") as schema_file:
+            schema_sql = schema_file.read()
+
+        schema_sql = schema_sql.replace("%%USER%%", TEST_USER).replace(
+            "%%PASSWORD%%", TEST_PASSWORD
+        )
+
+        cursor.execute(schema_sql)
+
+        user_id = uuid.uuid4().hex
+        ph = PasswordHasher()
+        password_hash = ph.hash("testtest")
+
+        insert_user_query = """
+        INSERT INTO users (user_id, username, password_hash)
+        VALUES (%s, %s, %s);
+        """
+
+        cursor.execute(insert_user_query, (user_id, "test", password_hash))
+        cursor.close()
+        connection.close()
+    except Exception as e:
+        raise Exception(f"Unable to create schema: {str(e)}")
+
+    # Yield async db URL with user role
+    async_user_db_url = construct_database_url(TEST_DATABASE_NAME, TEST_USER, TEST_PASSWORD)
+    yield async_user_db_url
+
+    # Tear down (delete database and close)
+    connection = psycopg2.connect(sync_postgres_url)
     connection.autocommit = True
     cursor = connection.cursor()
 
-    cursor.execute(f"DROP DATABASE IF EXISTS {TEST_DATABASE_NAME}")
-    cursor.execute(f"CREATE DATABASE {TEST_DATABASE_NAME}")
-
-    cursor.close()
-    connection.close()
-
-    test_db_url = get_database_url_with_new_db(TEST_DATABASE_NAME)
-    load_schema_psycopg2("../database/schema.sql", test_db_url)
-
-    yield test_db_url
-
-    connection = psycopg2.connect(sync_postgres_url.replace("/postgres", "/postgres"))
-    connection.autocommit = True
-    cursor = connection.cursor()
-
+    # Terminate any existing sessions
     cursor.execute(f"""
     SELECT pg_terminate_backend(pg_stat_activity.pid)
     FROM pg_stat_activity
@@ -170,7 +174,9 @@ async def get_db_with_token(
     authenticated_user: Auth = await authenticate(token_str, db_session)
     if not authenticated_user:
         raise ValueError("Auth key cannot be empty or None.")
-    await db_session.execute(text(f"SET app.current_user_id = '{authenticated_user.user_id}'"))
+    await db_session.execute(
+        text("SELECT set_current_user_id(:user_id)"), {"user_id": authenticated_user.user_id}
+    )
     yield db_session, authenticated_user
 
 

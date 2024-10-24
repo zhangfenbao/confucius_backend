@@ -4,8 +4,9 @@ from typing import Any, AsyncGenerator, Tuple, cast
 from bots.context_storage import PersistentContextStorage
 from bots.http.frame_serializer import BotFrameSerializer
 from bots.rtvi import create_rtvi_processor
-from bots.service_factory import service_factory_get
 from bots.types import BotConfig, BotParams
+from common.models import Service
+from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
 from openai._types import NOT_GIVEN
 from pipecat.pipeline.pipeline import Pipeline
@@ -24,19 +25,35 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def http_bot_pipeline(
-    params: BotParams, config: BotConfig, messages, db: AsyncSession, language_code: str = "english"
+    params: BotParams,
+    config: BotConfig,
+    services: list[Service],
+    messages,
+    db: AsyncSession,
+    language_code: str = "english",
 ) -> Tuple[AsyncGenerator[Any, None], Any]:
-    api_keys = config.api_keys
-    services = config.services
-    service_options = config.service_options
-
     if "llm" not in services:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Service `llm` not available in provided services.",
         )
 
-    llm = cast(LLMService, service_factory_get(services["llm"], api_keys, service_options))
+    try:
+        llm = cast(
+            LLMService,
+            ServiceFactory.get_service(
+                services["llm"].service_provider,
+                ServiceType.ServiceLLM,
+                services["llm"].api_key,
+                services["llm"].options,
+            ),
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating LLM service: {e}",
+        )
 
     tools = NOT_GIVEN
     context = OpenAILLMContext(messages, tools)

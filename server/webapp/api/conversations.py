@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
-from webapp.deps import get_db
+from webapp import get_db
 
 router = APIRouter(prefix="/conversations")
 

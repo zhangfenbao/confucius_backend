@@ -1,13 +1,6 @@
 {
     "title": "My First Workspace",
     "config": {
-        "api_keys": {
-            "cartesia": "${CARTESIA_API_KEY}",
-            "daily": "${DAILY_API_KEY}",
-            "deepgram": "${DEEPGRAM_API_KEY}",
-            "openai": "${OPENAI_API_KEY}",
-            "together": "${TOGETHER_API_KEY}"
-        },
         "config": [
             {
                 "options": [
@@ -75,7 +68,8 @@
         "services": {
             "llm": "together",
             "stt": "deepgram",
-            "tts": "cartesia"
+            "tts": "cartesia",
+            "transport": "daily"
         }
     }
 }

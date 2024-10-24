@@ -278,6 +278,62 @@ USING (
 );
 
 -- ========================
+-- Services Table
+-- ========================
+CREATE TABLE IF NOT EXISTS services (
+    service_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR(64) NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    workspace_id UUID REFERENCES workspaces(workspace_id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    service_type VARCHAR(255) NOT NULL,
+    service_provider VARCHAR(255) NOT NULL,
+    api_key TEXT NOT NULL,
+    options JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- Prevent duplicate providers within the same workspace
+    CONSTRAINT unique_provider_per_workspace UNIQUE (workspace_id, service_provider)
+);
+
+-- Indexes for better query performance
+CREATE INDEX IF NOT EXISTS idx_services_user_id ON services(user_id);
+CREATE INDEX IF NOT EXISTS idx_services_workspace_id ON services(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_services_service_type ON services(service_type);
+
+-- Create a unique partial index for user-level services
+CREATE UNIQUE INDEX IF NOT EXISTS unique_provider_per_user 
+ON services (user_id, service_provider) 
+WHERE workspace_id IS NULL;
+
+-- Enable row-level security
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only view their own services
+CREATE POLICY services_select_policy
+ON services
+FOR SELECT
+USING (user_id = get_current_user_id());
+
+-- Policy: Users can only insert services for themselves
+CREATE POLICY services_insert_policy
+ON services
+FOR INSERT
+WITH CHECK (user_id = get_current_user_id());
+
+-- Policy: Users can only update their own services
+CREATE POLICY services_update_policy
+ON services
+FOR UPDATE
+USING (user_id = get_current_user_id());
+
+-- Policy: Users can only delete their own services
+CREATE POLICY services_delete_policy
+ON services
+FOR DELETE
+USING (user_id = get_current_user_id());
+
+
+-- ========================
 -- Functions and Triggers
 -- ========================
 -- Function to update 'updated_at' timestamp
@@ -309,6 +365,11 @@ CREATE TRIGGER trg_messages_updated_at
 BEFORE UPDATE OF content ON messages
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TRIGGER trg_services_updated_at
+BEFORE UPDATE ON services
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update 'workspaces.updated_at' when a new conversation is created
 CREATE OR REPLACE FUNCTION update_workspace_updated_at() 

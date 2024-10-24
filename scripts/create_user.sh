@@ -10,12 +10,13 @@ else
   exit 1
 fi
 
-# Check if SESAME_DATABASE_ADMIN_URL (for anon_user) is set
-if [ -z "$SESAME_DATABASE_ADMIN_URL" ]; then
-  echo "SESAME_DATABASE_ADMIN_URL is not set in .env file. Please set it."
+# Check for database credetials
+if [ -z "$SESAME_DATABASE_ADMIN_USER" ] || [ -z "$SESAME_DATABASE_ADMIN_PASSWORD" ] || [ -z "$SESAME_DATABASE_NAME" ] || [ -z "$SESAME_DATABASE_HOST" ] || [ -z "$SESAME_DATABASE_PORT" ]; then
+  echo "One or more required environment variables are not set in .env file. Please set them."
   exit 1
 fi
 
+SESAME_DATABASE_ADMIN_URL="$SESAME_DATABASE_PROTOCOL://$SESAME_DATABASE_ADMIN_USER:$SESAME_DATABASE_ADMIN_PASSWORD@$SESAME_DATABASE_HOST:$SESAME_DATABASE_PORT/$SESAME_DATABASE_NAME"
 
 # Prompt for username
 while true; do
