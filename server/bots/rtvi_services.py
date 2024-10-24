@@ -1,5 +1,6 @@
 from typing import List
 
+from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import (
     ErrorFrame,
     LLMUpdateSettingsFrame,
@@ -15,7 +16,6 @@ from pipecat.processors.frameworks.rtvi import (
     RTVIServiceOption,
     RTVIServiceOptionConfig,
 )
-from pipecat.vad.vad_analyzer import VADParams
 
 
 async def register_rtvi_services(rtvi: RTVIProcessor, user_aggregator: LLMUserContextAggregator):

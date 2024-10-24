@@ -140,9 +140,15 @@ async def connect(
             detail="Missing transport service configuration",
         )
 
-    transport_api_key = services.get("transport").api_key
-    transport_api_url = (
-        services.get("transport").options.get("api_url") or "https://api.daily.co/v1"
+    logger.debug("Retrieving transport service configuration from service factory")
+
+    transport_service = services.get("transport")
+    transport_api_key = transport_service.api_key
+
+    logger.info(
+        ServiceFactory.get_service_defintion(
+            ServiceType.ServiceTransport, transport_service.service_provider
+        )
     )
 
     if not transport_api_key:
@@ -150,6 +156,17 @@ async def connect(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Missing API key for transport service",
+        )
+
+    transport_api_url = ServiceFactory.get_service_defintion(
+        ServiceType.ServiceTransport, transport_service.service_provider
+    ).default_params.get("api_url")
+
+    if not transport_api_url:
+        logger.error("Missing API URL for transport service")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Missing API URL for transport service",
         )
 
     room, user_token, bot_token = await voice_bot_create(transport_api_key, transport_api_url)

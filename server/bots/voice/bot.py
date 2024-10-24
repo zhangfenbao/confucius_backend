@@ -29,10 +29,9 @@ async def _cleanup(room_url: str, config: BotConfig, services: list[Service]):
         if debug_room:
             return
 
-        transport_api_key = services.get("transport").api_key
-        transport_api_url = (
-            services.get("transport").options.get("api_url") or "https://api.daily.co/v1"
-        )
+        transport_service = services.get("transport")
+        transport_api_key = transport_service.api_key
+        transport_api_url = transport_service.options.get("api_url") or "https://api.daily.co/v1"
 
         helper = DailyRESTHelper(
             daily_api_key=transport_api_key,

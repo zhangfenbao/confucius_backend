@@ -302,7 +302,11 @@ class Service(Base):
     @classmethod
     async def get_services_by_user(cls, db: AsyncSession):
         result = await db.execute(select(Service).order_by(Service.created_at.desc()))
-        return result.scalars().all()
+        services = result.scalars().all()
+        for service in services:
+            service.api_key = "hidden"
+
+        return services
 
     @classmethod
     async def get_services_by_provider(

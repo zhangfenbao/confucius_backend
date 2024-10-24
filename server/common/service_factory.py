@@ -1,43 +1,24 @@
 from enum import Enum
-from typing import Any, Dict, List, Mapping, Type
+from typing import Any, Dict, List, Mapping
 
+from common.errors import InvalidServiceTypeError, UnsupportedServiceError
 from pipecat.services.ai_services import AIService
-from pipecat.services.anthropic import AnthropicLLMService
-from pipecat.services.azure import AzureTTSService
-from pipecat.services.cartesia import CartesiaTTSService
-from pipecat.services.deepgram import DeepgramSTTService
-from pipecat.services.elevenlabs import ElevenLabsTTSService
-from pipecat.services.openai import OpenAILLMService, OpenAITTSService
-from pipecat.services.playht import PlayHTTTSService
-from pipecat.services.together import TogetherLLMService
-from pipecat.transports.services.daily import DailyTransport
 from pipecat.utils.text.markdown_text_filter import MarkdownTextFilter
+from pydantic import BaseModel
 
 
-class ServiceFactoryError(Exception):
-    """Base exception for service configuration errors"""
+class ServiceDefinition(BaseModel):
+    class_path: str
+    type: str
+    requires_api_key: bool
+    optional_params: List[str]
+    required_params: List[str]
+    default_params: Dict[str, Any]
 
-    pass
-
-
-class UnsupportedServiceError(ServiceFactoryError):
-    def __init__(self, service_name: str, service_type: str, valid_services: list[str]):
-        self.service_name = service_name
-        self.service_type = service_type
-        self.valid_services = valid_services
-        super().__init__(
-            f"Service '{service_name}' is not a valid {service_type} service. "
-            f"Valid {service_type} services are: {', '.join(valid_services)}"
-        )
-
-
-class InvalidServiceTypeError(ServiceFactoryError):
-    def __init__(self, service_type: str, valid_types: list[str]):
-        self.service_type = service_type
-        self.valid_types = valid_types
-        super().__init__(
-            f"Invalid service type '{service_type}'. " f"Must be one of: {', '.join(valid_types)}"
-        )
+    model_config = {
+        "arbitrary_types_allowed": True,
+        "extra": "forbid",
+    }
 
 
 class ServiceType(Enum):
@@ -52,16 +33,16 @@ class ServiceType(Enum):
 class ServiceFactory:
     """A factory class for creating and managing AI services."""
 
-    _services: Dict[tuple[str, ServiceType], Dict[str, Any]] = {}
+    _services: Dict[tuple[str, ServiceType], ServiceDefinition] = {}
 
     @classmethod
     def register_service(
         cls,
-        service_class: Type[AIService],
+        service_class: str,
         service_name: str,
         service_type: ServiceType,
         requires_api_key: bool = True,
-        default_params: Dict[str, Any] = None,  # Changed from service_options
+        default_params: Dict[str, Any] = None,
         optional_params: List[str] = None,
         required_params: List[str] = None,
     ) -> None:
@@ -69,7 +50,7 @@ class ServiceFactory:
         Register a new service with the factory.
 
         Args:
-            service_class: The class to instantiate for this service
+            service_class: String of module / class to instantiate for this service (lazy loaded)
             service_name: String identifier for the service
             service_type: Type of service (STT, LLM, TTS)
             requires_api_key: Whether this service requires an API key
@@ -83,14 +64,14 @@ class ServiceFactory:
                 f"Service '{service_name}' of type {service_type.value} is already registered"
             )
 
-        cls._services[service_key] = {
-            "class": service_class,
-            "type": service_type,
-            "requires_api_key": requires_api_key,
-            "optional_params": optional_params or [],
-            "required_params": required_params or [],
-            "default_params": default_params or {},
-        }
+        cls._services[service_key] = ServiceDefinition(
+            class_path=service_class,
+            type=service_type.value,
+            requires_api_key=requires_api_key,
+            optional_params=optional_params or [],
+            required_params=required_params or [],
+            default_params=default_params or {},
+        )
 
     @classmethod
     def get_service(
@@ -110,19 +91,18 @@ class ServiceFactory:
             )
 
         service_info = cls._services[service_key]
-        service_class = service_info["class"]
 
         # Start with default params
-        kwargs = service_info["default_params"].copy()
+        kwargs = service_info.default_params.copy()
 
         # Handle API key
-        if service_info["requires_api_key"]:
+        if service_info.requires_api_key:
             if not api_key:
                 raise ValueError(f"API key required for service '{service_name}'")
             kwargs["api_key"] = api_key
 
         # Check required parameters
-        for param in service_info["required_params"]:
+        for param in service_info.required_params:
             if param not in service_options and param not in kwargs:
                 raise ValueError(
                     f"Required parameter '{param}' missing for service '{service_name}'"
@@ -131,7 +111,7 @@ class ServiceFactory:
                 kwargs[param] = service_options[param]
 
         # Add optional parameters if provided
-        for param in service_info["optional_params"]:
+        for param in service_info.optional_params:
             if param in service_options:
                 kwargs[param] = service_options[param]
 
@@ -140,7 +120,23 @@ class ServiceFactory:
             if key not in kwargs and key != "api_key":
                 kwargs[key] = value
 
+        # Instantiate the service
+        module_name, class_name = service_info.class_path.rsplit(":", 1)
+        module = __import__(module_name, fromlist=[class_name])
+        service_class = getattr(module, class_name)
+
         return service_class(**kwargs)
+
+    @classmethod
+    def get_service_defintion(
+        cls, service_type: ServiceType, service_name: str
+    ) -> ServiceDefinition:
+        service_key = (service_name, service_type)
+        if service_key not in cls._services:
+            raise ValueError(
+                f"Service '{service_name}' of type {service_type.value} is not registered"
+            )
+        return cls._services[service_key]
 
     @classmethod
     def get_available_services(cls, service_type: ServiceType = None) -> List[str]:
@@ -186,7 +182,7 @@ class ServiceFactory:
 
 # Transport services
 ServiceFactory.register_service(
-    DailyTransport,
+    "pipecat.transports.services.daily:DailyTransport",
     "daily",
     ServiceType.ServiceTransport,
     default_params={"api_url": "https://api.daily.co/v1"},
@@ -194,40 +190,45 @@ ServiceFactory.register_service(
 
 # STT services
 ServiceFactory.register_service(
-    DeepgramSTTService,
+    "pipecat.services.deepgram:DeepgramSTTService",
     "deepgram",
     ServiceType.ServiceSTT,
 )
 
 # LLM services
 ServiceFactory.register_service(
-    OpenAILLMService,
+    "pipecat.services.openai:OpenAILLMService",
     "custom_llm",
     ServiceType.ServiceLLM,
     optional_params=["base_url"],
     required_params=["model"],
 )
 
-ServiceFactory.register_service(
-    OpenAILLMService, "openai", ServiceType.ServiceLLM, optional_params=["model"]
-)
 
 ServiceFactory.register_service(
-    AnthropicLLMService,
+    "pipecat.services.openai:OpenAILLMService",
+    "openai",
+    ServiceType.ServiceLLM,
+    optional_params=["model"],
+)
+
+
+ServiceFactory.register_service(
+    "pipecat.services.anthropic:AnthropicLLMService",
     "anthropic",
     ServiceType.ServiceLLM,
     optional_params=["model"],
 )
 
 ServiceFactory.register_service(
-    TogetherLLMService,
+    "pipecat.services.together:TogetherLLMService",
     "together",
     ServiceType.ServiceLLM,
     optional_params=["model"],
 )
 
 ServiceFactory.register_service(
-    OpenAILLMService,
+    "pipecat.services.openai:OpenAILLMService",
     "groq",
     ServiceType.ServiceLLM,
     default_params={"base_url": "https://api.groq.com/openai/v1"},
@@ -236,7 +237,7 @@ ServiceFactory.register_service(
 
 # TTS services
 ServiceFactory.register_service(
-    CartesiaTTSService,
+    "pipecat.services.cartesia:CartesiaTTSService",
     "cartesia",
     ServiceType.ServiceTTS,
     optional_params=["voice_id"],
@@ -247,7 +248,7 @@ ServiceFactory.register_service(
 )
 
 ServiceFactory.register_service(
-    ElevenLabsTTSService,
+    "pipecat.services.elevenlabs:ElevenLabsTTSService",
     "elevenlabs",
     ServiceType.ServiceTTS,
     optional_params=["voice_id"],
@@ -258,7 +259,7 @@ ServiceFactory.register_service(
 )
 
 ServiceFactory.register_service(
-    PlayHTTTSService,
+    "pipecat.services.playht:PlayHTTTSService",
     "playht",
     ServiceType.ServiceTTS,
     required_params=["user_id"],
@@ -270,7 +271,7 @@ ServiceFactory.register_service(
 )
 
 ServiceFactory.register_service(
-    AzureTTSService,
+    "pipecat.services.azure:AzureTTSService",
     "azure",
     ServiceType.ServiceTTS,
     optional_params=["voice_id"],
@@ -281,7 +282,7 @@ ServiceFactory.register_service(
 )
 
 ServiceFactory.register_service(
-    OpenAITTSService,
+    "pipecat.services.openai:OpenAITTSService",
     "openai",
     ServiceType.ServiceTTS,
     optional_params=["sample_rate"],
