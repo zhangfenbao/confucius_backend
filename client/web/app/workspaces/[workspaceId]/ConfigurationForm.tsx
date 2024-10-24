@@ -1,26 +1,18 @@
 "use client";
 
 import PageRefresher from "@/components/PageRefresher";
+import PageTransitionLink from "@/components/PageTransitionLink";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
+import emitter from "@/lib/eventEmitter";
 import { LLMMessageRole, LLMProvider } from "@/lib/llm";
 import { MessageCreateModel, WorkspaceModel } from "@/lib/sesameApi";
 import { InteractionMode, TTSService, voiceOptions } from "@/lib/voice";
 import { getWorkspaceStructuredData } from "@/lib/workspaces";
 import equal from "fast-deep-equal";
-import { LoaderCircle, SaveIcon } from "lucide-react";
+import { ArrowRightIcon, LoaderCircle, SaveIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useMemo, useState } from "react";
 import APIKeysSection from "./APIKeysSection";
@@ -118,6 +110,7 @@ export default function ConfigurationForm({ workspace }: Props) {
   const handlePageRefresh = useCallback(() => {
     if (!hasLocalChanges || workspace.workspace_id === "new") return;
     toast({
+      duration: 60000,
       title: "Workspace configuration changed",
       description:
         "This workspace's configuration has changed and there are unsaved changes.",
@@ -192,10 +185,12 @@ export default function ConfigurationForm({ workspace }: Props) {
               {
                 name: "text_filter",
                 value: {
-                  filter_code: formState.voiceSettings.interactionMode === "conversational",
-                  filter_tables: formState.voiceSettings.interactionMode === "conversational",
-                }
-              }
+                  filter_code:
+                    formState.voiceSettings.interactionMode === "informational",
+                  filter_tables:
+                    formState.voiceSettings.interactionMode === "informational",
+                },
+              },
             ],
           },
           {
@@ -261,6 +256,7 @@ export default function ConfigurationForm({ workspace }: Props) {
       }
     } catch (e: unknown) {
       toast({
+        duration: 60000,
         variant: "destructive",
         title: "Could not save workspace configuration",
         description: (e as Error).toString(),
@@ -270,25 +266,21 @@ export default function ConfigurationForm({ workspace }: Props) {
     }
   };
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const handleClickDelete = async () => {
-    setIsDeleting(true);
-    const response = await fetch("/api/delete-workspace", {
-      method: "DELETE",
-      body: JSON.stringify({
-        workspace_id: workspace.workspace_id,
-      }),
-    });
-    if (response.ok) {
-      push(`/workspaces`);
-      refresh();
-    } else {
-      setIsDeleting(false);
-    }
-  };
-
   return (
-    <form className="animate-appear p-4 flex flex-col gap-6" onSubmit={handleSubmit}>
+    <form
+      className="animate-appear p-4 flex flex-col gap-6"
+      onSubmit={handleSubmit}
+    >
+      <PageTransitionLink href={`/${workspace.workspace_id}`}>
+        <Button className="group gap-1 w-full" variant="secondary">
+          <span>Go to Workspace</span>
+          <ArrowRightIcon
+            className="transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1"
+            size={16}
+          />
+        </Button>
+      </PageTransitionLink>
+      <Separator />
       <WorkspaceOptionsSection
         formState={formState}
         setFormState={setFormState}
@@ -319,38 +311,15 @@ export default function ConfigurationForm({ workspace }: Props) {
             <h3 className="text-lg font-semibold text-destructive">
               Danger zone
             </h3>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive">Delete workspace</Button>
-              </DialogTrigger>
-              <DialogContent noCloseButton={isDeleting}>
-                <DialogHeader>
-                  <DialogTitle>Delete workspace</DialogTitle>
-                  <DialogDescription>
-                    Do you really want to delete the workspace &ldquo;
-                    {workspace.title}&rdquo;?
-                    <br />
-                    This will also delete all associated conversations.
-                  </DialogDescription>
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button disabled={isDeleting} variant="secondary">
-                        Cancel
-                      </Button>
-                    </DialogClose>
-                    <Button
-                      className="gap-2"
-                      disabled={isDeleting}
-                      onClick={handleClickDelete}
-                      variant="destructive"
-                    >
-                      {isDeleting && <LoaderCircle className="animate-spin" />}
-                      Delete
-                    </Button>
-                  </DialogFooter>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() =>
+                emitter.emit("deleteWorkspace", workspace as WorkspaceModel)
+              }
+              type="button"
+              variant="destructive"
+            >
+              Delete workspace
+            </Button>
           </section>
         </>
       )}

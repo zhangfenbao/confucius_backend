@@ -1,9 +1,11 @@
 "use client";
 
+import { WorkspaceModel } from "@/lib/sesameApi";
 import { EventEmitter } from "events";
 
 interface EventMap {
   deleteConversation: [conversationId: string];
+  deleteWorkspace: [workspace: WorkspaceModel];
   disabledInSandboxMode: [];
   showChatMessages: [];
   showPageTransitionLoader: [];

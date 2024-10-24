@@ -1,6 +1,10 @@
 import equal from "fast-deep-equal";
 import { defaultModel, getLLMModel, LLMProvider } from "./llm";
-import { MessageCreateModel, WorkspaceModel, WorkspaceWithConversations } from "./sesameApi";
+import {
+  MessageCreateModel,
+  WorkspaceModel,
+  WorkspaceWithConversations,
+} from "./sesameApi";
 import { getApiClient } from "./sesameApiClient";
 import { defaultVoice, InteractionMode, TTSService } from "./voice";
 
@@ -189,9 +193,12 @@ export function getWorkspaceStructuredData(
     (o) => o.name === "text_filter"
   );
 
-  const interactionMode = equal(ttsTextFilter?.value, defaultTextFilter)
-    ? "informational"
-    : "conversational";
+  const interactionMode: InteractionMode = equal(
+    ttsTextFilter?.value,
+    defaultTextFilter
+  )
+    ? "conversational"
+    : "informational";
 
   return {
     apiKeys: workspaceConfig?.api_keys ?? {},
