@@ -5,6 +5,7 @@ from bots.context_storage import PersistentContextStorage
 from bots.http.frame_serializer import BotFrameSerializer
 from bots.rtvi import create_rtvi_processor
 from bots.types import BotConfig, BotParams
+from common.models import Service
 from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
 from openai._types import NOT_GIVEN
@@ -26,7 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def http_bot_pipeline(
     params: BotParams,
     config: BotConfig,
-    services,
+    services: list[Service],
     messages,
     db: AsyncSession,
     language_code: str = "english",

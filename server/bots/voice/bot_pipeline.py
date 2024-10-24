@@ -2,10 +2,12 @@ from typing import cast
 
 from bots.context_storage import PersistentContextStorage
 from bots.rtvi import create_rtvi_processor
-from bots.service_factory import service_factory_get
 from bots.types import BotCallbacks, BotConfig, BotParams
-from common.models import Conversation
+from common.models import Conversation, Service
+from common.service_factory import ServiceFactory, ServiceType
 from openai._types import NOT_GIVEN
+from pipecat.audio.vad.silero import SileroVADAnalyzer
+from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.processors.frame_processor import FrameDirection
 from pipecat.processors.frameworks.rtvi import (
@@ -17,27 +19,22 @@ from pipecat.processors.frameworks.rtvi import (
 from pipecat.services.ai_services import (
     LLMService,
     OpenAILLMContext,
-    STTService,
-    TTSService,
 )
 from pipecat.transports.services.daily import DailyParams, DailyTransport
-from pipecat.vad.silero import SileroVADAnalyzer
-from pipecat.vad.vad_analyzer import VADParams
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def voice_bot_pipeline(
     params: BotParams,
     config: BotConfig,
+    services: list[Service],
     callbacks: BotCallbacks,
     room_url: str,
     room_token: str,
     db: AsyncSession,
 ) -> Pipeline:
-    api_keys = config.api_keys
-    services = config.services
-    service_options = config.service_options
-
+    if "transport" not in services:
+        raise Exception("Service `llm` not available in provided services.")
     if "llm" not in services:
         raise Exception("Service `llm` not available in provided services.")
     if "tts" not in services:
@@ -45,9 +42,33 @@ async def voice_bot_pipeline(
     if "stt" not in services:
         raise Exception("Service `stt` not available in provided services.")
 
-    llm = cast(LLMService, service_factory_get(services["llm"], api_keys, service_options))
-    tts = cast(TTSService, service_factory_get(services["tts"], api_keys, service_options))
-    stt = cast(STTService, service_factory_get(services["stt"], api_keys, service_options))
+    llm = cast(
+        LLMService,
+        ServiceFactory.get_service(
+            services["llm"].service_provider,
+            ServiceType.ServiceLLM,
+            services["llm"].api_key,
+            services["llm"].options,
+        ),
+    )
+    tts = cast(
+        LLMService,
+        ServiceFactory.get_service(
+            services["tts"].service_provider,
+            ServiceType.ServiceTTS,
+            services["tts"].api_key,
+            services["tts"].options,
+        ),
+    )
+    stt = cast(
+        LLMService,
+        ServiceFactory.get_service(
+            services["stt"].service_provider,
+            ServiceType.ServiceSTT,
+            services["stt"].api_key,
+            services["stt"].options,
+        ),
+    )
 
     # Daily API is used in dial-in case only
     transport = DailyTransport(

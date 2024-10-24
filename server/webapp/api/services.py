@@ -34,7 +34,7 @@ async def get_services(
     db: AsyncSession = Depends(get_db),
     user: Auth = Depends(get_user),
 ):
-    services = await Service.get_services_by_user(user.user_id, db)
+    services = await Service.get_services_by_user(db)
 
     return [ServiceModel.model_validate(service) for service in services]
 

@@ -119,34 +119,51 @@ async def stream_action(
 async def connect(
     params: BotParams, db: AsyncSession = Depends(get_db), user: Auth = Depends(get_user)
 ):
+    logger.debug(f"Connecting to conversation {params.conversation_id}")
     if not params.conversation_id:
+        logger.error("No conversation ID passed to connect")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Missing conversation_id in params",
         )
 
     config, conversation = await _get_config_and_conversation(params.conversation_id, db)
+    services = await _validate_services(db, config, conversation)
 
-    daily_api_key = config.api_keys.get("daily", os.getenv("DAILY_API_KEY", ""))
+    logger.debug(
+        "Connecting with services: " + ", ".join(f"{k}: {v}" for k, v in config.services.items())
+    )
 
-    if not daily_api_key:
+    if not services.get("transport"):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Missing Daily API key",
+            detail="Missing transport service configuration",
         )
 
-    room, user_token, bot_token = await voice_bot_create(daily_api_key)
+    transport_api_key = services.get("transport").api_key
+    transport_api_url = (
+        services.get("transport").options.get("api_url") or "https://api.daily.co/v1"
+    )
+
+    if not transport_api_key:
+        logger.error("Missing API key for transport service")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Missing API key for transport service",
+        )
+
+    room, user_token, bot_token = await voice_bot_create(transport_api_key, transport_api_url)
 
     # Check if we are running on Modal and launch the voice bot as a separate function
     if os.getenv("MODAL_ENV"):
         logger.debug("Spawning voice bot on Modal")
         from app import launch_bot_modal
 
-        launch_bot_modal.spawn(user, params, config, room.url, bot_token)
+        launch_bot_modal.spawn(user, params, config, services, room.url, bot_token)
         # launch_bot_modal.spawn("pew")  # user, params, config, room.url, bot_token)
     else:
         logger.debug("Spawning voice bot as process")
-        voice_bot_launch(user, params, config, room.url, bot_token)
+        voice_bot_launch(user, params, config, services, room.url, bot_token)
 
     return JSONResponse(
         {

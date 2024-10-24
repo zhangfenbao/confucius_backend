@@ -10,6 +10,7 @@ from pipecat.services.elevenlabs import ElevenLabsTTSService
 from pipecat.services.openai import OpenAILLMService, OpenAITTSService
 from pipecat.services.playht import PlayHTTTSService
 from pipecat.services.together import TogetherLLMService
+from pipecat.transports.services.daily import DailyTransport
 from pipecat.utils.text.markdown_text_filter import MarkdownTextFilter
 
 
@@ -45,6 +46,7 @@ class ServiceType(Enum):
     ServiceSTT = "stt"  # Speech to Text
     ServiceLLM = "llm"  # Language Models
     ServiceTTS = "tts"  # Text to Speech
+    ServiceTransport = "transport"  # Transport
 
 
 class ServiceFactory:
@@ -182,13 +184,20 @@ class ServiceFactory:
         return True
 
 
+# Transport services
+ServiceFactory.register_service(
+    DailyTransport,
+    "daily",
+    ServiceType.ServiceTransport,
+    default_params={"api_url": "https://api.daily.co/v1"},
+)
+
 # STT services
 ServiceFactory.register_service(
     DeepgramSTTService,
     "deepgram",
     ServiceType.ServiceSTT,
 )
-
 
 # LLM services
 ServiceFactory.register_service(
