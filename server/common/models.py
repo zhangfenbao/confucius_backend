@@ -5,6 +5,8 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from common.encryption import decrypt_with_secret
+from common.errors import ServiceConfigurationError
+from common.service_factory import ServiceType
 from pipecat.processors.frameworks.rtvi import RTVIServiceConfig
 from pydantic import BaseModel, Field
 from sqlalchemy import (
@@ -328,6 +330,86 @@ class Service(Base):
         db.expunge(service)
         service.api_key = decrypted_key
         return service
+
+    @classmethod
+    async def get_services_by_type_map(
+        cls,
+        workspace_services: dict[str, str],
+        db: AsyncSession,
+        workspace_id: Optional[uuid.UUID] = None,
+        service_type_filter: Optional[ServiceType] = None,
+    ) -> dict[str, "Service"]:
+        if service_type_filter:
+            service_type_str = service_type_filter.value
+            provider = workspace_services.get(service_type_str)
+            conditions = [
+                Service.service_type == service_type_str,
+                Service.service_provider == provider if provider else True,
+            ]
+            services_to_check = {service_type_str: workspace_services.get(service_type_str)}
+        else:
+            conditions = [
+                Service.service_type.in_(workspace_services.keys()),
+                Service.service_provider.in_(workspace_services.values()),
+            ]
+            services_to_check = workspace_services
+
+        query = select(Service).where(*conditions).order_by(Service.updated_at.desc())
+
+        result = await db.execute(query)
+        services = result.scalars().all()
+
+        # Group services by type
+        services_by_type: dict[str, list[Service]] = {}
+        for service in services:
+            if service.service_provider == workspace_services[service.service_type]:
+                if service.service_type not in services_by_type:
+                    services_by_type[service.service_type] = []
+                services_by_type[service.service_type].append(service)
+
+        # Build final result prioritizing workspace services
+        final_services: dict[str, Service] = {}
+        missing_types = []
+
+        for service_type, provider in services_to_check.items():
+            services_of_type = services_by_type.get(service_type, [])
+
+            if not services_of_type:
+                missing_types.append(f"{service_type} ({provider})")
+                continue
+
+            # Try to find workspace-specific service first
+            workspace_service = None
+            user_service = None
+
+            for service in services_of_type:
+                if service.workspace_id == workspace_id:
+                    workspace_service = service
+                    break
+                elif service.workspace_id is None:
+                    user_service = service
+
+            # Use workspace service if found, otherwise fall back to user service
+            if workspace_service:
+                service = workspace_service
+            elif user_service:
+                service = user_service
+            else:
+                missing_types.append(f"{service_type} ({provider})")
+                continue
+
+            # Decrypt API key before returning
+            decrypted_key = decrypt_with_secret(service.api_key)
+            db.expunge(service)
+            service.api_key = decrypted_key
+            final_services[service_type] = service
+
+        if missing_types:
+            raise ServiceConfigurationError(
+                "Required services not found", missing_services=missing_types
+            )
+
+        return final_services
 
 
 # ==========================

@@ -3,6 +3,7 @@ from uuid import UUID
 from common.auth import Auth
 from common.encryption import encrypt_with_secret
 from common.models import Service, ServiceCreateModel, ServiceModel, ServiceUpdateModel
+from common.service_factory import ServiceFactory, ServiceType
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +11,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from webapp import get_db, get_user
 
 router = APIRouter(prefix="/services")
+
+
+@router.get("/supported", response_model=list[str])
+async def get_supported_services(
+    service_type: str | None = None,
+):
+    if service_type is None:
+        return ServiceFactory.get_available_services()
+    try:
+        service_type_enum = ServiceType[f"Service{service_type.upper()}"]
+        return ServiceFactory.get_available_services(service_type_enum)
+    except KeyError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid service type. Must be one of: {', '.join(type.name[7:].lower() for type in ServiceType)}",
+        )
 
 
 @router.get("", response_model=list[ServiceModel])
