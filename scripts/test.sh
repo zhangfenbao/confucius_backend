@@ -26,30 +26,10 @@ SESAME_USER_ROLE=$SESAME_DATABASE_USER
 # Create a database URL 
 SESAME_DATABASE_ADMIN_URL="$SESAME_DATABASE_PROTOCOL://$SESAME_DATABASE_ADMIN_USER:$SESAME_DATABASE_ADMIN_PASSWORD@$SESAME_DATABASE_HOST:$SESAME_DATABASE_PORT/$SESAME_DATABASE_NAME"
 
-# Generate a random password for the anon user
-ANON_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9')
-
-if [ -z "$ANON_USER_PASSWORD" ]; then
-  echo "Failed to generate password for anon_user."
-  exit 1
-fi
-
-# Run schema with password substitution directly, passing the result to psql
-echo "Running schema on $SESAME_DATABASE_ADMIN_URL..."
-
-# Replace the placeholder in the schema file with the generated password
-sed "s/%%PASSWORD%%/$ANON_USER_PASSWORD/g; s/%%USER%%/$SESAME_DATABASE_USER/g" "$SCHEMA_FILE" | psql "$SESAME_DATABASE_ADMIN_URL"
-
-# Check the result of the command
-if [ $? -eq 0 ]; then
-  echo "Schema successfully applied to the database!"
-else
-  echo "Error applying schema to the database."
-  exit 1
-fi
-
 # Query for the actual role name that was created
 CREATED_ROLE_USERNAME=$(psql "$SESAME_DATABASE_ADMIN_URL" -t -c "SELECT rolname FROM pg_roles WHERE rolname LIKE '${SESAME_USER_ROLE}%' ORDER BY rolname DESC LIMIT 1;")
+echo $CREATED_ROLE_USERNAME
+
 CREATED_ROLE_USERNAME=$(echo $ACTUAL_ROLE | xargs)  # Trim whitespace
 
 if [ -z "$CREATED_ROLE_USERNAME" ]; then
