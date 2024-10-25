@@ -45,8 +45,17 @@ else
   exit 1
 fi
 
+# Query for the actual role name that was created
+ACTUAL_ROLE=$(psql "$SESAME_DATABASE_ADMIN_URL" -t -c "SELECT rolname FROM pg_roles WHERE rolname LIKE '${SESAME_USER_ROLE}%' ORDER BY rolname DESC LIMIT 1;")
+ACTUAL_ROLE=$(echo $ACTUAL_ROLE | xargs)  # Trim whitespace
+
+if [ -z "$ACTUAL_ROLE" ]; then
+  echo "Warning: Could not find the created role."
+  ACTUAL_ROLE=$SESAME_USER_ROLE
+fi
+
 echo "--------------------------------------------------"
-echo -e "\033[32mUpdate your server/.env to include:"
-echo -e "SESAME_DATABASE_USER=\"${SESAME_USER_ROLE}\""
+echo -e "\033[32mUpdate your sesame/.env to include:"
+echo -e "SESAME_DATABASE_USER=\"${ACTUAL_ROLE}\""
 echo -e "SESAME_DATABASE_PASSWORD=\"${ANON_USER_PASSWORD}\"\033[0m"
 echo "--------------------------------------------------"
