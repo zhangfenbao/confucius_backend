@@ -48,7 +48,7 @@ def construct_database_url(db_name="", user=None, password=None):
 
 
 @pytest.fixture(scope="session")
-def create_test_database():
+def create_test_schema():
     async_postgres_url = construct_database_url()
     sync_postgres_url = async_postgres_url.replace("postgresql+asyncpg://", "postgresql://")
 
@@ -75,7 +75,7 @@ def create_test_database():
         connection.autocommit = True
         cursor = connection.cursor()
 
-        with open("../database/schema.sql", "r") as schema_file:
+        with open("../schema/postgres.sql", "r") as schema_file:
             schema_sql = schema_file.read()
 
         schema_sql = schema_sql.replace("%%USER%%", TEST_USER).replace(
@@ -122,8 +122,8 @@ def create_test_database():
 
 
 @pytest.fixture(scope="session")
-async def db_engine(create_test_database):
-    engine = create_async_engine(create_test_database, echo=False)
+async def db_engine(create_test_schema):
+    engine = create_async_engine(create_test_schema, echo=False)
     yield engine
     await engine.dispose()
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Load environment variables from .env file
-ENV_FILE="server/.env"
+ENV_FILE="sesame/.env"
 
 if [ -f "$ENV_FILE" ]; then
   export $(grep -v '^#' "$ENV_FILE" | xargs)

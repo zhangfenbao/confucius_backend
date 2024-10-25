@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
                 await conn.run_sync(Base.metadata.reflect)
     except Exception:
         logger.error(
-            "Database connection failed. Have you set valid SESAME_DATABASE_* credentials in your server/.env?"
+            "Database connection failed. Have you set valid SESAME_DATABASE_* credentials in your .env?"
         )
     yield
     await engine.dispose()
@@ -77,7 +77,7 @@ async def home(request: Request):
             request,
             "error.html",
             {
-                "message": "Database connection failed. Have you set valid SESAME_DATABASE_* credentials in your server/.env?"
+                "message": "Database connection failed. Have you set valid SESAME_DATABASE_* credentials in your .env?"
             },
         )
 

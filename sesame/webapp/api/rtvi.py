@@ -174,10 +174,9 @@ async def connect(
     # Check if we are running on Modal and launch the voice bot as a separate function
     if os.getenv("MODAL_ENV"):
         logger.debug("Spawning voice bot on Modal")
-        from app import launch_bot_modal
+        from sesame.modal_app import launch_bot_modal
 
         launch_bot_modal.spawn(user, params, config, services, room.url, bot_token)
-        # launch_bot_modal.spawn("pew")  # user, params, config, room.url, bot_token)
     else:
         logger.debug("Spawning voice bot as process")
         voice_bot_launch(user, params, config, services, room.url, bot_token)
