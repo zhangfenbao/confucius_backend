@@ -18,7 +18,9 @@ if [ -z "$SESAME_DATABASE_ADMIN_USER" ] || [ -z "$SESAME_DATABASE_ADMIN_PASSWORD
   exit 1
 fi
 
-SESAME_USER_ROLE=${SESAME_DATABASE_USER:-"sesame"}
+# Role defaults
+SESAME_DATABASE_USER=${SESAME_DATABASE_USER:-"sesame"}
+SESAME_USER_ROLE=$SESAME_DATABASE_USER
 
 # Create a database URL 
 SESAME_DATABASE_ADMIN_URL="$SESAME_DATABASE_PROTOCOL://$SESAME_DATABASE_ADMIN_USER:$SESAME_DATABASE_ADMIN_PASSWORD@$SESAME_DATABASE_HOST:$SESAME_DATABASE_PORT/$SESAME_DATABASE_NAME"
@@ -45,17 +47,32 @@ else
   exit 1
 fi
 
-# Query for the actual role name that was created
-ACTUAL_ROLE=$(psql "$SESAME_DATABASE_ADMIN_URL" -t -c "SELECT rolname FROM pg_roles WHERE rolname LIKE '${SESAME_USER_ROLE}%' ORDER BY rolname DESC LIMIT 1;")
-ACTUAL_ROLE=$(echo $ACTUAL_ROLE | xargs)  # Trim whitespace
+# Create a database URL 
+SESAME_DATABASE_ADMIN_URL="$SESAME_DATABASE_PROTOCOL://$SESAME_DATABASE_ADMIN_USER:$SESAME_DATABASE_ADMIN_PASSWORD@$SESAME_DATABASE_HOST:$SESAME_DATABASE_PORT/$SESAME_DATABASE_NAME"
 
-if [ -z "$ACTUAL_ROLE" ]; then
-  echo "Warning: Could not find the created role."
-  ACTUAL_ROLE=$SESAME_USER_ROLE
+# Query for the actual role name that was created
+CREATED_ROLE_USERNAME=$(psql "$SESAME_DATABASE_ADMIN_URL" -t -c "SELECT rolname FROM pg_roles WHERE rolname LIKE '${SESAME_USER_ROLE}%' ORDER BY rolname DESC LIMIT 1;")
+if [ -z "$CREATED_ROLE_USERNAME" ]; then
+  echo "Error: Could ${SESAME_USER_ROLE} not found in database. Does your database support creating roles?"
+  exit 1
 fi
+
+# Trim whitespace
+CREATED_ROLE_USERNAME=$(echo $ACTUAL_ROLE | xargs)
+
+if [ -z "$CREATED_ROLE_USERNAME" ]; then
+  CREATED_ROLE_USERNAME=$SESAME_USER_ROLE
+fi
+
+# Extract namespace from the admin URL if possible
+NAMESPACE=$(echo "$SESAME_DATABASE_ADMIN_URL" | grep -o "[^/]*@" | cut -d@ -f1 | grep -o "\..*:" | tr -d '.:')
+if [ ! -z "$NAMESPACE" ]; then
+    CREATED_ROLE_USERNAME="${SESAME_USER_ROLE}.${NAMESPACE}"
+fi
+
 
 echo "--------------------------------------------------"
 echo -e "\033[32mUpdate your sesame/.env to include:"
-echo -e "SESAME_DATABASE_USER=\"${ACTUAL_ROLE}\""
+echo -e "SESAME_DATABASE_USER=\"${CREATED_ROLE_USERNAME}\""
 echo -e "SESAME_DATABASE_PASSWORD=\"${ANON_USER_PASSWORD}\"\033[0m"
 echo "--------------------------------------------------"
