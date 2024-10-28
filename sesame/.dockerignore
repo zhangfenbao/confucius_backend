@@ -12,7 +12,7 @@ venv/
 .pytest_cache/
 *.log
 tests/
-tests/requirements.txt
 .pytest_cache
 .coverage
 htmlcov/
+pytest.ini

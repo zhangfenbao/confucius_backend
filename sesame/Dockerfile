@@ -1,44 +1,40 @@
+# Base image
 FROM python:3.12.7-slim-bookworm
 
+# Set up environment variables
 ARG DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1 \
-    HOME=/home/user \
-    PATH=/home/user/.local/bin:$PATH \
-    PYTHONPATH=$HOME/app
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1
+
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    build-essential \
+    libpq-dev \
+    && pip3 install --no-cache-dir wheel && \
+    useradd -m -u 1000 user && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/* && \
+    rm -rf ~/.cache/pip/*
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements files
+COPY webapp/requirements.txt webapp/
+COPY bots/requirements.txt bots/
+RUN pip3 install --no-cache-dir -r webapp/requirements.txt -r bots/requirements.txt && \
+    rm -rf webapp bots ~/.cache/pip/*
+
+# Switch to non-root user
+USER user
+
+# Copy the entire project
+COPY --chown=user . .
 
 # Expose FastAPI port
 EXPOSE 7860
 
-# Install system dependencies
-RUN apt-get update && apt-get install --no-install-recommends -y \
-    build-essential \
-    ffmpeg \
-    google-perftools \
-    ca-certificates curl gnupg \
-    libpq-dev \
-    && apt-get clean && rm -rf /var/lib/apt/lists/* && rm -rf /var/cache/apt/*
-
-# Set up a new user named "user" with user ID 1000
-RUN useradd -m -u 1000 user
-
-# Install Python dependencies before copying the whole project to leverage layer caching
-WORKDIR /tmp
-
-# Install dependencies
-COPY webapp/requirements.txt \
-    bots/requirements.txt \
-    ./
-RUN cat *requirements.txt > combined-requirements.txt \
-    && pip3 install --no-cache-dir -r combined-requirements.txt \
-    && rm *requirements.txt \
-    && rm -rf ~/.cache/pip/*
-
-# Now switch to non-root user
-USER user
-WORKDIR $HOME/app
-
-# Copy the entire project as the last step
-COPY --chown=user . .
-
-# Start the FastAPI server
+# Run FastAPI
 CMD ["uvicorn", "webapp.main:app", "--host", "0.0.0.0", "--port", "7860"]
