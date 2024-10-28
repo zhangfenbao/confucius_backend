@@ -5,13 +5,12 @@ export async function POST(request: NextRequest) {
   try {
     const json = await request.json();
 
-    const { actions, conversation_id, workspace_id } = json;
+    const { actions, conversation_id } = json;
 
     const apiClient = await getApiClient();
     const res = await apiClient.api.streamActionApiRtviActionPost(
       {
         conversation_id,
-        workspace_id,
         actions,
       }
     );
