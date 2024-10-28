@@ -13,8 +13,6 @@
 export interface BotParams {
   /** Conversation Id */
   conversation_id: string;
-  /** Workspace Id */
-  workspace_id?: string | null;
   /**
    * Actions
    * @default []
@@ -185,6 +183,65 @@ export interface RTVIServiceOptionConfig {
 export interface RevokeTokenRequest {
   /** Token */
   token?: string | null;
+}
+
+/** ServiceCreateModel */
+export interface ServiceCreateModel {
+  /** Title */
+  title: string;
+  /** Service Type */
+  service_type: string;
+  /** Service Provider */
+  service_provider?: string | null;
+  /** Api Key */
+  api_key: string;
+  /** Workspace Id */
+  workspace_id?: string | null;
+  /** Options */
+  options?: object | null;
+}
+
+/** ServiceModel */
+export interface ServiceModel {
+  /**
+   * Service Id
+   * @format uuid
+   */
+  service_id: string;
+  /** User Id */
+  user_id: string;
+  /** Workspace Id */
+  workspace_id: string | null;
+  /** Title */
+  title: string;
+  /** Service Type */
+  service_type: string;
+  /** Service Provider */
+  service_provider: string | null;
+  /** Api Key */
+  api_key: string;
+  /** Options */
+  options: object | null;
+  /**
+   * Created At
+   * @format date-time
+   */
+  created_at: string;
+  /**
+   * Updated At
+   * @format date-time
+   */
+  updated_at: string;
+}
+
+/** ServiceUpdateModel */
+export interface ServiceUpdateModel {
+  /** Title */
+  title?: string | null;
+  /** Api Key */
+  api_key?: string | null;
+  /** Options */
+  options?: object | null;
 }
 
 /** UserLoginModel */
@@ -898,6 +955,104 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         query: query,
         secure: true,
         format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Services
+     * @name GetSupportedServicesApiServicesSupportedGet
+     * @summary Get Supported Services
+     * @request GET:/api/services/supported
+     */
+    getSupportedServicesApiServicesSupportedGet: (
+      query?: {
+        /** Service Type */
+        service_type?: string | null;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<string[], HTTPValidationError>({
+        path: `/api/services/supported`,
+        method: "GET",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Services
+     * @name GetServicesApiServicesGet
+     * @summary Get Services
+     * @request GET:/api/services
+     * @secure
+     */
+    getServicesApiServicesGet: (params: RequestParams = {}) =>
+      this.request<ServiceModel[], any>({
+        path: `/api/services`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Services
+     * @name CreateServiceApiServicesPost
+     * @summary Create Service
+     * @request POST:/api/services
+     * @secure
+     */
+    createServiceApiServicesPost: (data: ServiceCreateModel, params: RequestParams = {}) =>
+      this.request<ServiceModel, HTTPValidationError>({
+        path: `/api/services`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Services
+     * @name UpdateServiceApiServicesServiceIdPut
+     * @summary Update Service
+     * @request PUT:/api/services/{service_id}
+     * @secure
+     */
+    updateServiceApiServicesServiceIdPut: (serviceId: string, data: ServiceUpdateModel, params: RequestParams = {}) =>
+      this.request<ServiceModel, HTTPValidationError>({
+        path: `/api/services/${serviceId}`,
+        method: "PUT",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Services
+     * @name DeleteServiceApiServicesServiceIdDelete
+     * @summary Delete Service
+     * @request DELETE:/api/services/{service_id}
+     * @secure
+     */
+    deleteServiceApiServicesServiceIdDelete: (serviceId: string, params: RequestParams = {}) =>
+      this.request<void, HTTPValidationError>({
+        path: `/api/services/${serviceId}`,
+        method: "DELETE",
+        secure: true,
         ...params,
       }),
 
