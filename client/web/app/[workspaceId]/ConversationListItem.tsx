@@ -71,6 +71,7 @@ export default function ConversationListItem({
       });
       if (response.ok) {
         setIsEditing(false);
+        setIsUpdating(false);
         setTitle(title);
         refresh();
         emitter.emit("updateSidebar");
@@ -126,7 +127,7 @@ export default function ConversationListItem({
             <Tooltip open={updateFailed}>
               <TooltipTrigger asChild>
                 <Button
-                  className="absolute top-0 right-2"
+                  className="absolute top-1/2 -translate-y-1/2 right-1"
                   disabled={isUpdating}
                   size="icon"
                   type="submit"
