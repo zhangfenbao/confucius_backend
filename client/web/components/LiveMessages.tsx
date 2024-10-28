@@ -52,6 +52,14 @@ interface MessageChunk {
   updatedAt?: Date;
 }
 
+const revalidateConversation = async (workspaceId: string) => {
+  await revalidateAll();
+  queryClient.invalidateQueries({
+    queryKey: ["conversations", workspaceId],
+    type: "all",
+  });
+};
+
 export default function LiveMessages({
   autoscroll,
   conversationId,
@@ -132,9 +140,15 @@ export default function LiveMessages({
           updated_at: updatedAtIso,
         };
 
-        return liveMessages.map((liveMessage, idx) =>
-          idx === matchingMessageIdx ? updatedMessage : liveMessage
-        );
+        return liveMessages
+          .map((liveMessage, idx) =>
+            idx === matchingMessageIdx ? updatedMessage : liveMessage
+          )
+          .filter((m, idx, arr) => {
+            const isEmptyMessage =
+              m.content.content.trim() === "" && idx < arr.length - 1;
+            return !isEmptyMessage;
+          });
       });
     },
     [conversationId, messages.length]
@@ -153,7 +167,6 @@ export default function LiveMessages({
     });
   }, []);
 
-  const botTextBuffer = useRef<string>("");
   const isTextResponse = useRef(false);
 
   useRTVIClientEvent(
@@ -186,8 +199,6 @@ export default function LiveMessages({
             text: text.text,
             updatedAt: new Date(),
           });
-        } else {
-          botTextBuffer.current += text.text;
         }
       },
       [addMessageChunk, structuredWorkspace.tts.interactionMode]
@@ -197,13 +208,13 @@ export default function LiveMessages({
   useRTVIClientEvent(
     RTVIEvent.BotLlmStopped,
     useCallback(async () => {
+      const textResponse = isTextResponse.current;
       isTextResponse.current = false;
-      await revalidateAll();
-      queryClient.invalidateQueries({
-        queryKey: ["conversations", workspaceId],
-        type: "all",
-      });
-      if (structuredWorkspace.tts.interactionMode !== "informational") return;
+      if (
+        structuredWorkspace.tts.interactionMode !== "informational" ||
+        !textResponse
+      )
+        return;
       if (firstBotResponseTime.current) {
         addMessageChunk({
           createdAt: firstBotResponseTime.current,
@@ -213,6 +224,7 @@ export default function LiveMessages({
           updatedAt: new Date(),
         });
         firstBotResponseTime.current = undefined;
+        revalidateConversation(workspaceId);
       }
     }, [addMessageChunk, structuredWorkspace.tts.interactionMode, workspaceId])
   );
@@ -220,20 +232,18 @@ export default function LiveMessages({
   useRTVIClientEvent(
     RTVIEvent.BotTtsStarted,
     useCallback(() => {
+      if (structuredWorkspace.tts.interactionMode !== "conversational") return;
       if (!firstBotResponseTime.current) {
         firstBotResponseTime.current = new Date();
       }
-      if (botTextBuffer.current) {
-        addMessageChunk({
-          createdAt: firstBotResponseTime.current,
-          final: false,
-          role: "assistant",
-          text: botTextBuffer.current,
-          updatedAt: new Date(),
-        });
-        botTextBuffer.current = "";
-      }
-    }, [addMessageChunk])
+      addMessageChunk({
+        createdAt: firstBotResponseTime.current,
+        final: false,
+        role: "assistant",
+        text: "",
+        updatedAt: new Date(),
+      });
+    }, [addMessageChunk, structuredWorkspace.tts.interactionMode])
   );
 
   useRTVIClientEvent(
@@ -259,9 +269,19 @@ export default function LiveMessages({
   useRTVIClientEvent(
     RTVIEvent.BotTtsStopped,
     useCallback(() => {
+      if (structuredWorkspace.tts.interactionMode !== "conversational") return;
+      const createdAt = firstBotResponseTime.current;
       firstBotResponseTime.current = undefined;
-      botTextBuffer.current = "";
-    }, [])
+      setTimeout(() => {
+        addMessageChunk({
+          createdAt,
+          final: true,
+          role: "assistant",
+          text: "",
+          updatedAt: new Date(),
+        });
+      }, 1000);
+    }, [addMessageChunk, structuredWorkspace.tts.interactionMode])
   );
 
   useRTVIClientEvent(
@@ -293,30 +313,23 @@ export default function LiveMessages({
     RTVIEvent.UserTranscript,
     useCallback(
       (data: TranscriptData) => {
-        const createdAt = userStartedSpeakingTime.current;
-        if (createdAt) {
-          addMessageChunk({
-            createdAt,
-            final: data.final,
-            replace: true,
-            role: "user" as LLMMessageRole,
-            text: data.text,
-            updatedAt: new Date(),
-          });
+        if (!userStartedSpeakingTime.current) {
+          userStartedSpeakingTime.current = new Date();
         }
+        addMessageChunk({
+          createdAt: userStartedSpeakingTime.current,
+          final: data.final,
+          replace: true,
+          role: "user" as LLMMessageRole,
+          text: data.text,
+          updatedAt: new Date(),
+        });
         if (data.final) {
           userStartedSpeakingTime.current = undefined;
         }
       },
       [addMessageChunk]
     )
-  );
-
-  useRTVIClientEvent(
-    RTVIEvent.StorageItemStored,
-    useCallback(() => {
-      revalidateAll();
-    }, [])
   );
 
   useEffect(() => {
@@ -353,9 +366,9 @@ export default function LiveMessages({
   useRTVIClientEvent(
     RTVIEvent.Disconnected,
     useCallback(async () => {
-      await revalidateAll();
+      await revalidateConversation(workspaceId);
       refresh();
-    }, [refresh])
+    }, [refresh, workspaceId])
   );
 
   return liveMessages.map((m, i) => (
