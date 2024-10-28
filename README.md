@@ -27,7 +27,7 @@ Open Source multi-modal LLM environment. Host your own web and mobile chat inter
 ```shell
 python -m venv venv
 source venv/bin/activate # ... or OS specific activation
-pip install -r server/dev-requirements.txt
+pip install -r sesame/dev-requirements.txt
 ```
 
 #### 2. Create a database
@@ -42,18 +42,18 @@ Create a new local database: `psql -U postgres -c "CREATE DATABASE sesame;"`
 #### 3. Create a local .env
 
 ```shell
-cp server/env.example server/.env
+cp sesame/env.example sesame/.env
 ```
 
 You must set the following:
 
 ```bash
-SESAME_APP_SECRET # For data encryption
-SESAME_DATABASE_ADMIN_USER # Privileged database user
+SESAME_APP_SECRET # For salting secrets during encryption
+SESAME_DATABASE_ADMIN_USER # Privileged database user name
 SESAME_DATABASE_ADMIN_PASSWORD # Privileged user password
-SESAME_DATABASE_NAME # E.g. sesame
-SESAME_DATABASE_HOST # E.g. localhost
-SESAME_DATABASE_PORT # E.g. 5432
+SESAME_DATABASE_NAME # Name of database, e.g. sesame
+SESAME_DATABASE_HOST # Database host address, e.g. localhost
+SESAME_DATABASE_PORT # Database port E.g. 5432 (should allow asynchronous session pooling)
 ```
 
 _Note: Your database must support asyncpg or equivalent asychnronous driver._
@@ -72,7 +72,7 @@ Note: the `run_schema.sh` script requires Postgres to run. Install the necessary
 
 If the schema runs correctly, the script will print out a non-superuser user and password.
 
-Edit `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` in `server/.env` with the output of the script.
+Edit `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` in `sesame/.env` with the output of the script.
 
 For more information about database configuration, read [here](#database-setup)
 
@@ -86,10 +86,10 @@ bash scripts/create_user.sh
 
 Running this script will create a user account in your database. Make a note of your username and password; the password will be encrypted and not recoverable later.
 
-#### 6. Run the Sesame server and generate access token
+#### 6. Run the Sesame webapp and generate access token
 
 ```shell
-cd server/
+cd sesame/
 uvicorn webapp.main:app --reload
 ```
 
@@ -104,7 +104,7 @@ Now, create a new access token to authenticate web requests in any of the Open S
 #### 7. Run the tests to check your configuration
 
 ```bash
-cd server/
+cd sesame/
 PYTHONPATH=. pytest tests/ -s -v
 ```
 
@@ -130,7 +130,7 @@ Sesame requires a Postgres database (support for other database types, such as S
 
 #### 1. Update your .env
 
-Update the non-optional `SESAME_DATABASE_*` variables in `server/.env`.
+Update the non-optional `SESAME_DATABASE_*` variables in `sesame/.env`.
 
 For Supabase, for example, you can find credentials URL here: https://supabase.com/dashboard/project/[YOUR_PROJECT]/settings/database. **Note: be sure to use the URI for `Mode: session` to get the correct port for session mode.**
 
@@ -155,7 +155,7 @@ This script will create the necessary tables, functions and triggers, as well ec
 
 #### 3. Update your .env with the public database URL
 
-Update`SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` (public) in `server/.env` with the randomly generated password created by the `run_schema` script.
+Update`SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` (public) in `sesame/.env` with the randomly generated password created by the `run_schema` script.
 
 Alternatively, you can set this yourself in `database/schema.sql` by changing the `%%REPLACED%%` input near the bottom.
 
@@ -166,7 +166,7 @@ Optional: Test your connection by running `PYTHONPATH=.  pytest tests/ -s -v`
 #### Run the webapp
 
 ```
-cd server
+cd sesame
 uvicorn webapp.main:app --reload
 ```
 
@@ -252,12 +252,14 @@ Modal.com provides fast process spawning for voice sessions, meaning you app is 
 
 #### Setup Modal:
 
+Copy the `modal_app.py` from the `deployment/modal` directory to your `sesame` app folder.
+
 ```bash
 pip install modal
 python -m modal setup
 
-cd server
-modal serve app.py
+cd sesame
+modal serve modal_app.py
 
 =>
 ...
@@ -270,7 +272,7 @@ This serves the app as a shell process. Optional: navigate to `https://YOUR_DEPL
 #### Deploy to production:
 
 ```bash
-modal deploy app.py
+modal deploy modal_app.py
 
 =>
 ...
