@@ -154,6 +154,7 @@ export default function ConfigurationForm({ workspace }: Props) {
           llm: formState.configuration.model.llmProvider,
           tts: formState.voiceSettings.defaultVoice.ttsProvider,
           stt: "deepgram",
+          transport: "daily",
         },
         config: [
           {
