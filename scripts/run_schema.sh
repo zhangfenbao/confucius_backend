@@ -26,11 +26,14 @@ SESAME_USER_ROLE=$SESAME_DATABASE_USER
 SESAME_DATABASE_ADMIN_URL="$SESAME_DATABASE_PROTOCOL://$SESAME_DATABASE_ADMIN_USER:$SESAME_DATABASE_ADMIN_PASSWORD@$SESAME_DATABASE_HOST:$SESAME_DATABASE_PORT/$SESAME_DATABASE_NAME"
 
 # Generate a random password for the anon user
-ANON_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9')
-
-if [ -z "$ANON_USER_PASSWORD" ]; then
-  echo "Failed to generate password for anon_user."
-  exit 1
+if [ -z "$SESAME_DATABASE_PASSWORD" ]; then
+  ANON_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9')
+  if [ -z "$ANON_USER_PASSWORD" ]; then
+    echo "Failed to generate password for anon_user."
+    exit 1
+  fi
+else
+  ANON_USER_PASSWORD="$SESAME_DATABASE_PASSWORD"
 fi
 
 # Run schema with password substitution directly, passing the result to psql
@@ -46,7 +49,6 @@ else
   echo "Error applying schema to the database."
   exit 1
 fi
-
 
 # Create a database URL 
 SESAME_DATABASE_ADMIN_URL="$SESAME_DATABASE_PROTOCOL://$SESAME_DATABASE_ADMIN_USER:$SESAME_DATABASE_ADMIN_PASSWORD@$SESAME_DATABASE_HOST:$SESAME_DATABASE_PORT/$SESAME_DATABASE_NAME"

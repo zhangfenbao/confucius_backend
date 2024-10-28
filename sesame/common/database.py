@@ -39,8 +39,6 @@ def construct_database_url():
         f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"
     )
 
-    print(db_url)
-
     return db_url
 
 

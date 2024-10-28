@@ -20,7 +20,7 @@ async def get_supported_services(
     if service_type is None:
         return ServiceFactory.get_available_services()
     try:
-        service_type_enum = ServiceType[f"Service{service_type.upper()}"]
+        service_type_enum = ServiceType(service_type.lower())
         return ServiceFactory.get_available_services(service_type_enum)
     except KeyError:
         raise HTTPException(
