@@ -272,16 +272,20 @@ export default function ConfigurationForm({ workspace }: Props) {
       className="animate-appear p-4 flex flex-col gap-6"
       onSubmit={handleSubmit}
     >
-      <PageTransitionLink href={`/${workspace.workspace_id}`}>
-        <Button className="group gap-1 w-full" variant="secondary">
-          <span>Go to Workspace</span>
-          <ArrowRightIcon
-            className="transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1"
-            size={16}
-          />
-        </Button>
-      </PageTransitionLink>
-      <Separator />
+      {workspace.workspace_id !== "new" && (
+        <>
+          <PageTransitionLink href={`/${workspace.workspace_id}`}>
+            <Button className="group gap-1 w-full" variant="secondary">
+              <span>Go to Workspace</span>
+              <ArrowRightIcon
+                className="transition-transform group-hover:translate-x-1 group-focus-visible:translate-x-1"
+                size={16}
+              />
+            </Button>
+          </PageTransitionLink>
+          <Separator />
+        </>
+      )}
       <WorkspaceOptionsSection
         formState={formState}
         setFormState={setFormState}
