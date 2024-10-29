@@ -5,6 +5,21 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";    -- For gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";     -- For full-text search
 CREATE EXTENSION IF NOT EXISTS "unaccent";    -- For text normalization in search
 
+--- Drop all policies
+
+DO $$
+DECLARE
+    policy RECORD;
+BEGIN
+    FOR policy IN
+        SELECT schemaname, tablename, policyname
+        FROM pg_policies
+        WHERE schemaname = 'public' -- Change if your policies are in a different schema
+    LOOP
+        EXECUTE format('DROP POLICY %I ON %I.%I', policy.policyname, policy.schemaname, policy.tablename);
+    END LOOP;
+END $$;
+
 -- ========================
 -- RLS Functions
 -- ========================
@@ -42,7 +57,7 @@ ON users
 FOR UPDATE
 USING (user_id = get_current_user_id());
 
-CREATE TABLE login_attempts (
+CREATE TABLE IF NOT EXISTS login_attempts (
     username VARCHAR(64),
     attempt_time TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (username, attempt_time)
@@ -346,26 +361,31 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Triggers for updating 'updated_at'
+DROP TRIGGER IF EXISTS trg_users_updated_at ON users;
 CREATE TRIGGER trg_users_updated_at
 BEFORE UPDATE ON users
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trg_workspaces_updated_at ON workspaces;
 CREATE TRIGGER trg_workspaces_updated_at
 BEFORE UPDATE ON workspaces
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trg_conversations_updated_at ON conversations;
 CREATE TRIGGER trg_conversations_updated_at
 BEFORE UPDATE ON conversations
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trg_messages_updated_at ON messages;
 CREATE TRIGGER trg_messages_updated_at
 BEFORE UPDATE OF content ON messages
 FOR EACH ROW
 EXECUTE PROCEDURE update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trg_services_updated_at ON services;
 CREATE TRIGGER trg_services_updated_at
 BEFORE UPDATE ON services
 FOR EACH ROW
@@ -383,6 +403,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger that fires after a new conversation is created
+DROP TRIGGER IF EXISTS trg_conversations_update_workspace_updated_at ON conversations;
 CREATE TRIGGER trg_conversations_update_workspace_updated_at
 AFTER INSERT ON conversations
 FOR EACH ROW
@@ -409,6 +430,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_messages_tsvector_update ON messages;
 CREATE TRIGGER trg_messages_tsvector_update
 BEFORE INSERT OR UPDATE OF content ON messages
 FOR EACH ROW
@@ -425,6 +447,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_messages_update_conversation_updated_at ON messages;
 CREATE TRIGGER trg_messages_update_conversation_updated_at
 AFTER INSERT OR UPDATE ON messages
 FOR EACH ROW
@@ -449,6 +472,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_cleanup_sequence_conversation_delete ON conversations;
 CREATE TRIGGER trg_cleanup_sequence_conversation_delete
 AFTER DELETE ON conversations
 FOR EACH ROW
@@ -478,6 +502,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_set_message_number ON messages;
 CREATE TRIGGER trg_set_message_number
 BEFORE INSERT ON messages
 FOR EACH ROW
@@ -542,15 +567,15 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_catalog.pg_roles WHERE rolname = '%%USER%%'
     ) THEN
-        CREATE USER %%USER%% WITH PASSWORD '%%PASSWORD%%';
+        CREATE USER "%%USER%%" WITH PASSWORD '%%PASSWORD%%';
     END IF;
 END $$;
 
 -- Grant USAGE permission to access the public schema
-GRANT USAGE ON SCHEMA public TO %%USER%%;
+GRANT USAGE ON SCHEMA public TO "%%USER%%";
 
 -- Grant SELECT, INSERT, UPDATE, DELETE privileges on all tables in the public schema
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO %%USER%%;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "%%USER%%";
 
 -- Grant USAGE and SELECT privileges on all sequences
 DO $$
@@ -559,15 +584,15 @@ DECLARE
 BEGIN
     FOR r IN SELECT sequence_name FROM information_schema.sequences WHERE sequence_schema = 'public'
     LOOP
-        EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE %I TO %%USER%%;', r.sequence_name);
+        EXECUTE format('GRANT USAGE, SELECT ON SEQUENCE %I TO "%%USER%%";', r.sequence_name);
     END LOOP;
 END $$;
 
 -- Grant EXECUTE privileges on all functions and procedures
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO %%USER%%;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO "%%USER%%";
 
 -- Grant CREATE privileges on the public schema to allow user to create sequences
-GRANT CREATE ON SCHEMA public TO %%USER%%;
+GRANT CREATE ON SCHEMA public TO "%%USER%%";
 
 -- ========================
 -- End of SQL Schema

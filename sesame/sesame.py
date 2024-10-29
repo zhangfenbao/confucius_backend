@@ -27,6 +27,7 @@ console = Console()
 app = typer.Typer(
     help="Sesame CLI - Development and management tools for the Sesame application.",
     no_args_is_help=True,
+    add_completion=False,
 )
 
 env_example = Path("env.example")
@@ -576,7 +577,7 @@ def create_user():
 async def _create_user():
     """Async function to create a new user."""
     # Validate database connection first
-    await _test_db()
+    await _test_db(as_admin=True)
 
     console.print("\nUser Creation", style="blue bold")
 
@@ -611,7 +612,7 @@ async def _create_user():
         echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
     )
 
-    with Status("[blue]Creating user...", spinner="dots"):
+    with Status("[blue]Creating user...", spinner="dots") as status:
         try:
             async with admin_engine.begin() as conn:
                 # Check if username already exists
@@ -632,42 +633,42 @@ async def _create_user():
                     """),
                     {"user_id": user_id, "username": username, "password_hash": password_hash},
                 )
-
+            status.stop()
             console.print("\n✓ User successfully created!", style="green bold")
-
-            # Create a nice table for the credentials
-            table = Table(
-                box=box.ROUNDED, show_header=False, show_edge=False, pad_edge=False, style="green"
-            )
-
-            table.add_column("Field", style="green dim")
-            table.add_column("Value", style="green bold")
-
-            table.add_row("Username", username)
-            table.add_row("Password", password)
-
-            # Create a panel containing the table
-            panel = Panel(
-                table,
-                title="[yellow]Your User Credentials",
-                title_align="left",
-                subtitle="[red]Please make sure to keep these credentials safe. You will not be able to recover them later.",
-                subtitle_align="left",
-                box=box.ROUNDED,
-                border_style="blue",
-                padding=(1, 2),
-            )
-
-            console.print("\n")
-            console.print(panel)
-            console.print("\n")
-
         except Exception as e:
+            status.stop()
             console.print("\n✗ Failed to create user", style="red bold")
             console.print(f"Error: {str(e)}", style="red")
             raise
         finally:
             await admin_engine.dispose()
+
+        # Create a nice table for the credentials
+        table = Table(
+            box=box.ROUNDED, show_header=False, show_edge=False, pad_edge=False, style="green"
+        )
+
+        table.add_column("Field", style="green dim")
+        table.add_column("Value", style="green bold")
+
+        table.add_row("Username", username)
+        table.add_row("Password", password)
+
+        # Create a panel containing the table
+        panel = Panel(
+            table,
+            title="[yellow]Your User Credentials",
+            title_align="left",
+            subtitle="[red]Please make sure to keep these credentials safe. You will not be able to recover them later.",
+            subtitle_align="left",
+            box=box.ROUNDED,
+            border_style="blue",
+            padding=(1, 2),
+        )
+
+        console.print("\n")
+        console.print(panel)
+        console.print("\n")
 
 
 @app.command()
