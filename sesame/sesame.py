@@ -254,7 +254,9 @@ def init_db():
         "SESAME_DATABASE_NAME": Prompt.ask("Database name", default="sesame"),
         "SESAME_DATABASE_HOST": Prompt.ask("Database host", default="localhost"),
         "SESAME_DATABASE_PORT": Prompt.ask("Database port", default="5432"),
-        "SESAME_DATABASE_USER": Prompt.ask("Application database user", default=default_app_user),
+        "SESAME_DATABASE_USER": Prompt.ask(
+            "Application database user (this will be created)", default=default_app_user
+        ),
     }
 
     # Handle the application database password
@@ -314,7 +316,7 @@ def init_db():
         console.print("\nDatabase configuration cancelled.", style="yellow")
 
     if Confirm.ask("\nWould you like to test your database credentials?"):
-        test_db()
+        test_db(as_admin=True)
     else:
         console.print("Skipping database tests. You can do this later by running test_db")
 
@@ -322,34 +324,44 @@ def init_db():
 
 
 @app.command()
-def test_db():
+def test_db(
+    as_admin: bool = typer.Option(False, "--admin", help="Test with admin / superuser role"),
+):
     """Test database connection using async engine."""
     try:
+        load_dotenv(env_file)
         # We need to run the async code in the event loop
-        asyncio.run(_test_db())
+        asyncio.run(_test_db(as_admin))
     except Exception as e:
         console.print(f"\nError connecting to database: {str(e)}", style="red bold")
         raise typer.Exit(1)
 
 
-async def _test_db():
+async def _test_db(as_admin=True):
     """Async function to test database connection."""
-    from common.database import engine
+    if as_admin:
+        # Set up the admin engine
+        admin_url = construct_admin_database_url()
+        engine_for_role = create_async_engine(
+            admin_url,
+            echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
+        )
+    else:
+        from common.database import engine
+
+        engine_for_role = engine
 
     console.print("\nDatabase Connection Test", style="blue bold")
 
     with Status("[blue]Testing database connection...", spinner="dots"):
         try:
-            # Test the connection
-            async with engine.begin() as conn:
-                # Try a simple query
+            async with engine_for_role.begin() as conn:
                 result = await conn.execute(text("SELECT 1"))
                 result.scalar()
 
             console.print("\n✓ Successfully connected to database!", style="green bold")
 
-            # Get database version
-            async with engine.begin() as conn:
+            async with engine_for_role.begin() as conn:
                 result = await conn.execute(text("SELECT version()"))
                 version = result.scalar()
                 console.print(f"\nDatabase version: {version}", style="blue")
@@ -382,7 +394,7 @@ def validate_schema_replacements(schema_content: str, replacements: Dict[str, st
 
 async def _run_schema():
     """Async function to apply database schema."""
-    await _test_db()
+    await _test_db(as_admin=True)
 
     # Ensure schema file exists
     if not schema_file.exists():
