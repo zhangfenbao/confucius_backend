@@ -461,7 +461,7 @@ DECLARE
     next_number INTEGER;
 BEGIN
     PERFORM 1 FROM conversations WHERE conversation_id = conversation_uuid FOR UPDATE;
-    SELECT COUNT(*) + 1
+    SELECT COALESCE(MAX(message_number), 0) + 1
     INTO next_number
     FROM messages
     WHERE conversation_id = conversation_uuid;
