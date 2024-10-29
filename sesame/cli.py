@@ -263,10 +263,9 @@ def test_db():
 
 async def _test_db():
     """Async function to test database connection."""
-    from common.database import DATABASE_URL, engine
+    from common.database import engine
 
     console.print("\nDatabase Connection Test", style="blue bold")
-    console.print(DATABASE_URL)
 
     with Status("[blue]Testing database connection...", spinner="dots"):
         try:
@@ -312,6 +311,8 @@ def validate_schema_replacements(schema_content: str, replacements: Dict[str, st
 
 async def _run_schema():
     """Async function to apply database schema."""
+    await _test_db()
+
     # Ensure schema file exists
     if not schema_file.exists():
         raise FileNotFoundError(f"Schema file not found at {schema_file}")
