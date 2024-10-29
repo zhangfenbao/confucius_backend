@@ -10,6 +10,7 @@ export async function getConversations(
   workspaceId: string,
   offset: number = 0
 ) {
+  if (!workspaceId) return [];
   try {
     const apiClient = await getApiClient();
     const response =

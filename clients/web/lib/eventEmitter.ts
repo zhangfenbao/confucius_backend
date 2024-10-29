@@ -4,6 +4,7 @@ import { WorkspaceModel } from "@/lib/sesameApi";
 import { EventEmitter } from "events";
 
 interface EventMap {
+  changeLlmModel: [llmModel: string];
   deleteConversation: [conversationId: string];
   deleteWorkspace: [workspace: WorkspaceModel];
   disabledInSandboxMode: [];

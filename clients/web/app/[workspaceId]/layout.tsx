@@ -2,8 +2,9 @@
 
 import ErrorPage from "@/components/ErrorPage";
 import QueryClientProvider from "@/components/QueryClientProvider";
+import { getLLMModelsByService } from "@/lib/llm";
 import { WorkspaceWithConversations } from "@/lib/sesameApi";
-import { getWorkspaces } from "@/lib/workspaces";
+import { getWorkspaces, getWorkspaceStructuredData } from "@/lib/workspaces";
 import { redirect } from "next/navigation";
 import React from "react";
 import DeleteConversationModal from "./DeleteConversationModal";
@@ -36,9 +37,13 @@ export default async function WorkspaceLayout({
       />
     );
   }
-  const workspace = workspaces.find((w) => w.workspace_id === workspaceId) ?? workspaces[0];
+  const workspace =
+    workspaces.find((w) => w.workspace_id === workspaceId) ?? workspaces[0];
 
   if (!workspace) redirect("/");
+
+  const structuredWorkspaceData = getWorkspaceStructuredData(workspace.config);
+  const models = getLLMModelsByService(structuredWorkspaceData.llm.service);
 
   return (
     <div className="lg:grid lg:grid-cols-[var(--sidebar-width)_1fr] min-h-dvh">
@@ -52,7 +57,10 @@ export default async function WorkspaceLayout({
       {/* Main content area */}
       <div className="flex flex-col min-h-dvh w-full bg-background">
         {/* Navbar */}
-        <Navbar />
+        <Navbar
+          currentModelValue={structuredWorkspaceData.llm.model.value}
+          models={models}
+        />
 
         {/* Page content */}
         <main className="relative flex-grow mx-auto max-w-3xl w-full flex flex-col">

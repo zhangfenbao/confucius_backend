@@ -31,6 +31,21 @@ const llmModels: LLMModel[] = [
     model: "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
     label: "Llama 3.1 405B",
   },
+  {
+    service: "together",
+    model: "meta-llama/Llama-3.2-3B-Instruct-Turbo",
+    label: "Llama 3.2 3B",
+  },
+  {
+    service: "together",
+    model: "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
+    label: "Llama 3.2 11B",
+  },
+  {
+    service: "together",
+    model: "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
+    label: "Llama 3.2 90B",
+  },
   // Groq
   {
     service: "groq",
