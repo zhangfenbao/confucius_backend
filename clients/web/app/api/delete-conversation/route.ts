@@ -1,4 +1,3 @@
-import { revalidateAll } from "@/app/actions";
 import { getApiClient } from "@/lib/sesameApiClient";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -13,8 +12,6 @@ export async function DELETE(request: NextRequest) {
       );
 
     const json = await response.json();
-
-    await revalidateAll();
 
     return NextResponse.json(json);
   } catch (error) {

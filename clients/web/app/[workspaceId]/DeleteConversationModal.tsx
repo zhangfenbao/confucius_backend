@@ -1,6 +1,5 @@
 "use client";
 
-import { revalidateAll } from "@/app/actions";
 import { queryClient } from "@/components/QueryClientProvider";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,7 +48,6 @@ export default function DeleteConversationModal({
         }),
       });
       if (response.ok) {
-        await revalidateAll();
         queryClient.invalidateQueries({
           queryKey: ["conversations", workspaceId],
           type: "all",

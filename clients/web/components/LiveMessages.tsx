@@ -8,7 +8,6 @@ import {
   useState,
 } from "react";
 
-import { revalidateAll } from "@/app/actions";
 import ChatMessage from "@/components/ChatMessage";
 import { queryClient } from "@/components/QueryClientProvider";
 import emitter from "@/lib/eventEmitter";
@@ -18,8 +17,9 @@ import { WorkspaceStructuredData } from "@/lib/workspaces";
 import { useRouter } from "next/navigation";
 import {
   BotLLMTextData,
+  BotTTSTextData,
   RTVIEvent,
-  TTSTextData,
+  StorageItemStoredData,
   TranscriptData,
 } from "realtime-ai";
 import { useRTVIClient, useRTVIClientEvent } from "realtime-ai-react";
@@ -53,7 +53,6 @@ interface MessageChunk {
 }
 
 const revalidateConversation = async (workspaceId: string) => {
-  await revalidateAll();
   queryClient.invalidateQueries({
     queryKey: ["conversations", workspaceId],
     type: "all",
@@ -154,9 +153,10 @@ export default function LiveMessages({
     [conversationId, messages.length]
   );
 
-  const firstBotResponseTime = useRef<Date>();
-  const userStartedSpeakingTime = useRef<Date>();
-  const userStoppedSpeakingTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const firstBotResponseTime = useRef<Date>(undefined);
+  const userStartedSpeakingTime = useRef<Date>(undefined);
+  const userStoppedSpeakingTimeout =
+    useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const cleanupUserMessages = useCallback(() => {
     setLiveMessages((messages) => {
@@ -168,6 +168,11 @@ export default function LiveMessages({
   }, []);
 
   const isTextResponse = useRef(false);
+
+  const revalidateAndRefresh = useCallback(async () => {
+    await revalidateConversation(workspaceId);
+    refresh();
+  }, [refresh, workspaceId]);
 
   useRTVIClientEvent(
     RTVIEvent.BotLlmStarted,
@@ -183,7 +188,7 @@ export default function LiveMessages({
   );
 
   useRTVIClientEvent(
-    RTVIEvent.BotText,
+    RTVIEvent.BotLlmText,
     useCallback(
       (text: BotLLMTextData) => {
         if (
@@ -210,11 +215,13 @@ export default function LiveMessages({
     useCallback(async () => {
       const textResponse = isTextResponse.current;
       isTextResponse.current = false;
+
       if (
-        structuredWorkspace.tts.interactionMode !== "informational" ||
+        structuredWorkspace.tts.interactionMode !== "informational" &&
         !textResponse
       )
         return;
+
       if (firstBotResponseTime.current) {
         addMessageChunk({
           createdAt: firstBotResponseTime.current,
@@ -224,9 +231,15 @@ export default function LiveMessages({
           updatedAt: new Date(),
         });
         firstBotResponseTime.current = undefined;
-        revalidateConversation(workspaceId);
+        // TODO: Move to StorageItemStored handler, once that is emitted in text-mode
+        setTimeout(revalidateAndRefresh, 2000);
       }
-    }, [addMessageChunk, structuredWorkspace.tts.interactionMode, workspaceId])
+    }, [
+      addMessageChunk,
+      revalidateAndRefresh,
+      structuredWorkspace.tts.interactionMode,
+      workspaceId,
+    ])
   );
 
   useRTVIClientEvent(
@@ -249,7 +262,7 @@ export default function LiveMessages({
   useRTVIClientEvent(
     RTVIEvent.BotTtsText,
     useCallback(
-      (text: TTSTextData) => {
+      (text: BotTTSTextData) => {
         if (structuredWorkspace.tts.interactionMode !== "conversational")
           return;
         if (firstBotResponseTime.current) {
@@ -272,15 +285,13 @@ export default function LiveMessages({
       if (structuredWorkspace.tts.interactionMode !== "conversational") return;
       const createdAt = firstBotResponseTime.current;
       firstBotResponseTime.current = undefined;
-      setTimeout(() => {
-        addMessageChunk({
-          createdAt,
-          final: true,
-          role: "assistant",
-          text: "",
-          updatedAt: new Date(),
-        });
-      }, 1000);
+      addMessageChunk({
+        createdAt,
+        final: true,
+        role: "assistant",
+        text: "",
+        updatedAt: new Date(),
+      });
     }, [addMessageChunk, structuredWorkspace.tts.interactionMode])
   );
 
@@ -332,6 +343,20 @@ export default function LiveMessages({
     )
   );
 
+  useRTVIClientEvent(RTVIEvent.Disconnected, revalidateAndRefresh);
+  useRTVIClientEvent(
+    RTVIEvent.StorageItemStored,
+    useCallback(
+      (data: StorageItemStoredData) => {
+        const items = data.items as Array<Message["content"]>;
+        if (items.some((i) => i.role === "assistant")) {
+          revalidateAndRefresh();
+        }
+      },
+      [revalidateAndRefresh]
+    )
+  );
+
   useEffect(() => {
     const handleUserTextMessage = (text: string) => {
       isTextResponse.current = true;
@@ -362,14 +387,6 @@ export default function LiveMessages({
     // Server-stored messages updated. Empty client state.
     setLiveMessages([]);
   }, [messages.length]);
-
-  useRTVIClientEvent(
-    RTVIEvent.Disconnected,
-    useCallback(async () => {
-      await revalidateConversation(workspaceId);
-      refresh();
-    }, [refresh, workspaceId])
-  );
 
   return liveMessages.map((m, i) => (
     <ChatMessage

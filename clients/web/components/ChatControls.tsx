@@ -1,6 +1,5 @@
 "use client";
 
-import { revalidateAll } from "@/app/actions";
 import ExpiryCountdown from "@/components/ExpiryCountdown";
 import { queryClient } from "@/components/QueryClientProvider";
 import emitter from "@/lib/eventEmitter";
@@ -25,8 +24,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { RTVIEvent, RTVIMessage } from "realtime-ai";
-import { DailyVoiceClient } from "realtime-ai-daily";
+import { RTVIClient, RTVIEvent, RTVIMessage } from "realtime-ai";
 import {
   useRTVIClient,
   useRTVIClientEvent,
@@ -96,7 +94,7 @@ const ChatControls: React.FC<Props> = ({
 
   const newConversationIdRef = useRef<string>("");
 
-  const sendTextMessage = async (client: DailyVoiceClient, message: string) => {
+  const sendTextMessage = async (client: RTVIClient, message: string) => {
     emitter.emit("userTextMessage", message);
     setText("");
 
@@ -160,7 +158,6 @@ const ChatControls: React.FC<Props> = ({
   );
 
   const invalidateAndRedirect = async (redirect: string) => {
-    await revalidateAll();
     await queryClient.invalidateQueries({
       queryKey: ["conversations", workspaceId],
       type: "all",

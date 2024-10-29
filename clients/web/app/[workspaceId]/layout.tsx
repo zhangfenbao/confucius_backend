@@ -14,16 +14,16 @@ import Sidebar from "./Sidebar";
 // Define the layout for the workspace
 interface WorkspaceLayoutProps {
   children: React.ReactNode;
-  params: {
+  params: Promise<{
     workspaceId: string;
-  };
+  }>;
 }
 
 export default async function WorkspaceLayout({
   children,
   params,
 }: WorkspaceLayoutProps) {
-  const { workspaceId } = params;
+  const { workspaceId } = await params;
 
   let workspaces: WorkspaceWithConversations[];
   try {

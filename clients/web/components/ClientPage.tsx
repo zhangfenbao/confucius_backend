@@ -16,10 +16,11 @@ import emitter from "@/lib/eventEmitter";
 import type { Message } from "@/lib/messages";
 import { cn } from "@/lib/utils";
 import { WorkspaceStructuredData } from "@/lib/workspaces";
+import { DailyTransport } from "@daily-co/realtime-ai-daily";
 import { ArrowDownIcon } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useLayoutEffect, useState } from "react";
-import { DailyTransport, DailyVoiceClient } from "realtime-ai-daily";
+import { RTVIClient } from "realtime-ai";
 import { RTVIClientAudio, RTVIClientProvider } from "realtime-ai-react";
 import ChatMessages from "./ChatMessages";
 import Settings from "./Settings";
@@ -39,11 +40,11 @@ export default function ClientPage({
 }: Props) {
   const searchParams = useSearchParams();
 
-  const [client, setClient] = useState<DailyVoiceClient>();
+  const [client, setClient] = useState<RTVIClient>();
 
   useEffect(() => {
     setClient(
-      new DailyVoiceClient({
+      new RTVIClient({
         enableCam: false,
         enableMic: false,
         transport: new DailyTransport(),

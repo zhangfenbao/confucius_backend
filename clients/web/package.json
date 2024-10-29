@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@daily-co/realtime-ai-daily": "^0.2.1-rc1",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.1",
@@ -33,15 +34,14 @@
     "jotai": "^2.9.3",
     "lucide-react": "^0.441.0",
     "markdown-to-jsx": "^7.5.0",
-    "next": "14.2.11",
+    "next": "15.0.1",
     "prism-react-renderer": "^2.4.0",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "19.0.0-rc-69d4b800-20241021",
+    "react-dom": "19.0.0-rc-69d4b800-20241021",
     "react-hook-form": "^7.53.0",
     "react-syntax-highlighter": "^15.5.0",
-    "realtime-ai": "^0.2.0",
-    "realtime-ai-daily": "^0.2.0",
-    "realtime-ai-react": "^0.2.0",
+    "realtime-ai": "^0.2.1-rc1",
+    "realtime-ai-react": "^0.2.1-rc1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^10.0.0",
@@ -49,16 +49,20 @@
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
     "eslint": "^8",
-    "eslint-config-next": "14.2.11",
+    "eslint-config-next": "15.0.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "@types/react": "npm:types-react@19.0.0-rc.1",
+    "@types/react-dom": "npm:types-react-dom@19.0.0-rc.1"
   }
 }
