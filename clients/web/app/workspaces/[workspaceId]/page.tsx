@@ -3,13 +3,13 @@ import { defaultWorkspace, getWorkspace } from "@/lib/workspaces";
 import ConfigurationForm from "./ConfigurationForm";
 
 interface WorkspacePageProps {
-  params: { workspaceId: string };
+  params: Promise<{ workspaceId: string }>;
 }
 
 export default async function EditWorkspacePage({
   params,
 }: WorkspacePageProps) {
-  const { workspaceId } = params;
+  const { workspaceId } = await params;
 
   if (workspaceId === "new") {
     return <ConfigurationForm workspace={defaultWorkspace} />;

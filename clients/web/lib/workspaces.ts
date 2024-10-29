@@ -11,15 +11,7 @@ import { defaultVoice, InteractionMode, TTSService } from "./voice";
 export async function getWorkspaces() {
   const apiClient = await getApiClient();
   const response =
-    await apiClient.api.getRecentConversationsWithWorkspaceApiConversationsGet(
-      {},
-      {
-        next: {
-          revalidate: 60,
-          tags: ["workspaces"],
-        },
-      }
-    );
+    await apiClient.api.getRecentConversationsWithWorkspaceApiConversationsGet();
   const json = await response.json();
   if (!response.ok) {
     throw new Error(
@@ -36,12 +28,7 @@ export async function getWorkspace(id: string) {
   try {
     const apiClient = await getApiClient();
     const response =
-      await apiClient.api.getWorkspaceApiWorkspacesWorkspaceIdGet(id, {
-        next: {
-          revalidate: 60,
-          tags: ["workspaces", id],
-        },
-      });
+      await apiClient.api.getWorkspaceApiWorkspacesWorkspaceIdGet(id);
     const json = await response.json();
     if (response.ok) {
       return json as WorkspaceModel;

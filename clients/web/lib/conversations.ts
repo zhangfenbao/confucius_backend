@@ -18,12 +18,6 @@ export async function getConversations(
         {
           limit: PAGE_SIZE,
           offset: offset * PAGE_SIZE,
-        },
-        {
-          next: {
-            revalidate: 60,
-            tags: ['conversations'],
-          },
         }
       );
     if (response.ok) {
@@ -56,12 +50,6 @@ export async function searchConversations(
           search_term: query,
           limit: PAGE_SIZE,
           offset: offset * PAGE_SIZE,
-        },
-        {
-          next: {
-            revalidate: 60,
-            tags: ['conversations'],
-          },
         }
       );
     if (response.ok) {
@@ -97,13 +85,7 @@ export async function getConversation(conversationId: string) {
     const apiClient = await getApiClient();
     const response =
       await apiClient.api.getConversationAndMessagesApiConversationsConversationIdMessagesGet(
-        conversationId,
-        {
-          next: {
-            revalidate: 30,
-            tags: ['conversations', conversationId],
-          },
-        }
+        conversationId
       );
     if (response.ok) {
       const json = await response.json();

@@ -6,16 +6,16 @@ import { getWorkspace, getWorkspaceStructuredData } from "@/lib/workspaces";
 import { redirect } from "next/navigation";
 
 interface ConversationPageProps {
-  params: {
+  params: Promise<{
     conversationId: string;
     workspaceId: string;
-  };
+  }>;
 }
 
 export default async function ConversationPage({
   params,
 }: ConversationPageProps) {
-  const { conversationId, workspaceId } = params;
+  const { conversationId, workspaceId } = await params;
 
   const workspace = await getWorkspace(workspaceId);
 

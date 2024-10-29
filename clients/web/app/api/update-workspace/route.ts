@@ -1,4 +1,3 @@
-import { revalidateAll } from "@/app/actions";
 import { syncWorkspaceServices } from "@/lib/services";
 import { WorkspaceModel } from "@/lib/sesameApi";
 import { getApiClient } from "@/lib/sesameApiClient";
@@ -22,8 +21,6 @@ export async function PUT(request: NextRequest) {
       const json = await response.json();
 
       await syncWorkspaceServices(json as WorkspaceModel);
-
-      await revalidateAll();
 
       return NextResponse.json(json);
     } else {
