@@ -24,7 +24,10 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 console = Console()
-app = typer.Typer(help="CLI tool for project setup and management.")
+app = typer.Typer(
+    help="Sesame CLI - Development and management tools for the Sesame application.",
+    no_args_is_help=True,
+)
 
 env_example = Path("env.example")
 env_file = Path(".env")
@@ -83,18 +86,37 @@ def format_env_contents(current_contents: list[str], updates: Dict[str, str]) ->
 
 
 def handle_env_updates(
-    env_updates: Dict[str, str], action: Literal["print", "save", "both", "skip"] = "both"
+    env_updates: Dict[str, str],
+    action: Literal["print", "save", "both", "skip"] = "both",
+    init_mode: bool = False,
 ) -> None:
-    """Helper function to handle env variable updates with flexible output options."""
+    """Helper function to handle env variable updates with flexible output options.
+
+    Args:
+        env_updates: Dictionary of environment variables to update
+        action: How to handle the updates ("print", "save", "both", or "skip")
+        init_mode: If True, creates a fresh .env file instead of updating existing one
+    """
     try:
-        # Get current or example env contents
-        if env_file.exists():
-            with open(env_file, "r") as f:
-                current_contents = f.readlines()
-        else:
+        if init_mode:
+            # For initialization, always start with the example template
             with open(env_example, "r") as f:
                 current_contents = f.readlines()
-            console.print("\nNo .env file found, using env.example as template", style="yellow")
+
+            # If .env exists, create a backup before overwriting
+            if env_file.exists():
+                backup_file = env_file.with_suffix(".backup")
+                shutil.copy2(env_file, backup_file)
+                console.print(f"Created backup of existing .env at {backup_file}", style="yellow")
+        else:
+            # For updates, use existing .env or fall back to example
+            if env_file.exists():
+                with open(env_file, "r") as f:
+                    current_contents = f.readlines()
+            else:
+                with open(env_example, "r") as f:
+                    current_contents = f.readlines()
+                console.print("\nNo .env file found, using env.example as template", style="yellow")
 
         # Format the updated contents
         updated_contents = format_env_contents(current_contents, env_updates)
@@ -109,16 +131,13 @@ def handle_env_updates(
             console.print(syntax)
 
         if action in ["save", "both"]:
-            # Create backup if file exists
-            if env_file.exists():
-                backup_file = env_file.with_suffix(".env.backup")
-                shutil.copy2(env_file, backup_file)
-                console.print(f"Created backup at {backup_file}", style="yellow")
-
             # Write the updates
             with open(env_file, "w") as f:
                 f.writelines(updated_contents)
-            console.print("Successfully updated .env file", style="green")
+            console.print(
+                "✓ Created new .env file" if init_mode else "✓ Successfully updated .env file",
+                style="bold green",
+            )
 
         if action == "skip":
             console.print("Skipped environment variable updates", style="yellow")
@@ -154,11 +173,19 @@ def init():
     """Initialize a new project and Sesame environment."""
 
     if env_file.exists():
-        console.print("Warning: Project .env file already exists.", style="red")
-        if not Confirm.ask("Would you like to proceed? This will overwrite your existing settings"):
+        warning_panel = Panel(
+            "[yellow]A project .env file already exists.\n"
+            "Proceeding will create a fresh .env file.\n"
+            "Your current .env will be backed up to .env.backup[/yellow]",
+            title="[red bold]Warning",
+            border_style="red",
+        )
+        console.print("\n", warning_panel, "\n")
+
+        if not Confirm.ask("Would you like to proceed?"):
             raise typer.Exit()
 
-    if Confirm.ask("\nWould you like to generate a random app secret? (No to provide your own)"):
+    if Confirm.ask("\nWould you like to generate a random app secret? (SESAME_APP_SECRET)"):
         app_secret = generate_secret()
         console.print("Generated random app secret.")
     else:
@@ -168,13 +195,27 @@ def init():
         )
         console.print("Using provided app secret.")
 
+    table = Table(show_header=False, box=None, padding=(0, 2), collapse_padding=True)
+
+    table.add_column("Option", style="cyan")
+    table.add_column("Description", style="white")
+
+    table.add_row("print", "Display the changes in the terminal without saving to .env")
+    table.add_row("save", "Save the changes to .env without displaying")
+    table.add_row("both", "Display and save the changes")
+    table.add_row("skip", "Cancel without making any changes")
+
+    console.print("\nAvailable options:", style="blue bold")
+    console.print(table)
+    console.print()
+
     action = Prompt.ask(
-        "\nHow would you like to handle these updates?",
+        "How would you like to handle these updates?",
         choices=["print", "save", "both", "skip"],
         default="both",
     )
 
-    handle_env_updates({"SESAME_APP_SECRET": app_secret}, action=action)
+    handle_env_updates({"SESAME_APP_SECRET": app_secret}, action=action, init_mode=True)
 
     if Confirm.ask("\nWould you like to configure your database?"):
         init_db()
@@ -191,13 +232,29 @@ def init_db():
     console.print("Please provide the following database details:\n")
 
     # Collect database configuration
+    admin_user = Prompt.ask("Database admin username", default="postgres")
+
+    default_app_user = "sesame"
+    namespace_found = None
+
+    # Split on dot and take the last part
+    parts = admin_user.split(".")
+    if len(parts) > 1:
+        namespace_found = parts[-1]
+        default_app_user = f"sesame.{namespace_found}"
+        console.print(
+            f"[dim]Detected namespace '[cyan]{namespace_found}[/cyan]' "
+            f"from admin user, suggesting application user: [cyan]{default_app_user}[/cyan][/dim]"
+        )
+
+    # Collect database configuration
     db_config = {
-        "SESAME_DATABASE_ADMIN_USER": Prompt.ask("Database admin username", default="postgres"),
+        "SESAME_DATABASE_ADMIN_USER": admin_user,
         "SESAME_DATABASE_ADMIN_PASSWORD": Prompt.ask("Database admin password", password=True),
         "SESAME_DATABASE_NAME": Prompt.ask("Database name", default="sesame"),
         "SESAME_DATABASE_HOST": Prompt.ask("Database host", default="localhost"),
         "SESAME_DATABASE_PORT": Prompt.ask("Database port", default="5432"),
-        "SESAME_DATABASE_USER": Prompt.ask("Application database user", default="sesame"),
+        "SESAME_DATABASE_USER": Prompt.ask("Application database user", default=default_app_user),
     }
 
     # Handle the application database password
@@ -228,6 +285,20 @@ def init_db():
         else:
             display_value = value
         console.print(f"{key}: {display_value}")
+
+    table = Table(show_header=False, box=None, padding=(0, 2), collapse_padding=True)
+
+    table.add_column("Option", style="cyan")
+    table.add_column("Description", style="white")
+
+    table.add_row("print", "Display the changes in the terminal without saving to .env")
+    table.add_row("save", "Save the changes to .env without displaying")
+    table.add_row("both", "Display and save the changes")
+    table.add_row("skip", "Cancel without making any changes")
+
+    console.print("\nAvailable options:", style="blue bold")
+    console.print(table)
+    console.print()
 
     action = Prompt.ask(
         "\nHow would you like to handle these updates?",
@@ -392,13 +463,6 @@ async def _run_schema():
 
         if not created_role:
             created_role = sesame_user
-
-        # Try to extract namespace if present in connection URL
-        match = re.search(r"[^/]*@", str(admin_url))
-        if match:
-            namespace = re.search(r"\..*:", match.group())
-            if namespace:
-                created_role = f"{sesame_user}.{namespace.group().strip('.:')}"
 
         # Create the output table
         table = Table(
