@@ -96,6 +96,59 @@ export default function ClientPage({
     };
   }, []);
 
+  useEffect(() => {
+    if (!client) return;
+    const handleChangeLlmModel = (model: string) => {
+      if (client.connected) {
+        client.updateConfig([
+          {
+            service: "llm",
+            options: [
+              {
+                name: "model",
+                value: model
+              }
+            ]
+          }
+        ])
+      } else {
+        const config = client.params.config;
+        if (config) {
+          const llmConfig = config.find(c => c.service === "llm");
+          client.params.config = [
+            ...config,
+            {
+              service: "llm",
+              options: [
+                ...(llmConfig?.options ?? []),
+                {
+                  name: "model",
+                  value: model
+                }
+              ]
+            }
+          ];
+        } else {
+          client.params.config = [
+            {
+              service: "llm",
+              options: [
+                {
+                  name: "model",
+                  value: model
+                }
+              ]
+            }
+          ];
+        }
+      }
+    };
+    emitter.on("changeLlmModel", handleChangeLlmModel);
+    return () => {
+      emitter.off("changeLlmModel", handleChangeLlmModel);
+    };
+  }, [client]);
+
   const animate = !searchParams.has("a") || searchParams.get("a") === "1";
 
   return (
