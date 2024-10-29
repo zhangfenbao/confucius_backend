@@ -142,15 +142,6 @@ class PersistentContextStorage:
 
     async def store_messages(self, context_messages, erase_before_store=False):
         try:
-            """
-            # Get the highest message number for this conversation
-            result = await self._db.execute(
-                select(func.coalesce(func.max(Message.message_number), 0)).where(
-                    Message.conversation_id == self._conversation_id
-                )
-            )
-            highest_message_number = result.scalar_one()
-            """
             ms = []
             for i, message_data in enumerate(context_messages, start=1):
                 m = Message(
@@ -185,10 +176,9 @@ class PersistentContextStorage:
 
             # Add the new messages to the session and flush
             self._db.add_all(ms)
+
             await self._db.flush()
 
-            # If we get here, the insertion was successful
-            await self._db.commit()
             logger.debug(f"Stored {len(context_messages)} messages")
 
         except IntegrityError:

@@ -58,5 +58,8 @@ async def get_db_with_token(
 @asynccontextmanager
 async def get_authenticated_db_context(auth: Auth):
     async with get_db_session_async_context() as db:
-        await db.execute(text("SELECT set_current_user_id(:user_id)"), {"user_id": auth.user_id})
-        yield db
+        async with db.begin():
+            await db.execute(
+                text("SELECT set_current_user_id(:user_id)"), {"user_id": auth.user_id}
+            )
+            yield db
