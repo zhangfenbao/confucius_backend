@@ -270,6 +270,7 @@ ServiceFactory.register_service(
     },
 )
 
+"""
 ServiceFactory.register_service(
     "pipecat.services.azure:AzureTTSService",
     "azure",
@@ -280,6 +281,7 @@ ServiceFactory.register_service(
         "text_filter": MarkdownTextFilter(),
     },
 )
+"""
 
 ServiceFactory.register_service(
     "pipecat.services.openai:OpenAITTSService",
