@@ -28,7 +28,12 @@ To run Open Sesame locally, you will need:
 
 - Python 3.10 or higher.
 - Database that supports async sessions.
-- Service provider API keys for a large-language, text-to-speech, and speech-to-text provider.
+- Service provider API keys for a large-language, text-to-speech, and speech-to-text providers.
+
+Running an Open Sesame requires:
+
+- Deploying the `sesame` app, containing the API and bot files.
+- Connecting a client to your deployment.
 
 ### 1. Install project dependencies
 
