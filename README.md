@@ -2,7 +2,7 @@
 
 # Open Sesame
 
-Open Source multi-modal LLM environment. Host your own web and mobile chat interface, powered by real-time bots that provide best-in-class voice AI functionality with an emphasis on:
+Open Source multi-modal LLM environment. Host your own web and mobile chat interface, powered by real-time bots that provide voice AI interactivity with an emphasis on:
 
 - Using any model for any conversation thread
 - Data ownership
@@ -21,7 +21,6 @@ Open Source multi-modal LLM environment. Host your own web and mobile chat inter
   - [Services](#services)
   - [Authentication](#authentication)
 - [Client Apps](#client-apps)
-- [Deployment](#deployment)
 - [Core Technologies](#core-technologies)
 
 ## Quickstart
@@ -30,10 +29,12 @@ Open Source multi-modal LLM environment. Host your own web and mobile chat inter
 
 - Python 3.10 or higher
 - Database supporting async sessions
+  - Storage is used for user accounts, service keys, workspace settings and conversation history. Currently, the app requires PostgresSQL, but more database types are planned for the future.
 - API keys for:
   - Large Language Model provider
   - Text-to-Speech provider
   - Speech-to-Text provider
+  - Real-time media transport
 
 ### Installation Steps
 
@@ -52,11 +53,13 @@ python sesame.py init
 This creates a `.env` file. Alternatively, copy `sesame/env.example` to `sesame/.env` and configure manually.
 
 3. **Set Up Database**
+
 ```bash
+# Note: optional, if you skipped this step during init
 python sesame.py init-db
 ```
 
-Required environment variables:
+... or manually, set these environment variables:
 ```
 SESAME_DATABASE_ADMIN_USER="postgres"
 SESAME_DATABASE_ADMIN_PASSWORD=""
@@ -67,17 +70,22 @@ SESAME_DATABASE_USER="sesame"
 SESAME_DATABASE_PASSWORD="your-strong-password"
 ```
 
+> 💡 Ensure you are using a database that accepts session mode typically available on port `5432`. If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
+
 4. **Test Database Connection**
 ```bash
 python sesame.py test-db --admin  # Test admin credentials
-python sesame.py run-schema      # Apply database schema
-python sesame.py test-db         # Test user credentials
+python sesame.py run-schema       # Apply database schema
+python sesame.py test-db          # Test user credentials
 ```
+> 💡 The Open Sesame CLI will not create the database for you. If the database does not exist (if you are using a local psql, for example), please ensure to run `CREATE DATABASE dbname;` where `dbname` matched your `SESAME_DATABASE_NAME`.
 
 5. **Create User**
 ```bash
 python sesame.py create-user
 ```
+
+You must have a least one user account in order to generate a token (used to query the API.)
 
 6. **Launch Application**
 ```bash
@@ -96,10 +104,14 @@ Manual server launch:
 python -m uvicorn webapp.main:app --reload
 ```
 
+### Run a client
+
+See [Client Apps](#client-apps) section to start chatting to a bot!
+
 ## CLI Commands
 
 ```bash
-python sesame.py --help           # Show available commands
+python sesame.py --help          # Show available commands
 python sesame.py init            # Create .env file
 python sesame.py init-db         # Configure database
 python sesame.py test-db         # Test database connection
@@ -113,7 +125,7 @@ python sesame.py services        # List registered services
 
 ### Database Setup
 
-Requires PostgreSQL with extensions specified in `schema/postgresql.sql`. Cloud-hosted options like Render or Supabase recommended. See [database documentation](./docs/database.md) for details.
+Requires PostgreSQL with extensions specified in `schema/postgresql.sql`. Cloud-hosted options like Render or Supabase in production. See [database documentation](./docs/database.md) for details.
 
 ### Project Structure
 
@@ -124,22 +136,46 @@ Core modules:
 
 ### API
 
-Access Swagger documentation at `/docs` (requires authentication).
+The `webapp` must be running in order for your client and bots to function. 
 
+It defines an API that exposes several HTTP routes, such as workspace or conversation creation.
+
+```
+python sesame.py run
+```
+
+Swagger docs are available at `/docs`, e.g. `http://localhost:8000/docs`. You must authenticate requests via with a valid user token.
 ### Workspaces
 
-Workspaces contain:
+Workspaces define the environment in which you interact with your bot. They contain:
+
 - Conversations and messages
-- Bot pipeline configurations
-- Optional workspace-specific services
+- Config options for your bot pipelines
+- Optional: workspace specific services and keys (see [services](s#ervices) section below.)
+
+Workspaces are unique per user, and you can create as many as you like to support various use-cases. All the clients in this repo support initial workspace configuration steps.
 
 ### Services
 
-Required services:
-- Single-turn bots: `llm`
-- Voice bots: `transport`, `llm`, `stt`, `tts`
+Open Sesame bots require that you configure services and their associated API keys and required config options.
 
-Services can be configured at user or workspace level.
+Single-turn HTTP bots require:
+
+- `llm` (e.g. OpenAI, Together AI, Anthropic etc.)
+
+Realtime voice bots require:
+
+- `transport` (e.g. Daily)
+- `llm` (e.g. OpenAI, Together AI, Anthropic etc.)
+- `stt` (e.g. Deepgram, Azure etc.)
+- `tts` (e.g. Cartesia, ElevenLabs etc.)
+
+You can configure services at either:
+ - **user level**
+    - Accessible across all user workspaces.
+
+ - **workspace level**
+    - Only accessible for that specific workspace. This is useful if you want to override a service key or config option within the context of a specific workspace.
 
 ### Authentication
 
@@ -154,22 +190,6 @@ Available clients:
 
 Coming soon:
 - Command-line interface
-
-## Deployment
-
-### Modal.com Deployment
-
-1. Copy `modal_app.py` from `deployment/modal` to `sesame` folder
-2. Install and configure Modal:
-```bash
-pip install modal
-python -m modal setup
-cd sesame
-modal serve modal_app.py    # Development
-modal deploy modal_app.py   # Production
-```
-
-Visit `https://YOUR_DEPLOY_NAME.modal.run/docs` to verify deployment.
 
 ## Core Technologies
 
