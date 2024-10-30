@@ -1,0 +1,11 @@
+<section class="section">
+  <div class="box" v-if="isAuthenticated">
+    <h2 class="subtitle is-4">Services</h2>
+    <div class="loader" v-if="isFetchingServices"></div>
+
+    <h4 class="subtitle is-5">Registered / supported</h4>
+    <div v-for="service in availableServices" :key="service">
+      <div>${service.service_type}$ - ${service.service_name}$</div>
+    </div>
+  </div>
+</section>

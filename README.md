@@ -282,11 +282,11 @@ Mobile clients can be quickly authenticated by scanning a QR code for a session 
 
 ## Deployment
 
-### Deploy Server to Modal.com
+### Deploy to Modal.com
 
 This project is configured by default to deploy to [Modal](https://www.modal.com).
 
-The entry point for configuring your deployment can be found at [`server/app.py`](./server/app.py). Whilst the included http and voice bots do not run any compute heavy processes, you can modify your deployment to run local inference should you wish.
+The entry point for configuring your deployment can be found at [`deployment/modal_app.py`](./deployment/modal_app.py). Whilst the included http and voice bots do not run any compute heavy processes, you can modify your deployment to run local inference should you wish.
 
 Modal.com provides fast process spawning for voice sessions, meaning you app is not bottlenecked by the processing capabilities of the web api.
 

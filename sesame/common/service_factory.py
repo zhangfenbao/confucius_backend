@@ -21,6 +21,14 @@ class ServiceDefinition(BaseModel):
     }
 
 
+class ServiceInfo(BaseModel):
+    service_name: str
+    service_type: str
+    requires_api_key: bool
+    optional_params: List[str]
+    required_params: List[str]
+
+
 class ServiceType(Enum):
     """Enum representing different types of AI services."""
 
@@ -137,11 +145,24 @@ class ServiceFactory:
         return cls._services[service_key]
 
     @classmethod
-    def get_available_services(cls, service_type: ServiceType = None) -> List[str]:
+    def get_available_services(cls, service_type: ServiceType = None) -> List[ServiceInfo]:
         """Get a list of all registered services, optionally filtered by type."""
-        if service_type:
-            return [name for (name, type_) in cls._services.keys() if type_ == service_type]
-        return list(set(name for name, _ in cls._services.keys()))
+        services = (
+            (name, type_, service_dict)
+            for (name, type_), service_dict in cls._services.items()
+            if not service_type or type_ == service_type
+        )
+
+        return [
+            ServiceInfo(
+                service_name=name,
+                service_type=type_.value,
+                requires_api_key=service.requires_api_key,
+                optional_params=service.optional_params,
+                required_params=service.required_params,
+            )
+            for name, type_, service in services
+        ]
 
     @classmethod
     def get_service_info(cls) -> Dict[str, List[str]]:
