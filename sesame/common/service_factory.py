@@ -133,9 +133,7 @@ class ServiceFactory:
     ) -> ServiceDefinition:
         service_key = (service_name, service_type)
         if service_key not in cls._services:
-            raise ValueError(
-                f"Service '{service_name}' of type {service_type.value} is not registered"
-            )
+            raise ValueError(f"Service '{service_name}' of type {service_type} is not registered")
         return cls._services[service_key]
 
     @classmethod
@@ -146,12 +144,14 @@ class ServiceFactory:
         return list(set(name for name, _ in cls._services.keys()))
 
     @classmethod
-    def get_service_info(cls) -> Dict[ServiceType, List[str]]:
+    def get_service_info(cls) -> Dict[str, List[str]]:
         """Get a structured view of all registered services grouped by type."""
-        result = {service_type: [] for service_type in ServiceType}
-        for name, type_ in cls._services.keys():
-            result[type_].append(name)
-        return result
+        return {
+            service_type.value: sorted(
+                name for name, type_ in cls._services.keys() if type_ == service_type
+            )
+            for service_type in ServiceType
+        }
 
     def __str__(self) -> str:
         """Return a formatted string showing all available services by type."""

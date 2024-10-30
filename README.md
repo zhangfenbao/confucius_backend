@@ -10,11 +10,13 @@ Open Source multi-modal LLM environment. Host your own web and mobile chat inter
 ## Table of contents
 
 - [Quickstart](#quickstart)
-- [CLI commands](#the-open-sesame-cli)
-- [Overview](#overview)
-  - [Database setup](#database-setup)
-  - [Webapp and workspaces](#run-the-webapp-server-and-create-a-workspace)
-- [Create your first workspace](#create-your-first-workspace)
+- [CLI commands](#open-sesame-cli)
+- [Overview and Concepts](#overview-and-concepts)
+  - [Database setup guides](#database-setup-guides)
+  - [Project structure](#project-structure)
+  - [API](#api)
+  - [Services](#run-the-webapp-server-and-create-a-workspace)
+  - [Authentication](#authentication)
 - [Run a client app](#run-a-client-app)
 - [Deployment](#deployment)
   - [Modal.com](#deploy-server-to-modalcom)
@@ -56,6 +58,8 @@ This command will create a new .env file in the project folder. You can do this 
 
 ### 3. Configure your database
 
+Open Sesame uses data storage for users, services, workspace settings and conversation history. The current default schema assumes Postgres.
+
 If you chose to skip the database configuration step as part of the `sesame.py init` command, you step through this with:
 
 ```shell
@@ -69,12 +73,13 @@ SESAME_DATABASE_ADMIN_USER="postgres"
 SESAME_DATABASE_ADMIN_PASSWORD=""
 SESAME_DATABASE_NAME="postgres"
 SESAME_DATABASE_HOST="localhost"
-# Use a session port (typically 5432)
 SESAME_DATABASE_PORT="5432"
 # Public database role credentials
 SESAME_DATABASE_USER="sesame"
 SESAME_DATABASE_PASSWORD="some-strong-password"
 ```
+
+> 🛑 Ensure you are using a database that accepts session mode typically available on port `5432`. If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
 
 You can test your database credentials:
 
@@ -82,6 +87,9 @@ You can test your database credentials:
 python sesame test-db --admin
 # Note: --admin specifies to test using the admi credentials. The efault user role has not yet been created
 ```
+
+> 🛑 The Open Sesame CLI will not create the database for you. If the database does not exist (if you are using a local psql, for example), please ensure to run `CREATE DATABASE dbname;` where `dbname` matched your `SESAME_DATABASE_NAME`.
+
 
 #### Run the schema
 
@@ -122,6 +130,10 @@ Run the application:
 python sesame.py run
 ```
 
+You should see a URL in your terminal window to visit, for example `http://127.0.0.1:8000`. Navigating to this URL should reveal the Open Sesame dashboard, or an error message if something went wrong.
+
+<img alt="open-sesame-dashboard" width="280px" height="auto" src="./docs/sesame-dashboard.png">
+
 #### Something went wrong?
 
 - Check all the necessary settings are configured in your `.env`
@@ -135,7 +147,9 @@ To manually run the FastAPI server:
 python -m uvicorn webapp.main:app --reload
 ```
 
----
+### 6. Run one of the clients
+
+[See here for getting setup with a client app](#run-a-client-app).
 
 ## Open Sesame CLI
 
@@ -151,226 +165,102 @@ python sesame.py init
 python sesame.py init-db
 
 # Test admin database credentials
-python sesame.py test-db  --admin   # Admin role
-python sesame.py test-db            # User role
+python sesame.py test-db  --admin # Admin role
+python sesame.py test-db  # User role
 
 # Run required schema
 python sesame.py run-schema
 
 # Create user
 python sesame.py create-user
+# ... or for no prompt
 python sesame.py create-user -u user -p pass
 
 # Run the FastaPI app
 python sesame.py run
+
+# View registered services
+python sesame.py services
 ```
 
 ---
-
-#### 1. Install project dependencies
-
-```shell
-python -m venv venv
-source venv/bin/activate # ... or OS specific activation
-pip install -r sesame/dev-requirements.txt
-```
-
-#### 2. Create a database
-
-Sesame uses data storage for users, workspace settings and conversation history. The current default schema assumes Postgres.
-
-Create a new local database: `psql -U postgres -c "CREATE DATABASE sesame;"`
-
-... or alternatively, use a hosted database provider such as [Render](www.render.com) or [Supabase](www.supabase.com).
-
-
-#### 3. Create a local .env
-
-```shell
-cp sesame/env.example sesame/.env
-```
-
-You must set the following:
-
-```bash
-SESAME_APP_SECRET # For salting secrets during encryption
-SESAME_DATABASE_ADMIN_USER # Privileged database user name
-SESAME_DATABASE_ADMIN_PASSWORD # Privileged user password
-SESAME_DATABASE_NAME # Name of database, e.g. sesame
-SESAME_DATABASE_HOST # Database host address, e.g. localhost
-SESAME_DATABASE_PORT # Database port E.g. 5432 (should allow asynchronous session pooling)
-```
-
-_Note: Your database must support asyncpg or equivalent asychnronous driver._
-
-> 🛑 Ensure you are using a database that accepts session mode typically available on port `5432`. If you are using Supabase, the URL provided in the settings panel defaults to "transaction mode". See [Database setup](#database-setup) for details.
-
-#### 4. Create database roles and schema
-
-From the root of the project, run the schema script found in [scripts/run_shema.sh](./scripts/run_schema.sh)
-
-```shell
-bash scripts/run_schema.sh
-```
-
-Note: the `run_schema.sh` script requires Postgres to run. Install the necessary package for your system (e.g. `brew install postgresql` for MacOS).
-
-If the schema runs correctly, the script will print out a non-superuser user and password.
-
-Edit `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` in `sesame/.env` with the output of the script.
-
-For more information about database configuration, read [here](#database-setup)
-
-#### 5. Create a user
-
-From the root of the project still, create a user account and password from [scripts/create_user.sh](./scripts/create_user.sh).
-
-```shell
-bash scripts/create_user.sh
-```
-
-Running this script will create a user account in your database. Make a note of your username and password; the password will be encrypted and not recoverable later.
-
-#### 6. Run the Sesame webapp and generate access token
-
-```shell
-cd sesame/
-uvicorn webapp.main:app --reload
-```
-
-You should see a URL in your terminal window to visit, for example `http://127.0.0.1:8000`. Navigating to this URL should reveal the Sesame dashboard, or an error message if something went wrong.
-
-<img alt="open-sesame-dashboard" width="280px" height="auto" src="./docs/sesame-dashboard.png">
-
-Log in with the user name and password you set in step 5.
-
-Now, create a new access token to authenticate web requests in any of the Open Sesame clients. For more information, see [authentication](./docs/authentication.md).
-
-#### 7. Run the tests to check your configuration
-
-```bash
-cd sesame/
-PYTHONPATH=. pytest tests/ -s -v
-```
 
 #### 8. Create your first workspace
 
 Follow the [workspace creation steps](#create-your-first-workspace), and run a [client](#run-a-client-app) of your choosing.
 
 
-## Overview
+## Overview and Concepts
 
-### Project requirements
 
-- Python 3.10 or higher.
-- Database that supports async sessions (we recommend [Supabase](https://supabase.com/).)
-- Deployment target that can run Python processes (we recommend [Modal](https://www.modal.com).)
-- API keys for support transport, llm, tts, and stt services.
+### Database setup guides
 
-_Note: Sesame bots are configured to use [Daily](https://www.daily.co) as a transport layer when using realtime voice mode. You must provide a valid Daily API key to your workspace configuration in order to use voice mode_
+Open Sesame requires a Postgres database (support for other database types, such as SQLite, coming soon). You may need to install additional extensions specified in [schema/postgresql.sql](./schema/postgresql.sql).
 
-### Database setup
+For simplicity, we recommend using a cloud-hosted provider, such as [Render](www.render.com) or [Supabase](www.supabase.com). You can read more about database configuration steps [here](./docs/database.md.)
 
-Sesame requires a Postgres database (support for other database types, such as SQLite, coming soon). You may need to install additional extensions specified in [database/schema.sql](./database/schema.sql).
+### Project structure
 
-#### 1. Update your .env
+Open Sesame has 3 core Python modules that can be deployed together or individually.
 
-Update the non-optional `SESAME_DATABASE_*` variables in `sesame/.env`.
+- `webapp` - FastAPI routes, mostly responsible for authenticating and communicating with your database.
 
-For Supabase, for example, you can find credentials URL here: https://supabase.com/dashboard/project/[YOUR_PROJECT]/settings/database. **Note: be sure to use the URI for `Mode: session` to get the correct port for session mode.**
+- `bots` - [Pipecat](www.pipecat.ai) bot pipelines, one for single-turn inference and another for realtime voice communication.
 
-![](./docs/supabaseurl.png)
+- `common` - Shared libraries used by both the webapp API and the bots (such as database adapters, etc.)
 
-Your database credentials should look something like this:
 
-```bash
-SESAME_DATABASE_ADMIN_USER="postgres"
-SESAME_DATABASE_ADMIN_PASSWORD="password"
-SESAME_DATABASE_NAME="postgres"
-SESAME_DATABASE_HOST="region.pooler.supabase.com"
-# - Use a session port (typically 5432)
-SESAME_DATABASE_PORT=5432
-```
 
-#### 2. Apply database schema
+A `Dockerfile` is included in the `./sesame` directory.
 
-Run the schema `bash scripts/run_schema.sh` (or copy and paste into your SQL Editor of choice).
+### API
 
-This script will create the necessary tables, functions and triggers, as well echo the public database password to the terminal.
+The `webapp` must be running in order for your client and bots to function. 
 
-#### 3. Update your .env with the public database URL
-
-Update`SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` (public) in `sesame/.env` with the randomly generated password created by the `run_schema` script.
-
-Alternatively, you can set this yourself in `database/schema.sql` by changing the `%%REPLACED%%` input near the bottom.
-
-Optional: Test your connection by running `PYTHONPATH=.  pytest tests/ -s -v`
-
-## Run the webapp server
-
-#### Run the webapp
+It defines an API that exposes several HTTP routes, such as workspace or conversation creation.
 
 ```
-cd sesame
-uvicorn webapp.main:app --reload
+python sesame.py run
 ```
 
-> 💡 Swagger docs are available at http://127.0.0.1:8000/docs to assist in crafting the curl requests.
+Swagger docs are available at `/docs`, e.g. `http://localhost:8000/docs`. You must authenticate requests via the docs with a valid user token.
 
-#### Authentication
+### Workspaces
 
-You must authenticate all of your web requests with a valid access token which you can generate via the REST API or from the Sesame Dashboard.
+Workspaces define the environment in which you interact with your bot. They contain:
+
+- Conversations and messages
+- Config options for your bot pipelines
+- Optional: workspace specific services and keys (see [services](s#ervices) section below.)
+
+Workspaces are unique per user, and you can create as many as you like to support various use-cases. All the clients in this repo support initial workspace configuration steps.
+
+### Services
+
+Open Sesame bots require that you configure services and their associated API keys and required config options.
+
+Single-turn HTTP bots require:
+
+- `llm` (e.g. OpenAI, Together AI, Anthropic etc.)
+
+Realtime voice bots require:
+
+- `transport` (e.g. Daily)
+- `llm` (e.g. OpenAI, Together AI, Anthropic etc.)
+- `stt` (e.g. Deepgram, Azure etc.)
+- `tts` (e.g. Cartesia, ElevenLabs etc.)
+
+You can configure services at either **user level** or **workspace** level. 
+
+- Services defined at user level are accessible by all user workspaces.
+
+- Services defined at workspace level are only accessible for that specific workspace. This is useful if you want to override a service key or config option within the context of a specific workspace.
+
+### Authentication
+
+You must authenticate all of your web requests with a valid user token which you can generate via the REST API or from the Open Sesame Dashboard.
 
 For more information, read the [authentication docs](./docs/authentication.md).
-
-## Create your first workspace
-
-A workspace is a container for services, API keys and default conversations settings. A user can have multiple workspaces, but you need at least one to start talking to your bot.
-
-You can create a workspace using the API, for example:
-
-```bash
-curl -X 'POST' \
-'http://127.0.0.1:8000/api/workspaces' \
--H 'accept: application/json' \
--H "Authorization: Bearer $ACCESS_TOKEN" \
--H 'Content-Type: application/json' \
--d '{
-   "title": "My first workspace",
-   "config": {
-      "api_keys": {...},
-      "config": [...],
-      "services": {...}
-      "default_llm_context": [
-         {
-            "role": "system",
-            "content": {...}
-         },
-      ]
-   }
-}'
-```
-
-Here is an overview of the configuration options:
-
-`api_keys:{}` - Map of API keys for chosen service providers. Settings a key here will take precedence over anything you have set in your deployment environment.
-
-`config:[]` - A valid [RTVI](https://github.com/rtvi-ai#services) config array to configure your bot pipeline.
-
-`services:{}` - Map of services to providers.
-
-`default_llm_context:{}` - Initial LLM prompt for each new conversation.
-
-> 💡 You can find a full example workspace config [here](./scripts/example_workspace_config.json)
-
-#### 2. Check your workspace was created:
-
-```bash
-curl -X 'GET' \
-'http://127.0.0.1:8000/api/workspaces' \
--H 'accept: application/json' \
--H "Authorization: Bearer $ACCESS_TOKEN"
-```
 
 ## Run a client app
 

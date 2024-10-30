@@ -498,7 +498,6 @@ def test_db(
     """Test database connection using async engine."""
     try:
         load_dotenv(env_file)
-        # We need to run the async code in the event loop
         asyncio.run(_test_db(as_admin))
     except Exception as e:
         console.print(f"\nError connecting to database: {str(e)}", style="red bold")
@@ -878,6 +877,17 @@ def run(
     except Exception as e:
         console.print(f"\nError starting server: {str(e)}", style="red bold")
         raise typer.Exit(1)
+
+
+# ========================
+# Services
+# ========================
+@app.command()
+def services():
+    from common.service_factory import ServiceFactory
+
+    console.print("\nAvailable Services:", style="blue bold")
+    console.print(ServiceFactory.get_service_info())
 
 
 def main():
