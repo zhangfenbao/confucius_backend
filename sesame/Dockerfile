@@ -14,6 +14,8 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     build-essential \
     libpq-dev \
+    gcc \
+    libc-dev \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # Install Python dependencies (removing additions to reduce layer size)

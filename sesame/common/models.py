@@ -80,7 +80,11 @@ class Token(Base):
 
     @classmethod
     async def create_token_for_user(
-        cls, user_id: str, db: AsyncSession, title: str = None, expiration_minutes: int = 30
+        cls,
+        user_id: str,
+        db: AsyncSession,
+        title: Optional[str] = None,
+        expiration_minutes: int = 30,
     ):
         expires_at = datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes)
         random_bytes = os.urandom(32)
@@ -125,7 +129,9 @@ class Workspace(Base):
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    conversations: Mapped["Conversation"] = relationship("Conversation", back_populates="workspace")
+    conversations: Mapped[List["Conversation"]] = relationship(
+        "Conversation", back_populates="workspace"
+    )
 
     __mapper_args__ = {"eager_defaults": True}
 
@@ -324,13 +330,14 @@ class Service(Base):
 
         if workspace_id:
             workspace_service = next(
-                (service for service in services if service.workspace_id == workspace_id), None
+                (service for service in services if str(service.workspace_id) == str(workspace_id)),
+                None,
             )
             service = workspace_service or services[0]
         else:
             service = services[0]
 
-        decrypted_key = decrypt_with_secret(service.api_key)
+        decrypted_key = decrypt_with_secret(str(service.api_key))
         db.expunge(service)
         service.api_key = decrypted_key
         return service
@@ -366,10 +373,12 @@ class Service(Base):
         # Group services by type
         services_by_type: dict[str, list[Service]] = {}
         for service in services:
-            if service.service_provider == workspace_services[service.service_type]:
-                if service.service_type not in services_by_type:
-                    services_by_type[service.service_type] = []
-                services_by_type[service.service_type].append(service)
+            # Convert Column to string for comparison
+            if str(service.service_provider) == str(workspace_services[str(service.service_type)]):
+                service_type = str(service.service_type)
+                if service_type not in services_by_type:
+                    services_by_type[service_type] = []
+                services_by_type[service_type].append(service)
 
         # Build final result prioritizing workspace services
         final_services: dict[str, Service] = {}
@@ -387,7 +396,7 @@ class Service(Base):
             user_service = None
 
             for service in services_of_type:
-                if service.workspace_id == workspace_id:
+                if workspace_id and str(service.workspace_id) == str(workspace_id):
                     workspace_service = service
                     break
                 elif service.workspace_id is None:
@@ -403,7 +412,7 @@ class Service(Base):
                 continue
 
             # Decrypt API key before returning
-            decrypted_key = decrypt_with_secret(service.api_key)
+            decrypted_key = decrypt_with_secret(str(service.api_key))
             db.expunge(service)
             service.api_key = decrypted_key
             final_services[service_type] = service

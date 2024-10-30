@@ -8,10 +8,11 @@ import shutil
 import string
 import subprocess
 from pathlib import Path
-from typing import Callable, Dict, Literal
+from typing import Callable, Dict, Literal, Optional
 
 import typer
 from argon2 import PasswordHasher
+from common.database import construct_database_url
 from dotenv import load_dotenv
 from rich import box
 from rich.console import Console
@@ -95,7 +96,7 @@ def require_env_and_schema(f: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         if not check_required_env_vars():
             raise typer.Exit(1)
-        if not asyncio.run(check_schema_exists()):
+        if not check_schema_exists():
             raise typer.Exit(1)
         return f(*args, **kwargs)
 
@@ -297,7 +298,7 @@ async def check_schema_exists() -> bool:
                     )
                 """)
             )
-            exists = result.scalar()
+            exists = bool(result.scalar())
             if not exists:
                 console.print(
                     "\n✗ Database schema not found. Please run 'sesame run-schema' first.",
@@ -517,9 +518,11 @@ async def _test_db(as_admin=True):
         )
     else:
         console.print("Running Database Connection Test (User Role)", style="blue bold")
-        from common.database import engine
-
-        engine_for_role = engine
+        user_url = construct_database_url()
+        engine_for_role = create_async_engine(
+            user_url,
+            echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
+        )
 
     console.print("\nDatabase Connection Test", style="blue bold")
 
@@ -704,15 +707,16 @@ def create_user(
                 "SESAME_APP_SECRET missing from .env, required to salt encrypted passwords. Please set this and try again.",
                 style="red bold",
             )
-            raise typer.Exit("Missing SESAME_APP_SECRET")
+            raise typer.Exit(1)
 
         # Run the async user creation
         asyncio.run(_create_user(username, password))
     except Exception as e:
-        raise typer.Exit(f"Error creating user: {str(e)}")
+        console.print(f"Error creating user: {str(e)}", style="red bold")
+        raise typer.Exit(1)
 
 
-async def _create_user(username: str = None, password: str = None):
+async def _create_user(username: Optional[str] = None, password: Optional[str] = None):
     """Async function to create a new user."""
     # Validate database connection first
     await _test_db(as_admin=True)
@@ -778,7 +782,7 @@ async def _create_user(username: str = None, password: str = None):
                 )
                 count = result.scalar()
 
-                if count > 0:
+                if not count or count > 0:
                     raise ValueError("Username already exists")
 
                 # Insert new user

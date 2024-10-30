@@ -18,5 +18,6 @@ async def get_db(
 async def get_user(
     db_and_user: Tuple[AsyncSession, Auth] = Depends(get_db_with_token),
 ) -> Auth:
+    """Get authenticated user from the context"""
     _, user = db_and_user
     return user
