@@ -57,7 +57,7 @@ export interface WorkspaceFormConfig {
 }
 
 export default function ConfigurationForm({ workspace }: Props) {
-  const { push, refresh } = useRouter();
+  const { push } = useRouter();
   const { toast } = useToast();
   const structuredData = getWorkspaceStructuredData(workspace.config);
   const [isSaving, setIsSaving] = useState(false);
@@ -242,12 +242,12 @@ export default function ConfigurationForm({ workspace }: Props) {
             ? "Workspace created"
             : "Workspace configuration saved",
         });
+        emitter.emit("showPageTransitionLoader");
         push(
           isNewWorkspace
             ? `/${json.workspace_id}`
             : `/workspaces/${workspace.workspace_id}`
         );
-        refresh();
       } else {
         throw new Error(
           `${response.status}: ${

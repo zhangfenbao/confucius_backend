@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function DeleteWorkspaceModal() {
-  const { push, refresh } = useRouter();
+  const { push } = useRouter();
   const { toast } = useToast();
 
   const [isDeleting, setIsDeleting] = useState(false);
@@ -38,8 +38,8 @@ export default function DeleteWorkspaceModal() {
         title: "Workspace deleted",
       });
       setWorkspace(null);
+      emitter.emit("showPageTransitionLoader");
       push(`/workspaces`);
-      refresh();
     } else {
       setIsDeleting(false);
     }
