@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import functools
 import os
 import re
 import secrets
@@ -7,7 +8,7 @@ import shutil
 import string
 import subprocess
 from pathlib import Path
-from typing import Dict, Literal
+from typing import Callable, Dict, Literal
 
 import typer
 from argon2 import PasswordHasher
@@ -34,35 +35,84 @@ env_file = Path(".env")
 schema_file = Path("../schema/")
 
 
+def check_required_env_vars() -> bool:
+    """Check if all required environment variables are present in .env."""
+    # Variables that must have non-empty values
+    required_vars = [
+        "SESAME_APP_SECRET",
+        "SESAME_DATABASE_ADMIN_USER",
+        "SESAME_DATABASE_NAME",
+        "SESAME_DATABASE_HOST",
+        "SESAME_DATABASE_PORT",
+        "SESAME_DATABASE_USER",
+    ]
+
+    # Variables that must exist but can be empty
+    required_vars_allow_empty = ["SESAME_DATABASE_ADMIN_PASSWORD", "SESAME_DATABASE_PASSWORD"]
+
+    if not env_file.exists():
+        console.print("\n✗ No .env file found. Please run 'sesame init' first.", style="red bold")
+        return False
+
+    load_dotenv(env_file)
+
+    # Check vars that must have values
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+
+    # Check vars that must exist but can be empty
+    undefined_vars = [var for var in required_vars_allow_empty if os.getenv(var) is None]
+
+    if missing_vars or undefined_vars:
+        console.print("\n✗ Missing required environment variables:", style="red bold")
+        for var in missing_vars:
+            console.print(f"  • {var}", style="red")
+        for var in undefined_vars:
+            console.print(f"  • {var} (can be empty but must be defined)", style="red")
+        console.print(
+            "\nPlease run 'sesame init' or 'sesame init-db' to set these variables.", style="yellow"
+        )
+        return False
+
+    return True
+
+
+def require_env(f: Callable) -> Callable:
+    """Decorator to ensure environment variables."""
+
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        if not check_required_env_vars():
+            raise typer.Exit(1)
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
+def require_env_and_schema(f: Callable) -> Callable:
+    """Decorator to ensure environment variables and schema exist before running a command."""
+
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        if not check_required_env_vars():
+            raise typer.Exit(1)
+        if not asyncio.run(check_schema_exists()):
+            raise typer.Exit(1)
+        return f(*args, **kwargs)
+
+    return wrapper
+
+
 def construct_admin_database_url() -> str:
     """Construct database URL using admin credentials."""
-    required_vars = {
-        "SESAME_DATABASE_PROTOCOL": "postgresql",
-        "SESAME_DATABASE_ADMIN_USER": None,
-        "SESAME_DATABASE_ADMIN_PASSWORD": None,
-        "SESAME_DATABASE_HOST": None,
-        "SESAME_DATABASE_PORT": "5432",
-        "SESAME_DATABASE_NAME": "sesame",
-    }
-
-    # Ensure all required variables are present
-    missing_vars = [var for var, default in required_vars.items() if not os.getenv(var, default)]
-    if missing_vars:
-        raise ValueError(
-            f"Missing environment variables: {', '.join(missing_vars)}. Please set them in your .env file."
-        )
-
-    # Construct admin URL
     db_url = (
         f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+"
-        f"asyncpg://"
-        f"{os.getenv('SESAME_DATABASE_ADMIN_USER')}:"
-        f"{os.getenv('SESAME_DATABASE_ADMIN_PASSWORD')}@"
-        f"{os.getenv('SESAME_DATABASE_HOST')}:"
+        f"{os.getenv('SESAME_DATABASE_ASYNC_DRIVER', 'asyncpg')}://"
+        f"{os.getenv('SESAME_DATABASE_ADMIN_USER', 'postgres')}:"
+        f"{os.getenv('SESAME_DATABASE_ADMIN_PASSWORD', '')}@"
+        f"{os.getenv('SESAME_DATABASE_HOST', 'localhost')}:"
         f"{os.getenv('SESAME_DATABASE_PORT', '5432')}/"
         f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"
     )
-
     return db_url
 
 
@@ -229,6 +279,35 @@ def split_sql_statements(sql: str) -> list[str]:
     return [stmt for stmt in statements if stmt.strip() and not stmt.strip().startswith("--")]
 
 
+async def check_schema_exists() -> bool:
+    """Check if the schema has been applied by verifying the users table exists."""
+    admin_url = construct_admin_database_url()
+    admin_engine = create_async_engine(
+        admin_url,
+        echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
+    )
+
+    try:
+        async with admin_engine.begin() as conn:
+            result = await conn.execute(
+                text("""
+                    SELECT EXISTS (
+                        SELECT FROM information_schema.tables 
+                        WHERE table_name = 'users'
+                    )
+                """)
+            )
+            exists = result.scalar()
+            if not exists:
+                console.print(
+                    "\n✗ Database schema not found. Please run 'sesame run-schema' first.",
+                    style="red bold",
+                )
+            return exists
+    finally:
+        await admin_engine.dispose()
+
+
 # ========================
 # Initialize
 # ========================
@@ -307,6 +386,12 @@ def init_db():
     console.print("\nDatabase Configuration", style="blue bold")
     console.print("Please provide the following database details:\n")
 
+    db_engine = Prompt.ask(
+        "Which database would you like to use?",
+        choices=["postgresql"],
+        default="postgresql",
+    )
+
     # Collect database configuration
     admin_user = Prompt.ask("Database admin username", default="postgres")
 
@@ -325,11 +410,7 @@ def init_db():
 
     # Collect database configuration
     db_config = {
-        "SESAME_DATABASE_PROTOCOL": Prompt.ask(
-            "Which database would you like to use?",
-            choices=["postgres"],
-            default="postgres",
-        ),
+        "SESAME_DATABASE_PROTOCOL": db_engine,
         "SESAME_DATABASE_ADMIN_USER": admin_user,
         "SESAME_DATABASE_ADMIN_PASSWORD": Prompt.ask("Database admin password", password=True),
         "SESAME_DATABASE_NAME": Prompt.ask("Database name", default="sesame"),
@@ -410,6 +491,7 @@ def init_db():
 
 
 @app.command()
+@require_env
 def test_db(
     as_admin: bool = typer.Option(False, "--admin", help="Test with admin / superuser role"),
 ):
@@ -425,7 +507,9 @@ def test_db(
 
 async def _test_db(as_admin=True):
     """Async function to test database connection."""
+
     if as_admin:
+        console.print("Running Database Connection Test (Admin Role)", style="blue bold")
         # Set up the admin engine
         admin_url = construct_admin_database_url()
         engine_for_role = create_async_engine(
@@ -433,6 +517,7 @@ async def _test_db(as_admin=True):
             echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
         )
     else:
+        console.print("Running Database Connection Test (User Role)", style="blue bold")
         from common.database import engine
 
         engine_for_role = engine
@@ -450,7 +535,7 @@ async def _test_db(as_admin=True):
             async with engine_for_role.begin() as conn:
                 result = await conn.execute(text("SELECT version()"))
                 version = result.scalar()
-                console.print(f"\nDatabase version: {version}", style="blue")
+                console.print(f"Database version: {version}", style="dim")
 
         except Exception as e:
             console.print("\n✗ Failed to connect to database", style="red bold")
@@ -464,6 +549,7 @@ async def _test_db(as_admin=True):
 
 
 @app.command()
+@require_env
 def run_schema():
     """Apply database schema using existing configuration."""
     try:
@@ -603,11 +689,13 @@ async def _run_schema():
 
 
 @app.command()
+@require_env_and_schema
 def create_user(
     username: str = typer.Option(None, "--username", "-u", help="Username for the new user"),
     password: str = typer.Option(None, "--password", "-p", help="Password for the new user"),
 ):
     """Create a new user with secure password hashing."""
+
     try:
         # Load environment variables
         load_dotenv(env_file)
@@ -746,17 +834,29 @@ async def _create_user(username: str = None, password: str = None):
 
 
 @app.command()
+@require_env_and_schema
 def run(
-    host: str = typer.Option("127.0.0.1", "--host", "-h", help="Bind socket to this host."),
-    port: int = typer.Option(8000, "--port", "-p", help="Bind socket to this port."),
+    host: str = typer.Option(None, "--host", "-h", help="Bind socket to this host."),
+    port: int = typer.Option(None, "--port", "-p", help="Bind socket to this port."),
     reload: bool = typer.Option(True, "--reload/--no-reload", help="Enable auto-reload."),
 ):
     """Run the FastAPI server using uvicorn."""
+    load_dotenv(env_file)
+
     try:
+        final_port = port or int(os.getenv("SESAME_WEBAPP_PORT", "8000"))
         app_path = "webapp.main:app"
 
         # Build command arguments
-        command = ["uvicorn", app_path, "--host", host, "--port", str(port)]
+        command = [
+            "uvicorn",
+            app_path,
+            "--port",
+            str(final_port),
+        ]
+
+        if host:
+            command.extend(["--host", host])
 
         if reload:
             command.append("--reload")
@@ -764,8 +864,9 @@ def run(
         # Show server info
         console.print("\nStarting development server...", style="blue bold")
         console.print(f"Application: {app_path}", style="blue")
-        console.print(f"Host: {host}", style="blue")
-        console.print(f"Port: {port}", style="blue")
+        if host:
+            console.print(f"Host: {host}", style="blue")
+        console.print(f"Port: {final_port}", style="blue")
         console.print(f"Reload: {'enabled' if reload else 'disabled'}", style="blue")
         console.print("\nPress CTRL+C to stop the server\n", style="yellow")
 

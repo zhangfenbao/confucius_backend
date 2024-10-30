@@ -10,8 +10,8 @@ Open Source multi-modal LLM environment. Host your own web and mobile chat inter
 ## Table of contents
 
 - [Quickstart](#quickstart)
+- [CLI commands](#the-open-sesame-cli)
 - [Overview](#overview)
-  - [Project requirements](#project-requirements)
   - [Database setup](#database-setup)
   - [Webapp and workspaces](#run-the-webapp-server-and-create-a-workspace)
 - [Create your first workspace](#create-your-first-workspace)
@@ -21,6 +21,151 @@ Open Source multi-modal LLM environment. Host your own web and mobile chat inter
 - [Core technologies](#core-technologies)
 
 ## Quickstart
+
+To run Open Sesame locally, you will need:
+
+- Python 3.10 or higher.
+- Database that supports async sessions.
+- Service provider API keys for a large-language, text-to-speech, and speech-to-text provider.
+
+### 1. Install project dependencies
+
+```shell
+python -m venv venv
+source venv/bin/activate # ... or OS specific activation
+pip install -r sesame/dev-requirements.txt
+```
+
+**The main project files are found in the `/sesame` subdirectory. Please navigate to that folder to continue project setup**
+
+```shell
+cd sesame/
+```
+
+### 2. Create your enviroment `.env`
+
+Run the Open Sesame CLI `init` command:
+
+```shell
+python sesame.py init
+```
+
+Follow the prompts for creating your `.env` file and optionally configuring your database.
+
+This command will create a new .env file in the project folder. You can do this manually by copying the `sesame/env.example` to `sesame/.env` and configuring each of the environment variables.
+
+### 3. Configure your database
+
+If you chose to skip the database configuration step as part of the `sesame.py init` command, you step through this with:
+
+```shell
+python sesame.py init-db
+```
+
+Ensure you have set the following in your `.env` file:
+
+```shell
+SESAME_DATABASE_ADMIN_USER="postgres"
+SESAME_DATABASE_ADMIN_PASSWORD=""
+SESAME_DATABASE_NAME="postgres"
+SESAME_DATABASE_HOST="localhost"
+# Use a session port (typically 5432)
+SESAME_DATABASE_PORT="5432"
+# Public database role credentials
+SESAME_DATABASE_USER="sesame"
+SESAME_DATABASE_PASSWORD="some-strong-password"
+```
+
+You can test your database credentials:
+
+```shell
+python sesame test-db --admin
+# Note: --admin specifies to test using the admi credentials. The efault user role has not yet been created
+```
+
+#### Run the schema
+
+Schema files for various database engines can be found in the `schema` folder at the root of this project. 
+
+Let's run the PostgreSQL schema:
+
+```shell
+python sesame.py run-schema
+```
+
+This command will test your database admin credentials first and create the public user role. If you'd like to run the schema manually (not using the CLI), be sure to replace `%%USER%%` and `%%PASSWORD%%` in the schema file to align to your `SESAME_DATABASE_USER` and `SESAME_DATABASE_PASSWORD` respectively.
+
+You should now have a public user role. You can test this with:
+
+```shell
+python sesame.py test-db
+```
+
+### 4. Create a user
+
+The Open Sesame schema defaults to having row level security enabled, meaning you must have at least one user created in the database.
+
+```shell
+python sesame.py create-user
+```
+
+You can use this command to create new user accounts as you need them.
+
+
+### 5. Run the app!
+
+Your Open Sesame instance is now configured.
+
+Run the application:
+
+```shell
+python sesame.py run
+```
+
+#### Something went wrong?
+
+- Check all the necessary settings are configured in your `.env`
+- Ensure the database credentials are accurate: `python sesame.py test-db`
+- Run the included tests for more details: `PYTHONPATH=. pytest tests/ -s -v`
+
+
+To manually run the FastAPI server:
+
+```shell
+python -m uvicorn webapp.main:app --reload
+```
+
+---
+
+## Open Sesame CLI
+
+`sesame.py` provides convenience when configuring and running your instance. Here are the currently supported commands:
+
+```shell
+# Show available commands
+python sesame.py --help 
+
+# Create .env file from template
+python sesame.py init
+# Configure database credentials in .env
+python sesame.py init-db
+
+# Test admin database credentials
+python sesame.py test-db  --admin   # Admin role
+python sesame.py test-db            # User role
+
+# Run required schema
+python sesame.py run-schema
+
+# Create user
+python sesame.py create-user
+python sesame.py create-user -u user -p pass
+
+# Run the FastaPI app
+python sesame.py run
+```
+
+---
 
 #### 1. Install project dependencies
 
