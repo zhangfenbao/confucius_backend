@@ -1,4 +1,0 @@
-modal
--r webapp/requirements.txt
--r tests/requirements.txt
--r bots/requirements.txt

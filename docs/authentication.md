@@ -4,14 +4,18 @@ Out-of-the-box, Open Sesame provides basic username / password authentication. W
 
 Sesame's database schema creates a public `sesame` role with RLS enabled, meaning the database is set up for multi-tenant usage if desirable.
 
-All API requests are authenticated by a session token specific to each user.
+All API requests are authenticated by a user specific token.
 
 
 ### Creating a user
 
-You can create a new user account in the database either directly or by using the included [bash script](../scripts/create_user.sh).
+You can create a new user account in the database either directly or by the CLI
 
-When creating a user, we recommend:
+```shell
+python sesame.py create-user
+```
+
+When creating a user manually, we recommend:
 
 - `user_id` should be a secure 32 string. You can generate one like so: `openssl rand -base64 32`
 
@@ -20,6 +24,7 @@ When creating a user, we recommend:
 - Password hashes are one way, meaning there is no out-of-the-box recovery path for passwords. You can, of course, reset the user's password by manually editing the argon hash in the database.
 
 ### Row-level security
+
 Workspaces and associated objects are secured against a user id. All API routes require a `user_id` set, which can be achieved by passing a valid user session token.
 
 Querying the API without a bearer token or valid authentication key will return an `Unauthorized` response:
@@ -35,11 +40,17 @@ curl -X 'GET' \
 >> }
 ```
 
+#### Logging in
+
+After running the Open Sesame app (`python sesame.py run`), you can navigate to the URL shown in the terminal. 
+
+Logging in with your username and password will generate an auth token (if none exist already.)
+
 #### Creating a new token
 
 ```bash
 curl -X 'POST' \
-  'http://localhost:8000/api/users/session' \
+  'http://localhost:8000/api/users/create_token' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -50,7 +61,7 @@ curl -X 'POST' \
 >>> 200
 >>> {
 >>>     "success": true,
->>>     "token": "uuid4"
+>>>     "token": "abc..."
 >>> }
 ```
 
@@ -59,8 +70,8 @@ curl -X 'POST' \
 Tokens for a user can be revoked via the API. You can revoke either all or individual tokens by passing an optional `session_token` property as part of the request payload:
 
 ```bash
-curl -X 'DELETE' \
-  'http://localhost:8000/api/users/session' \
+curl -X 'POST' \
+  'http://localhost:8000/api/users/revoke_token' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
@@ -68,12 +79,12 @@ curl -X 'DELETE' \
     "username": "your-username",
     "password": "your-password"
   },
-  "session_token": "token-uuid" # Optional (remove to revoke all)
+  "token": "token-uuid" # Optional (remove to revoke all)
 }'
 
 >>> 200
 >>> {
 >>>   "success": true,
->>>   "message": "All session tokens revoked successfully."
+>>>   "message": "All tokens revoked successfully."
 >>> }
 ```
