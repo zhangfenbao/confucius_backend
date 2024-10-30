@@ -6,7 +6,6 @@ import secrets
 import shutil
 import string
 import subprocess
-import uuid
 from pathlib import Path
 from typing import Dict, Literal
 
@@ -32,7 +31,7 @@ app = typer.Typer(
 
 env_example = Path("env.example")
 env_file = Path(".env")
-schema_file = Path("../schema/postgres.sql")
+schema_file = Path("../schema/")
 
 
 def construct_admin_database_url() -> str:
@@ -154,6 +153,12 @@ def generate_secret() -> str:
     return base64.b64encode(random_bytes).decode("utf-8")
 
 
+def generate_user_id(length: int = 32) -> str:
+    """Generate a secure random user ID using only alphanumeric characters."""
+    alphabet = string.ascii_letters + string.digits
+    return "".join(secrets.choice(alphabet) for _ in range(length))
+
+
 def generate_db_password(length: int = 32) -> str:
     """Generate a secure random password safe for database use.
     Only includes letters and numbers to avoid SQL escaping issues."""
@@ -169,9 +174,69 @@ def generate_db_password(length: int = 32) -> str:
     return "".join(password_list)
 
 
+def split_sql_statements(sql: str) -> list[str]:
+    """Split SQL into individual statements, handling dollar-quoted blocks and comments."""
+    statements = []
+    current_statement = []
+    in_dollar_quote = False
+    dollar_quote_tag = ""
+
+    lines = sql.split("\n")
+
+    for line in lines:
+        stripped_line = line.strip()
+
+        # Skip empty lines
+        if not stripped_line:
+            continue
+
+        # Handle single line comments
+        if stripped_line.startswith("--"):
+            continue
+
+        # Handle dollar quoting
+        if not in_dollar_quote:
+            # Look for start of dollar quote
+            match = re.match(r".*(\$[^$]*\$)", line)
+            if match:
+                in_dollar_quote = True
+                dollar_quote_tag = match.group(1)
+        else:
+            # Look for matching end dollar quote
+            if dollar_quote_tag in line:
+                in_dollar_quote = False
+                dollar_quote_tag = ""
+
+        current_statement.append(line)
+
+        # If we're not in a dollar quote, check for statement end
+        if not in_dollar_quote and ";" in line:
+            full_statement = "\n".join(current_statement).strip()
+            if full_statement:  # Only add non-empty statements
+                # Remove any trailing comments after the semicolon
+                statement_parts = full_statement.split(";")
+                clean_statement = ";".join(statement_parts[:-1]) + ";"
+                if clean_statement.strip() != ";":  # Don't add standalone semicolons
+                    statements.append(clean_statement)
+            current_statement = []
+
+    # Add any remaining statement that's not empty or just comments
+    remaining_statement = "\n".join(current_statement).strip()
+    if remaining_statement and not remaining_statement.startswith("--"):
+        statements.append(remaining_statement)
+
+    # Return only non-empty, non-comment statements
+    return [stmt for stmt in statements if stmt.strip() and not stmt.strip().startswith("--")]
+
+
+# ========================
+# Initialize
+# ========================
+
+
 @app.command()
 def init():
-    """Initialize a new project and Sesame environment."""
+    """Initialize a new project and Open Sesame environment."""
 
     if env_file.exists():
         warning_panel = Panel(
@@ -226,9 +291,19 @@ def init():
     console.print("\nProject successfully initialized!", style="green bold")
 
 
+# ========================
+# Initialize database
+# ========================
+
+
 @app.command()
 def init_db():
-    """Initialize the database configuration."""
+    """Initialize the Open Sesame database configuration."""
+
+    if not env_file.exists():
+        console.print("\nNo .env file found. Please run 'init' first.", style="red")
+        raise typer.Exit(1)
+
     console.print("\nDatabase Configuration", style="blue bold")
     console.print("Please provide the following database details:\n")
 
@@ -250,6 +325,11 @@ def init_db():
 
     # Collect database configuration
     db_config = {
+        "SESAME_DATABASE_PROTOCOL": Prompt.ask(
+            "Which database would you like to use?",
+            choices=["postgres"],
+            default="postgres",
+        ),
         "SESAME_DATABASE_ADMIN_USER": admin_user,
         "SESAME_DATABASE_ADMIN_PASSWORD": Prompt.ask("Database admin password", password=True),
         "SESAME_DATABASE_NAME": Prompt.ask("Database name", default="sesame"),
@@ -324,6 +404,11 @@ def init_db():
     console.print("Database successfully initialized!", style="green bold")
 
 
+# ========================
+# Test Database Connection
+# ========================
+
+
 @app.command()
 def test_db(
     as_admin: bool = typer.Option(False, "--admin", help="Test with admin / superuser role"),
@@ -373,6 +458,11 @@ async def _test_db(as_admin=True):
             raise
 
 
+# ========================
+# Run DB Schema
+# ========================
+
+
 @app.command()
 def run_schema():
     """Apply database schema using existing configuration."""
@@ -397,12 +487,14 @@ async def _run_schema():
     """Async function to apply database schema."""
     await _test_db(as_admin=True)
 
+    _schema_file = schema_file / "postgresql.sql"
+
     # Ensure schema file exists
-    if not schema_file.exists():
-        raise FileNotFoundError(f"Schema file not found at {schema_file}")
+    if not _schema_file.exists():
+        raise FileNotFoundError(f"Schema file not found at {_schema_file}")
 
     # Read schema content
-    with open(schema_file, "r") as f:
+    with open(_schema_file, "r") as f:
         schema_content = f.read()
 
     # Ensure we have a schema to work with
@@ -421,7 +513,7 @@ async def _run_schema():
         console.print("Generated new database password", style="yellow")
 
     # Validate replacements before proceeding
-    replacements = {"%%PASSWORD%%": sesame_password, "%%USER%%": sesame_user}
+    replacements = {"%%PASSWORD%%": sesame_password, "%%USER%%": sesame_user.split(".")[0]}
     validate_schema_replacements(schema_content, replacements)
 
     # Set up the admin engine
@@ -505,91 +597,68 @@ async def _run_schema():
         console.print("\n")
 
 
-def split_sql_statements(sql: str) -> list[str]:
-    """Split SQL into individual statements, handling dollar-quoted blocks and comments."""
-    statements = []
-    current_statement = []
-    in_dollar_quote = False
-    dollar_quote_tag = ""
-
-    lines = sql.split("\n")
-
-    for line in lines:
-        stripped_line = line.strip()
-
-        # Skip empty lines
-        if not stripped_line:
-            continue
-
-        # Handle single line comments
-        if stripped_line.startswith("--"):
-            continue
-
-        # Handle dollar quoting
-        if not in_dollar_quote:
-            # Look for start of dollar quote
-            match = re.match(r".*(\$[^$]*\$)", line)
-            if match:
-                in_dollar_quote = True
-                dollar_quote_tag = match.group(1)
-        else:
-            # Look for matching end dollar quote
-            if dollar_quote_tag in line:
-                in_dollar_quote = False
-                dollar_quote_tag = ""
-
-        current_statement.append(line)
-
-        # If we're not in a dollar quote, check for statement end
-        if not in_dollar_quote and ";" in line:
-            full_statement = "\n".join(current_statement).strip()
-            if full_statement:  # Only add non-empty statements
-                # Remove any trailing comments after the semicolon
-                statement_parts = full_statement.split(";")
-                clean_statement = ";".join(statement_parts[:-1]) + ";"
-                if clean_statement.strip() != ";":  # Don't add standalone semicolons
-                    statements.append(clean_statement)
-            current_statement = []
-
-    # Add any remaining statement that's not empty or just comments
-    remaining_statement = "\n".join(current_statement).strip()
-    if remaining_statement and not remaining_statement.startswith("--"):
-        statements.append(remaining_statement)
-
-    # Return only non-empty, non-comment statements
-    return [stmt for stmt in statements if stmt.strip() and not stmt.strip().startswith("--")]
+# ========================
+# Create User
+# ========================
 
 
 @app.command()
-def create_user():
+def create_user(
+    username: str = typer.Option(None, "--username", "-u", help="Username for the new user"),
+    password: str = typer.Option(None, "--password", "-p", help="Password for the new user"),
+):
     """Create a new user with secure password hashing."""
     try:
         # Load environment variables
         load_dotenv(env_file)
 
+        if not os.getenv("SESAME_APP_SECRET"):
+            console.print(
+                "SESAME_APP_SECRET missing from .env, required to salt encrypted passwords. Please set this and try again.",
+                style="red bold",
+            )
+            raise typer.Exit("Missing SESAME_APP_SECRET")
+
         # Run the async user creation
-        asyncio.run(_create_user())
+        asyncio.run(_create_user(username, password))
     except Exception as e:
-        console.print(f"\nError creating user: {str(e)}", style="red bold")
-        raise typer.Exit(1)
+        raise typer.Exit(f"Error creating user: {str(e)}")
 
 
-async def _create_user():
+async def _create_user(username: str = None, password: str = None):
     """Async function to create a new user."""
     # Validate database connection first
     await _test_db(as_admin=True)
 
     console.print("\nUser Creation", style="blue bold")
 
-    # Get username with validation
-    while True:
-        username = Prompt.ask("Enter a username")
-        if len(username) > 2:
-            break
-        console.print("Username must be more than 2 characters", style="red")
+    # Validate or prompt for username
+    if username:
+        if len(username) <= 2:
+            console.print("Provided username must be more than 2 characters", style="red")
+            username = None
 
-    # Get and confirm password with validation
-    while True:
+    # Prompt for username if not provided or invalid
+    while not username:
+        username = Prompt.ask("Enter a username")
+        if len(username) <= 2:
+            console.print("Username must be more than 2 characters", style="red")
+            username = None
+
+    # Validate or prompt for password
+    if password:
+        if len(password) < 8:
+            console.print("Provided password must be at least 8 characters", style="red")
+            password = None
+        else:
+            # Confirm the provided password
+            password_confirm = Prompt.ask("Confirm your password", password=True)
+            if password != password_confirm:
+                console.print("Passwords do not match", style="red")
+                password = None
+
+    # Prompt for password if not provided, invalid, or confirmation failed
+    while not password:
         password = Prompt.ask("Enter a password (min 8 characters)", password=True)
         if len(password) < 8:
             console.print("Password must be at least 8 characters", style="red")
@@ -601,7 +670,7 @@ async def _create_user():
         console.print("Passwords do not match", style="red")
 
     # Generate user_id and hash password
-    user_id = str(uuid.uuid4())
+    user_id = generate_user_id()
     ph = PasswordHasher()
     password_hash = ph.hash(password)
 
@@ -671,13 +740,18 @@ async def _create_user():
         console.print("\n")
 
 
+# ========================
+# Run FastAPI App
+# ========================
+
+
 @app.command()
 def run(
     host: str = typer.Option("127.0.0.1", "--host", "-h", help="Bind socket to this host."),
     port: int = typer.Option(8000, "--port", "-p", help="Bind socket to this port."),
     reload: bool = typer.Option(True, "--reload/--no-reload", help="Enable auto-reload."),
 ):
-    """Run the development server using uvicorn."""
+    """Run the FastAPI server using uvicorn."""
     try:
         app_path = "webapp.main:app"
 
