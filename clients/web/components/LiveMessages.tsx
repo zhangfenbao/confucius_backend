@@ -153,10 +153,10 @@ export default function LiveMessages({
     [conversationId, messages.length]
   );
 
-  const firstBotResponseTime = useRef<Date>(undefined);
-  const userStartedSpeakingTime = useRef<Date>(undefined);
+  const firstBotResponseTime = useRef<Date>();
+  const userStartedSpeakingTime = useRef<Date>();
   const userStoppedSpeakingTimeout =
-    useRef<ReturnType<typeof setTimeout>>(undefined);
+    useRef<ReturnType<typeof setTimeout>>();
 
   const cleanupUserMessages = useCallback(() => {
     setLiveMessages((messages) => {

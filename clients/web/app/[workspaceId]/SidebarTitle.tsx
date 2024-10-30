@@ -54,7 +54,10 @@ const SidebarTitle = ({
                   emitter.emit("showPageTransitionLoader");
                   onSwitchWorkspace?.();
                   // Timeout to close sidebar and reset scroll lock styles
-                  setTimeout(() => push(`/${ws.workspace_id}`), 200);
+                  setTimeout(() => {
+                    emitter.emit("showPageTransitionLoader");
+                    push(`/${ws.workspace_id}`)
+                  }, 200);
                 }}
               >
                 <div className="flex items-center justify-between gap-4 w-full">

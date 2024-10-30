@@ -26,7 +26,7 @@ export default function DeleteConversationModal({
   conversations,
   workspaceId,
 }: Props) {
-  const { push, refresh } = useRouter();
+  const { push } = useRouter();
   const [conversationId, setConversationId] = useState("");
 
   useEffect(() => {
@@ -52,8 +52,8 @@ export default function DeleteConversationModal({
           queryKey: ["conversations", workspaceId],
           type: "all",
         });
+        emitter.emit("showPageTransitionLoader");
         push(`/${workspaceId}`);
-        refresh();
         emitter.emit("updateSidebar");
         setConversationId("");
       }

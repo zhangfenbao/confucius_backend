@@ -148,7 +148,10 @@ const ChatControls: React.FC<Props> = ({
         };
 
         emitter.emit("updateSidebar");
-        if (voice) push(`/${workspaceId}/c/${newConversationId}?v=1`);
+        if (voice) {
+          emitter.emit("showPageTransitionLoader");
+          push(`/${workspaceId}/c/${newConversationId}?v=1`);
+        }
 
         return newConversationId;
       }
@@ -162,6 +165,7 @@ const ChatControls: React.FC<Props> = ({
       queryKey: ["conversations", workspaceId],
       type: "all",
     });
+    emitter.emit("showPageTransitionLoader");
     push(redirect);
   }
 
