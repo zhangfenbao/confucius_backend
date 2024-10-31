@@ -6,7 +6,6 @@ import psycopg2
 import pytest
 from argon2 import PasswordHasher
 from common.auth import Auth, authenticate
-from common.database import get_db_session
 from dotenv import load_dotenv
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
@@ -75,7 +74,7 @@ def create_test_schema():
         connection.autocommit = True
         cursor = connection.cursor()
 
-        with open("../schema/postgres.sql", "r") as schema_file:
+        with open("../schema/postgresql.sql", "r") as schema_file:
             schema_sql = schema_file.read()
 
         schema_sql = schema_sql.replace("%%USER%%", TEST_USER).replace(
@@ -138,7 +137,7 @@ async def db_session(db_engine):
 
 @pytest.fixture(scope="module")
 async def async_client(db_session: AsyncSession):
-    app.dependency_overrides[get_db_session] = lambda: db_session
+    # app.dependency_overrides[get_db_session] = lambda: db_session
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
@@ -200,7 +199,6 @@ async def override_get_user(get_db_with_token):
 async def authorized_client(
     async_client, auth_token: Callable[[], str], override_get_db, override_get_user
 ):
-    app.dependency_overrides[get_db_session] = override_get_db
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_user] = override_get_user
 
