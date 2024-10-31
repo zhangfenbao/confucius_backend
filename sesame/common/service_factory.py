@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional
 
 from common.errors import InvalidServiceTypeError, UnsupportedServiceError
 from pipecat.services.ai_services import AIService
@@ -42,9 +42,9 @@ class ServiceFactory:
         service_name: str,
         service_type: ServiceType,
         requires_api_key: bool = True,
-        default_params: Dict[str, Any] = None,
-        optional_params: List[str] = None,
-        required_params: List[str] = None,
+        default_params: Optional[Dict[str, Any]] = None,
+        optional_params: Optional[List[str]] = None,
+        required_params: Optional[List[str]] = None,
     ) -> None:
         """
         Register a new service with the factory.
@@ -79,7 +79,7 @@ class ServiceFactory:
         service_name: str,
         service_type: ServiceType,
         api_key: str,
-        service_options: Mapping[str, Mapping[str, Any]] = None,
+        service_options: Optional[Mapping[str, Mapping[str, Any]]] = None,
     ) -> AIService:
         """
         Create and return an instance of the requested service.
@@ -103,22 +103,23 @@ class ServiceFactory:
 
         # Check required parameters
         for param in service_info.required_params:
-            if param not in service_options and param not in kwargs:
+            if (service_options is None or param not in service_options) and param not in kwargs:
                 raise ValueError(
                     f"Required parameter '{param}' missing for service '{service_name}'"
                 )
-            if param in service_options:
+            if service_options and param in service_options:
                 kwargs[param] = service_options[param]
 
         # Add optional parameters if provided
         for param in service_info.optional_params:
-            if param in service_options:
+            if service_options and param in service_options:
                 kwargs[param] = service_options[param]
 
         # Add any additional provided parameters that aren't in optional or required lists
-        for key, value in service_options.items():
-            if key not in kwargs and key != "api_key":
-                kwargs[key] = value
+        if service_options:
+            for key, value in service_options.items():
+                if key not in kwargs and key != "api_key":
+                    kwargs[key] = value
 
         # Instantiate the service
         module_name, class_name = service_info.class_path.rsplit(":", 1)
@@ -137,7 +138,7 @@ class ServiceFactory:
         return cls._services[service_key]
 
     @classmethod
-    def get_available_services(cls, service_type: ServiceType = None) -> List[str]:
+    def get_available_services(cls, service_type: Optional[ServiceType] = None) -> List[str]:
         """Get a list of all registered services, optionally filtered by type."""
         if service_type:
             return [name for (name, type_) in cls._services.keys() if type_ == service_type]
@@ -158,7 +159,7 @@ class ServiceFactory:
         info = self.get_service_info()
         lines = ["Available Services:"]
         for service_type, services in info.items():
-            lines.append(f"\n{service_type.name}:")
+            lines.append(f"\n{service_type}:")
             for service in sorted(services):
                 lines.append(f"  - {service}")
         return "\n".join(lines)

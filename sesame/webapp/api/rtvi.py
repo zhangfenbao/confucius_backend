@@ -175,7 +175,14 @@ async def connect(
     # Check if we are running on Modal and launch the voice bot as a separate function
     if os.getenv("MODAL_ENV"):
         logger.debug("Spawning voice bot on Modal")
-        from sesame.modal_app import launch_bot_modal
+        try:
+            launch_bot_modal = __import__("sesame.modal_app", fromlist=["launch_bot_modal"])
+        except ImportError:
+            logger.error("Failed to import launch_bot_modal from sesame.modal_app")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to import launch_bot_modal from sesame.modal_app",
+            )
 
         launch_bot_modal.spawn(user, params, config, services, room.url, bot_token)
     else:
