@@ -10,6 +10,7 @@ from bots.voice.bot_error_pipeline import bot_error_pipeline_task
 from bots.voice.bot_pipeline import voice_bot_pipeline
 from bots.voice.bot_pipeline_runner import BotPipelineRunner
 from common.auth import Auth, get_authenticated_db_context
+from common.database import DatabaseSessionFactory
 from common.models import Service
 from fastapi import HTTPException, status
 from loguru import logger
@@ -83,7 +84,8 @@ async def _voice_bot_main(
     room_url: str,
     room_token: str,
 ):
-    async with get_authenticated_db_context(auth) as db:
+    subprocess_session_factory = DatabaseSessionFactory()
+    async with get_authenticated_db_context(auth, subprocess_session_factory) as db:
         bot_runner = BotPipelineRunner()
         try:
             task_creator = await _voice_pipeline_task(
@@ -100,6 +102,7 @@ async def _voice_bot_main(
         await _cleanup(room_url, config, services)
 
         logger.info("Bot has finished. Bye!")
+    await subprocess_session_factory.engine.dispose()
 
 
 def _voice_bot_process(
