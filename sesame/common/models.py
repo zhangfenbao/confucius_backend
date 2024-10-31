@@ -508,7 +508,7 @@ class ConversationModel(BaseModel):
 
 class ConversationCreateModel(BaseModel):
     workspace_id: uuid.UUID
-    title: Optional[str]
+    title: Optional[str] = None
     language_code: Optional[str] = "english"
 
     model_config = {

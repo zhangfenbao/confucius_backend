@@ -132,7 +132,6 @@ const ChatControls: React.FC<Props> = ({
       const response = await fetch(`/api/create-conversation`, {
         method: "POST",
         body: JSON.stringify({
-          title: "New conversation",
           workspace_id: workspaceId,
         }),
       });
@@ -167,7 +166,7 @@ const ChatControls: React.FC<Props> = ({
     });
     emitter.emit("showPageTransitionLoader");
     push(redirect);
-  }
+  };
 
   const handleTextSubmit = async (ev: FormEvent<HTMLFormElement>) => {
     ev.preventDefault();
