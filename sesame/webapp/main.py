@@ -2,7 +2,7 @@ import os
 import sys
 from contextlib import asynccontextmanager
 
-from common.database import engine
+from common.database import DatabaseSessionFactory
 from common.models import Base
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
@@ -20,6 +20,8 @@ logger.remove(0)
 logger.add(sys.stderr, level=os.getenv("SESAME_WEBAPP_LOG_LEVEL", "DEBUG"))
 
 
+default_session_factory = DatabaseSessionFactory()
+
 # ========================
 # FastAPI App
 # ========================
@@ -28,15 +30,16 @@ logger.add(sys.stderr, level=os.getenv("SESAME_WEBAPP_LOG_LEVEL", "DEBUG"))
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
-        async with engine.begin() as conn:
+        async with default_session_factory.engine.connect() as session:
             if bool(int(os.getenv("SESAME_DATABASE_USE_REFLECTION", "0"))):
-                await conn.run_sync(Base.metadata.reflect)
+                await session.run_sync(Base.metadata.reflect)
     except Exception:
         logger.error(
             "Database connection failed. Have you set valid SESAME_DATABASE_* credentials in your .env?"
         )
+        os._exit(1)
     yield
-    await engine.dispose()
+    await default_session_factory.engine.dispose()
 
 
 app = FastAPI(
@@ -70,8 +73,8 @@ async def home(request: Request):
         raise HTTPException(status_code=404, detail="Page not found")
 
     try:
-        async with engine.begin() as conn:
-            await conn.execute(text("SELECT 1"))
+        async with default_session_factory() as session:
+            await session.execute(text("SELECT 1"))
     except Exception:
         return templates.TemplateResponse(
             request,
@@ -82,8 +85,8 @@ async def home(request: Request):
         )
 
     try:
-        async with engine.begin() as conn:
-            result = await conn.execute(
+        async with default_session_factory() as session:
+            result = await session.execute(
                 text("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
             )
             count = result.scalar()

@@ -2,10 +2,15 @@ from uuid import UUID
 
 from common.auth import Auth
 from common.encryption import encrypt_with_secret
-from common.models import Service, ServiceCreateModel, ServiceModel, ServiceUpdateModel
-from common.service_factory import ServiceFactory, ServiceType
+from common.models import (
+    Service,
+    ServiceCreateModel,
+    ServiceModel,
+    ServiceUpdateModel,
+)
+from common.service_factory import ServiceFactory, ServiceInfo, ServiceType
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from webapp import get_db, get_user
@@ -13,7 +18,7 @@ from webapp import get_db, get_user
 router = APIRouter(prefix="/services")
 
 
-@router.get("/supported", response_model=list[str])
+@router.get("/supported", response_model=list[ServiceInfo])
 async def get_supported_services(
     service_type: str | None = None,
 ):
@@ -32,7 +37,6 @@ async def get_supported_services(
 @router.get("", response_model=list[ServiceModel])
 async def get_services(
     db: AsyncSession = Depends(get_db),
-    user: Auth = Depends(get_user),
 ):
     services = await Service.get_services_by_user(db)
 
@@ -97,20 +101,32 @@ async def update_service(
     if not service:
         raise HTTPException(status_code=404, detail="Service not found")
 
+    # Build update data dictionary
+    update_data = {}
     if service_data.title is not None:
-        service.title = service_data.title
+        update_data["title"] = service_data.title
 
     if service_data.api_key is not None:
-        service.api_key = encrypt_with_secret(service_data.api_key)
+        update_data["api_key"] = encrypt_with_secret(service_data.api_key)
 
     if service_data.options is not None:
         if isinstance(service.options, dict):
-            service.options.update(service_data.options)
+            new_options = dict(service.options)  # Create a copy
+            new_options.update(service_data.options)
+            update_data["options"] = new_options
         else:
-            service.options = service_data.options
+            update_data["options"] = service_data.options
 
-    await db.commit()
-    await db.refresh(service)
+    # Perform update if we have data to update
+    if update_data:
+        await db.execute(
+            update(Service).where(Service.service_id == service_id).values(**update_data)
+        )
+        await db.commit()
+
+        # Fetch updated service
+        result = await db.execute(select(Service).where(Service.service_id == service_id))
+        service = result.scalar_one_or_none()
 
     return ServiceModel.model_validate(service)
 

@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Mapping
+from typing import Any, Dict, List, Mapping, Optional
 
 from common.errors import InvalidServiceTypeError, UnsupportedServiceError
 from pipecat.services.ai_services import AIService
@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 class ServiceDefinition(BaseModel):
     class_path: str
-    type: str
+    service_type: str
     requires_api_key: bool
     optional_params: List[str]
     required_params: List[str]
@@ -19,6 +19,14 @@ class ServiceDefinition(BaseModel):
         "arbitrary_types_allowed": True,
         "extra": "forbid",
     }
+
+
+class ServiceInfo(BaseModel):
+    service_name: str
+    service_type: str
+    requires_api_key: bool
+    optional_params: List[str]
+    required_params: List[str]
 
 
 class ServiceType(Enum):
@@ -42,9 +50,9 @@ class ServiceFactory:
         service_name: str,
         service_type: ServiceType,
         requires_api_key: bool = True,
-        default_params: Dict[str, Any] = None,
-        optional_params: List[str] = None,
-        required_params: List[str] = None,
+        default_params: Optional[Dict[str, Any]] = None,
+        optional_params: Optional[List[str]] = None,
+        required_params: Optional[List[str]] = None,
     ) -> None:
         """
         Register a new service with the factory.
@@ -66,7 +74,7 @@ class ServiceFactory:
 
         cls._services[service_key] = ServiceDefinition(
             class_path=service_class,
-            type=service_type.value,
+            service_type=service_type.value,
             requires_api_key=requires_api_key,
             optional_params=optional_params or [],
             required_params=required_params or [],
@@ -79,7 +87,7 @@ class ServiceFactory:
         service_name: str,
         service_type: ServiceType,
         api_key: str,
-        service_options: Mapping[str, Mapping[str, Any]] = None,
+        service_options: Optional[Mapping[str, Mapping[str, Any]]] = None,
     ) -> AIService:
         """
         Create and return an instance of the requested service.
@@ -103,22 +111,23 @@ class ServiceFactory:
 
         # Check required parameters
         for param in service_info.required_params:
-            if param not in service_options and param not in kwargs:
+            if (service_options is None or param not in service_options) and param not in kwargs:
                 raise ValueError(
                     f"Required parameter '{param}' missing for service '{service_name}'"
                 )
-            if param in service_options:
+            if service_options and param in service_options:
                 kwargs[param] = service_options[param]
 
         # Add optional parameters if provided
         for param in service_info.optional_params:
-            if param in service_options:
+            if service_options and param in service_options:
                 kwargs[param] = service_options[param]
 
         # Add any additional provided parameters that aren't in optional or required lists
-        for key, value in service_options.items():
-            if key not in kwargs and key != "api_key":
-                kwargs[key] = value
+        if service_options:
+            for key, value in service_options.items():
+                if key not in kwargs and key != "api_key":
+                    kwargs[key] = value
 
         # Instantiate the service
         module_name, class_name = service_info.class_path.rsplit(":", 1)
@@ -137,11 +146,26 @@ class ServiceFactory:
         return cls._services[service_key]
 
     @classmethod
-    def get_available_services(cls, service_type: ServiceType = None) -> List[str]:
+    def get_available_services(
+        cls, service_type: Optional[ServiceType] = None
+    ) -> List[ServiceInfo]:
         """Get a list of all registered services, optionally filtered by type."""
-        if service_type:
-            return [name for (name, type_) in cls._services.keys() if type_ == service_type]
-        return list(set(name for name, _ in cls._services.keys()))
+        services = (
+            (name, type_, service_dict)
+            for (name, type_), service_dict in cls._services.items()
+            if not service_type or type_ == service_type
+        )
+
+        return [
+            ServiceInfo(
+                service_name=name,
+                service_type=type_.value,
+                requires_api_key=service.requires_api_key,
+                optional_params=service.optional_params,
+                required_params=service.required_params,
+            )
+            for name, type_, service in services
+        ]
 
     @classmethod
     def get_service_info(cls) -> Dict[str, List[str]]:
@@ -158,24 +182,24 @@ class ServiceFactory:
         info = self.get_service_info()
         lines = ["Available Services:"]
         for service_type, services in info.items():
-            lines.append(f"\n{service_type.name}:")
+            lines.append(f"\n{service_type}:")
             for service in sorted(services):
                 lines.append(f"  - {service}")
         return "\n".join(lines)
 
     @classmethod
     def validate_service_map(cls, services: dict[str, str]) -> bool:
-        for service_type, service_name in services.items():
+        for service_type_key, service_name in services.items():
             try:
-                type_enum = ServiceType(service_type)
-                services_of_type = cls.get_available_services(type_enum)
-
+                service_type = ServiceType(service_type_key)
+                services_of_type = services_of_type = [
+                    name for (name, s_type) in cls._services.keys() if s_type == service_type
+                ]
                 if service_name not in services_of_type:
-                    raise UnsupportedServiceError(service_name, service_type, services_of_type)
-
+                    raise UnsupportedServiceError(service_name, str(service_type), services_of_type)
             except ValueError:
                 valid_types = [t.value for t in ServiceType]
-                raise InvalidServiceTypeError(service_type, valid_types)
+                raise InvalidServiceTypeError(str(service_type), valid_types)
 
         return True
 

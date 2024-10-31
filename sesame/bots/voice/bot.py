@@ -10,6 +10,7 @@ from bots.voice.bot_error_pipeline import bot_error_pipeline_task
 from bots.voice.bot_pipeline import voice_bot_pipeline
 from bots.voice.bot_pipeline_runner import BotPipelineRunner
 from common.auth import Auth, get_authenticated_db_context
+from common.database import DatabaseSessionFactory
 from common.models import Service
 from fastapi import HTTPException, status
 from loguru import logger
@@ -23,15 +24,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 MAX_SESSION_TIME = int(os.getenv("SESAME_MAX_VOICE_SESSION_TIME", 15 * 60)) or 15 * 60
 
 
-async def _cleanup(room_url: str, config: BotConfig, services: list[Service]):
+async def _cleanup(room_url: str, config: BotConfig, services: dict[str, Service]):
     async with aiohttp.ClientSession() as session:
         debug_room = os.getenv("USE_DEBUG_ROOM", None)
         if debug_room:
             return
 
         transport_service = services.get("transport")
-        transport_api_key = transport_service.api_key
-        transport_api_url = transport_service.options.get("api_url") or "https://api.daily.co/v1"
+        transport_api_key = getattr(transport_service, "api_key")
+        transport_api_url = (
+            getattr(transport_service, "options", {}).get("api_url") or "https://api.daily.co/v1"
+        )
 
         helper = DailyRESTHelper(
             daily_api_key=transport_api_key,
@@ -49,7 +52,7 @@ async def _cleanup(room_url: str, config: BotConfig, services: list[Service]):
 async def _voice_pipeline_task(
     params: BotParams,
     config: BotConfig,
-    services: list[Service],
+    services: dict[str, Service],
     room_url: str,
     room_token: str,
     db: AsyncSession,
@@ -77,13 +80,13 @@ async def _voice_bot_main(
     auth: Auth,
     params: BotParams,
     config: BotConfig,
-    services: list[Service],
+    services: dict[str, Service],
     room_url: str,
     room_token: str,
 ):
-    async with get_authenticated_db_context(auth) as db:
+    subprocess_session_factory = DatabaseSessionFactory()
+    async with get_authenticated_db_context(auth, subprocess_session_factory) as db:
         bot_runner = BotPipelineRunner()
-
         try:
             task_creator = await _voice_pipeline_task(
                 params, config, services, room_url, room_token, db
@@ -99,13 +102,14 @@ async def _voice_bot_main(
         await _cleanup(room_url, config, services)
 
         logger.info("Bot has finished. Bye!")
+    await subprocess_session_factory.engine.dispose()
 
 
 def _voice_bot_process(
     auth: Auth,
     params: BotParams,
     config: BotConfig,
-    services: list[Service],
+    services: dict[str, Service],
     room_url: str,
     room_token: str,
 ):
@@ -144,7 +148,7 @@ def voice_bot_launch(
     auth: Auth,
     params: BotParams,
     config: BotConfig,
-    services: list[Service],
+    services: dict[str, Service],
     room_url: str,
     room_token: str,
 ):

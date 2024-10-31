@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def http_bot_pipeline(
     params: BotParams,
     config: BotConfig,
-    services: list[Service],
+    services: dict[str, Service],
     messages,
     db: AsyncSession,
     language_code: str = "english",
@@ -42,10 +42,10 @@ async def http_bot_pipeline(
         llm = cast(
             LLMService,
             ServiceFactory.get_service(
-                services["llm"].service_provider,
+                str(services["llm"].service_provider),
                 ServiceType.ServiceLLM,
-                services["llm"].api_key,
-                services["llm"].options,
+                str(services["llm"].api_key),
+                getattr(services["llm"], "options"),
             ),
         )
 

@@ -27,7 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 async def voice_bot_pipeline(
     params: BotParams,
     config: BotConfig,
-    services: list[Service],
+    services: dict[str, Service],
     callbacks: BotCallbacks,
     room_url: str,
     room_token: str,
@@ -45,28 +45,28 @@ async def voice_bot_pipeline(
     llm = cast(
         LLMService,
         ServiceFactory.get_service(
-            services["llm"].service_provider,
+            str(services["llm"].service_provider),
             ServiceType.ServiceLLM,
-            services["llm"].api_key,
-            services["llm"].options,
+            str(services["llm"].api_key),
+            getattr(services["llm"], "options"),
         ),
     )
     tts = cast(
         LLMService,
         ServiceFactory.get_service(
-            services["tts"].service_provider,
+            str(services["tts"].service_provider),
             ServiceType.ServiceTTS,
-            services["tts"].api_key,
-            services["tts"].options,
+            str(services["tts"].api_key),
+            getattr(services["tts"], "options"),
         ),
     )
     stt = cast(
         LLMService,
         ServiceFactory.get_service(
-            services["stt"].service_provider,
+            str(services["stt"].service_provider),
             ServiceType.ServiceSTT,
-            services["stt"].api_key,
-            services["stt"].options,
+            str(services["stt"].api_key),
+            getattr(services["stt"], "options"),
         ),
     )
 
@@ -86,7 +86,9 @@ async def voice_bot_pipeline(
     )
 
     conversation = await Conversation.get_conversation_by_id(params.conversation_id, db)
-    messages = [msg.content for msg in conversation.messages]
+    if not conversation:
+        raise Exception(f"Conversation {params.conversation_id} not found")
+    messages = [getattr(msg, "content") for msg in conversation.messages]
 
     tools = NOT_GIVEN  # todo: implement tools in and set here
     context = OpenAILLMContext(messages, tools)
@@ -94,9 +96,10 @@ async def voice_bot_pipeline(
     user_aggregator = context_aggregator.user()
     assistant_aggregator = context_aggregator.assistant()
 
+    conversation_id = getattr(params, "conversation_id")
     context_storage = PersistentContextStorage(
         db=db,
-        conversation_id=params.conversation_id,
+        conversation_id=conversation_id,
         context=context,
         language_code=conversation.language_code,
     )

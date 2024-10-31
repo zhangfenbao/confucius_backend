@@ -1,182 +1,28 @@
 {% extends "layout.html" %} {% block content %}
-<section class="hero is-primary">
-  <div class="container">
-    <div class="hero-body">
-      <h1 class="title">Sesame Dashboard</h1>
-    </div>
-  </div>
-</section>
-
-<div id="app" class="container">
-  <div class="modal" :class="{'is-active': isModalActive }">
-    <div class="modal-background" @click="this.isModalActive = false"></div>
-    <div class="modal-content">
-      <div
-        class="box is-flex is-align-content-center is-justify-content-center"
-      >
-        <canvas id="qr-code"></canvas>
-      </div>
-    </div>
-    <button
-      class="modal-close is-large"
-      aria-label="close"
-      @click="this.isModalActive = false"
-    ></button>
-  </div>
-
-  <div class="modal" :class="{'is-active': isCreateTokenModalActive }">
-    <div
-      class="modal-background"
-      @click="this.isCreateTokenModalActive = false"
-    ></div>
-    <div class="modal-content">
-      <div class="box is-flex is-flex-direction-column" style="gap: 10px">
-        <h3 class="subtitle is-4">Create new user token</h3>
-        <div class="field">
-          <label class="label">Token name (optional)</label>
-          <input
-            type="text"
-            class="input"
-            placeholder="Enter token name"
-            v-model="tokenName"
-          />
-        </div>
-        <button class="button is-primary" @click="this.createToken()">
-          Create
-        </button>
-      </div>
-    </div>
-    <button
-      class="modal-close is-large"
-      aria-label="close"
-      @click="this.isCreateTokenModalActive = false"
-    ></button>
-  </div>
-
-  <section class="section container is-max-tablet" v-if="!isAuthenticated">
-    <div class="box">
-      <h3 class="subtitle is-4">Sign in with user account</h3>
-
-      <div
-        class="notification is-danger is-light"
-        v-if="responseMessage && !isFetching"
-      >
-        ${ responseMessage }$
-      </div>
-
-      <form @submit.prevent="handleLogin">
-        <div class="field">
-          <p class="control has-icons-left">
-            <input
-              v-model="username"
-              class="input"
-              type="text"
-              placeholder="Username"
-              autocomplete="username"
-            />
-            <span class="icon is-small is-left">
-              <i class="fas fa-user"></i>
-            </span>
-          </p>
-        </div>
-
-        <div class="field">
-          <p class="control has-icons-left">
-            <input
-              v-model="password"
-              class="input"
-              type="password"
-              placeholder="Password"
-              autocomplete="password"
-            />
-            <span class="icon is-small is-left">
-              <i class="fas fa-lock"></i>
-            </span>
-          </p>
-        </div>
-
+<div id="app">
+  <section class="hero is-primary">
+    <div class="container">
+      <div class="hero-body">
+        <h1 class="title">Sesame Dashboard</h1>
         <button
-          id="login-btn"
-          type="submit"
-          class="button"
-          @click="handleLogin"
-          :disabled="isFetching"
+          v-if="isAuthenticated"
+          class="button is-primary is-dark"
+          @click="this.handleLogout()"
         >
-          Login
+          Signout
         </button>
-      </form>
+      </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="box" v-if="isAuthenticated">
-      <h3 class="subtitle is-4">Tokens</h3>
-      <div class="loader" v-if="isFetching"></div>
+  <div v-if="isMounting" class="loader"></div>
 
-      <table class="table is-striped is-fullwidth" v-if="!isFetching">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Token</th>
-            <th>Created At</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="token in tokens" :key="token.token_id">
-            <td>${token.title}$</td>
-            <td><code>${ token.token }$</code></td>
-            <td>${ new Date(token.created_at).toLocaleString() }$</td>
-            <td
-              class="is-flex is-align-items-center is-justify-content-flex-end"
-              style="gap: 10px"
-            >
-              <button
-                class="button is-small is-light is-danger"
-                :class="{'is-loading': isRevoking == token.token}"
-                @click="revokeToken(token.token)"
-              >
-                <span class="icon is-small">
-                  <i class="fas fa-x"></i>
-                </span>
-                <span>Revoke</span>
-              </button>
-              <button
-                class="button is-small"
-                @click="generateQRCode(token.token)"
-              >
-                <span class="icon is-small">
-                  <i class="fas fa-qrcode"></i>
-                </span>
-                <span>QR</span>
-              </button>
-              <button
-                class="button is-small"
-                @click="copyToken(token.token, $event)"
-              >
-                <span class="icon is-small" style="pointer-events: none">
-                  <i class="fas fa-copy"></i>
-                </span>
-                <span>Copy</span>
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <footer class="is-flex is-flex-direction-row" style="gap: 10px">
-        <button
-          class="button"
-          :class="{'is-loading': isFetching }"
-          @click="this.isCreateTokenModalActive = true"
-        >
-          Create new token
-        </button>
-        <button class="button is-light is-danger" @click="revokeToken()">
-          Revoke all
-        </button>
-      </footer>
+  <template v-else>
+    <div class="container">
+      {% include 'login.html' %} {% include 'tokens.html' %} {% include
+      'services.html' %}
     </div>
-  </section>
+  </template>
 </div>
 {% endblock %} {% block scripts %}
 <script type="text/javascript">
@@ -184,22 +30,43 @@
 
   createApp({
     delimiters: ["${", "}$"],
+
     data() {
       return {
+        isMounting: true,
         username: "",
         password: "",
         responseMessage: "",
         isFetching: false,
+        isFetchingTokens: false,
+        isFetchingServices: false,
         isRevoking: null,
         isAuthenticated: false,
         token: null,
         tokens: [],
+        availableServices: [],
         isModalActive: false,
         isCreateTokenModalActive: false,
         tokenName: "",
       };
     },
+
+    mounted() {
+      if (localStorage.getItem("user")) {
+        const user = JSON.parse(localStorage.getItem("user"));
+        this.token = user.token;
+        this.isAuthenticated = true;
+        this.start();
+      }
+      this.isMounting = false;
+    },
+
     methods: {
+      async start() {
+        this.fetchTokens();
+        this.fetchServices();
+      },
+
       generateQRCode(token) {
         this.isModalActive = true;
         this.$nextTick(() => {
@@ -213,6 +80,7 @@
           });
         });
       },
+
       async handleLogin() {
         this.isAuthenticated = false;
         this.isFetching = true;
@@ -236,13 +104,16 @@
 
           const data = await response.json();
 
+          // Update local storage to fake 'login'
+          localStorage.setItem("user", JSON.stringify(data));
+
           if (!data.token) {
             throw new Error("User has no associated auth tokens.");
           }
 
           this.token = data.token;
           this.isAuthenticated = true;
-          this.fetchTokens();
+          this.start();
         } catch (error) {
           this.responseMessage = error.message || "Unknown error occurred";
           this.isAuthenticated = false;
@@ -250,8 +121,40 @@
           this.isFetching = false;
         }
       },
+
+      async handleLogout() {
+        localStorage.removeItem("user");
+        this.isAuthenticated = false;
+        this.token = null;
+        this.tokens = [];
+      },
+
+      async fetchServices() {
+        this.isFetchingServices = true;
+
+        try {
+          const response = await fetch("/api/services/supported", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${this.token}`,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error();
+          }
+          const data = await response.json();
+          this.availableServices = data;
+        } catch (error) {
+          console.error(error);
+        } finally {
+          this.isFetchingServices = false;
+        }
+      },
+
       async fetchTokens() {
-        this.isFetching = true;
+        this.isFetchingTokens = true;
         try {
           const response = await fetch("/api/users/tokens", {
             method: "POST",
@@ -275,12 +178,13 @@
           }
           this.isAuthenticated = false;
         } finally {
-          this.isFetching = false;
+          this.isFetchingTokens = false;
         }
       },
+
       async createToken() {
         this.isCreateTokenModalActive = false;
-        this.isFetching = true;
+        this.isFetchingTokens = true;
         try {
           const response = await fetch("/api/users/token", {
             method: "POST",
@@ -299,8 +203,9 @@
           const data = await response.json();
           this.fetchTokens();
         } catch (error) {
+          console.error(error);
         } finally {
-          this.isFetching = false;
+          this.isFetchingTokens = false;
           this.tokenName = "";
         }
       },
@@ -308,7 +213,7 @@
         if (tokenId) {
           this.isRevoking = tokenId;
         } else {
-          this.isFetching = true;
+          this.isFetchingTokens = true;
         }
 
         if (this.tokens.length <= 1 || !tokenId) {
@@ -335,9 +240,10 @@
           const data = await response.json();
           this.fetchTokens();
         } catch (error) {
+          console.error(error);
         } finally {
           this.isRevoking = null;
-          this.isFetching = false;
+          this.isFetchingTokens = false;
         }
       },
       async copyToken(token, event) {

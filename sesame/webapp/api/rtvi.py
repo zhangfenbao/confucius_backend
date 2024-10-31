@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 from bots.http.bot import http_bot_pipeline
 from bots.types import BotConfig, BotParams
@@ -28,9 +29,12 @@ async def _get_config_and_conversation(conversation_id: str, db: AsyncSession):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Conversation not found",
         )
-
     try:
-        config_json = conversation.workspace.config
+        config_json = (
+            conversation.workspace.config.copy()
+            if getattr(conversation.workspace, "config", None)
+            else {}
+        )
         config = BotConfig.model_validate(config_json)
     except Exception:
         raise HTTPException(
@@ -45,10 +49,10 @@ async def _validate_services(
     db: AsyncSession,
     config: BotConfig,
     conversation: Conversation,
-    service_type_filter: ServiceType = None,
+    service_type_filter: Optional[ServiceType] = None,
 ):
     try:
-        ServiceFactory.validate_service_map(config.services)
+        ServiceFactory.validate_service_map(dict(config.services))
     except UnsupportedServiceError as e:
         raise HTTPException(
             status_code=400,
@@ -74,8 +78,12 @@ async def _validate_services(
     # Retrieve API keys for services (workspace and user level)
     # @TODO: Cache this query to avoid multiple calls to the database
     try:
+        workspace_id = getattr(conversation.workspace, "workspace_id")
         services = await Service.get_services_by_type_map(
-            config.services, db, conversation.workspace.workspace_id, service_type_filter
+            dict(config.services),
+            db,
+            workspace_id,
+            service_type_filter,
         )
     except ServiceConfigurationError as e:
         raise HTTPException(
@@ -104,7 +112,6 @@ async def stream_action(
             config, conversation = await _get_config_and_conversation(params.conversation_id, db)
             messages = [msg.content for msg in conversation.messages]
             services = await _validate_services(db, config, conversation, ServiceType.ServiceLLM)
-
             gen, task = await http_bot_pipeline(
                 params, config, services, messages, db, conversation.language_code
             )
@@ -143,13 +150,7 @@ async def connect(
     logger.debug("Retrieving transport service configuration from service factory")
 
     transport_service = services.get("transport")
-    transport_api_key = transport_service.api_key
-
-    logger.info(
-        ServiceFactory.get_service_defintion(
-            ServiceType.ServiceTransport, transport_service.service_provider
-        )
-    )
+    transport_api_key = getattr(transport_service, "api_key", None)
 
     if not transport_api_key:
         logger.error("Missing API key for transport service")
@@ -159,7 +160,7 @@ async def connect(
         )
 
     transport_api_url = ServiceFactory.get_service_defintion(
-        ServiceType.ServiceTransport, transport_service.service_provider
+        ServiceType.ServiceTransport, getattr(transport_service, "service_provider")
     ).default_params.get("api_url")
 
     if not transport_api_url:
@@ -174,7 +175,14 @@ async def connect(
     # Check if we are running on Modal and launch the voice bot as a separate function
     if os.getenv("MODAL_ENV"):
         logger.debug("Spawning voice bot on Modal")
-        from sesame.modal_app import launch_bot_modal
+        try:
+            launch_bot_modal = __import__("sesame.modal_app", fromlist=["launch_bot_modal"])
+        except ImportError:
+            logger.error("Failed to import launch_bot_modal from sesame.modal_app")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to import launch_bot_modal from sesame.modal_app",
+            )
 
         launch_bot_modal.spawn(user, params, config, services, room.url, bot_token)
     else:
