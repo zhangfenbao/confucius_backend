@@ -21,6 +21,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
     select,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,6 +58,27 @@ class User(Base):
     async def get_user_by_email(cls, email: str, db: AsyncSession):
         result = await db.execute(select(User).where(User.email == email))
         return result.scalars().first()
+
+    @classmethod
+    async def authenticate_by_email(cls, email: str, db: AsyncSession):
+        try:
+            result = await db.execute(
+                text("SELECT * FROM get_user_for_login(:email)"), {"email": email}
+            )
+            user = result.fetchone()
+            if not user:
+                raise
+        except Exception:
+            raise Exception(f"Unable to authenticate user with Email {email}")
+
+        try:
+            await db.execute(
+                text("SELECT set_current_user_id(:user_id)"), {"user_id": user.user_id}
+            )
+        except Exception:
+            raise Exception(f"Unable to set current user with id {user.user_id}")
+
+        return user
 
 
 class Token(Base):
@@ -100,6 +122,31 @@ class Token(Base):
         db.add(new_token)
 
         return new_token
+
+    @classmethod
+    async def get_or_create_token_for_user(
+        cls,
+        user_id: str,
+        db: AsyncSession,
+        title: Optional[str] = None,
+        expiration_minutes: Optional[int] = None,
+    ):
+        try:
+            query = select(Token).where(Token.user_id == user_id, Token.revoked.is_(False)).limit(1)
+            token = (await db.execute(query)).scalar_one_or_none()
+            if not token:
+                expiry = expiration_minutes or int(os.getenv("SESAME_TOKEN_EXPIRY", 525600))
+                token = await Token.create_token_for_user(
+                    user_id=user_id,
+                    db=db,
+                    title=title or "Generated token",
+                    expiration_minutes=expiry,
+                )
+                await db.commit()
+            return token
+        except Exception as e:
+            await db.rollback()
+            raise Exception(f"Error obtaining token for user: {str(e)}")
 
     @classmethod
     async def get_token(cls, token: str, db: AsyncSession):
