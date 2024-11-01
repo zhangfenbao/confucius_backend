@@ -62,7 +62,7 @@ async def generate_summary_with_llm(
         messages.append(
             {
                 "role": "user",
-                "content": "Summarize our conversation into just a few words. It should be as short as possible and used as a label for this conversation. Avoid using any special characters.",
+                "content": "Summarize our conversation into just a few words. It will be used as a label for this conversation. Avoid using any special characters.",
             }
         )
 

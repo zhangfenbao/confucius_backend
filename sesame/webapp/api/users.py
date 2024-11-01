@@ -127,9 +127,9 @@ async def revoke_token(
 
 async def _authenticate_user(credentials: UserLoginModel, db_session: AsyncSession):
     result = await db_session.execute(
-        text("SELECT * FROM check_rate_limit(:username, :max_attempts, :window_minutes)"),
+        text("SELECT * FROM check_rate_limit(:email, :max_attempts, :window_minutes)"),
         {
-            "username": credentials.username,
+            "email": credentials.email,
             "max_attempts": int(os.getenv("SESAME_MAX_LOGIN_ATTEMPTS", 5)),
             "window_minutes": int(os.getenv("SESAME_RATE_LIMIT_WINDOW_MINUTES", 15)),
         },
@@ -141,25 +141,25 @@ async def _authenticate_user(credentials: UserLoginModel, db_session: AsyncSessi
         raise Exception("Rate limit exceeded. Please try again later.")
 
     result = await db_session.execute(
-        text("SELECT * FROM get_user_for_login(:username)"), {"username": credentials.username}
+        text("SELECT * FROM get_user_for_login(:email)"), {"email": credentials.email}
     )
     user = result.fetchone()
 
     if not user:
-        raise Exception("Invalid username or password")
+        raise Exception("Invalid email or password")
 
     try:
         ph.verify(user.password_hash, credentials.password)
     except VerifyMismatchError:
-        raise Exception("Invalid username or password")
+        raise Exception("Invalid email or password")
 
     await db_session.execute(
         text("SELECT set_current_user_id(:user_id)"), {"user_id": user.user_id}
     )
 
     await db_session.execute(
-        text("DELETE FROM login_attempts WHERE username = :username"),
-        {"username": credentials.username},
+        text("DELETE FROM login_attempts WHERE email = :email"),
+        {"email": credentials.email},
     )
 
     await db_session.commit()

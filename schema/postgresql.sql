@@ -42,7 +42,7 @@ $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp;
 -- ========================
 CREATE TABLE IF NOT EXISTS users (
     user_id VARCHAR(64) PRIMARY KEY,
-    username VARCHAR(64) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -58,9 +58,9 @@ FOR UPDATE
 USING (user_id = get_current_user_id());
 
 CREATE TABLE IF NOT EXISTS login_attempts (
-    username VARCHAR(64),
+    email VARCHAR(255),
     attempt_time TIMESTAMP WITH TIME ZONE,
-    PRIMARY KEY (username, attempt_time)
+    PRIMARY KEY (email, attempt_time)
 );
 
 -- ========================
@@ -524,34 +524,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to authenticate a user with username and password
-CREATE OR REPLACE FUNCTION get_user_for_login(p_username VARCHAR(64))
-RETURNS TABLE (user_id VARCHAR(64), username VARCHAR(64), password_hash TEXT) AS $$
+-- Function to authenticate a user with email and password
+CREATE OR REPLACE FUNCTION get_user_for_login(p_email VARCHAR(64))
+RETURNS TABLE (user_id VARCHAR(64), email VARCHAR(255), password_hash TEXT) AS $$
 BEGIN
     RETURN QUERY
-    SELECT u.user_id::VARCHAR(64), u.username::VARCHAR(64), u.password_hash::TEXT
+    SELECT u.user_id::VARCHAR(64), u.email::VARCHAR(255), u.password_hash::TEXT
     FROM users u
-    WHERE u.username = p_username;
+    WHERE u.email = p_email;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 REVOKE ALL ON FUNCTION get_user_for_login(VARCHAR(64)) FROM PUBLIC;
 
-CREATE OR REPLACE FUNCTION check_rate_limit(p_username VARCHAR(64), p_max_attempts INT, p_window_minutes INT)
+CREATE OR REPLACE FUNCTION check_rate_limit(p_email VARCHAR(64), p_max_attempts INT, p_window_minutes INT)
 RETURNS BOOLEAN AS $$
 DECLARE
     attempt_count INT;
 BEGIN
     SELECT COUNT(*) INTO attempt_count
     FROM login_attempts
-    WHERE username = p_username
+    WHERE email = p_email
     AND attempt_time > NOW() - (p_window_minutes || ' minutes')::INTERVAL;
 
     IF attempt_count >= p_max_attempts THEN
         RETURN FALSE;
     END IF;
 
-    INSERT INTO login_attempts (username, attempt_time) VALUES (p_username, NOW());
+    INSERT INTO login_attempts (email, attempt_time) VALUES (p_email, NOW());
     RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

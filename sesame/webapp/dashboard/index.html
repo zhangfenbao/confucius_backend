@@ -34,7 +34,7 @@
     data() {
       return {
         isMounting: true,
-        username: "",
+        email: "",
         password: "",
         responseMessage: "",
         isFetching: false,
@@ -92,7 +92,7 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              username: this.username,
+              email: this.email,
               password: this.password,
             }),
           });
@@ -174,7 +174,7 @@
             this.responseMessage =
               "Tokens revoked. Log in to create new token.";
           } else {
-            this.responseMessage = "Incorrect username or password";
+            this.responseMessage = "Incorrect Email or password";
           }
           this.isAuthenticated = false;
         } finally {

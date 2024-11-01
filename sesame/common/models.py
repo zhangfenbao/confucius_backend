@@ -44,18 +44,18 @@ class User(Base):
     __tablename__ = "users"
 
     user_id = Column(String(64), primary_key=True)
-    username = Column(String(64), unique=True, nullable=False)
+    email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     tokens: Mapped[List["Token"]] = relationship("Token", back_populates="user")
 
-    __table_args__ = (Index("idx_users_username", "username"),)
+    __table_args__ = (Index("idx_users_email", "email"),)
 
     @classmethod
-    async def get_user_by_username(cls, username: str, db: AsyncSession):
-        result = await db.execute(select(User).where(User.username == username))
+    async def get_user_by_email(cls, email: str, db: AsyncSession):
+        result = await db.execute(select(User).where(User.email == email))
         return result.scalars().first()
 
 
@@ -431,7 +431,7 @@ class Service(Base):
 
 
 class UserLoginModel(BaseModel):
-    username: str
+    email: str
     password: str
 
     model_config = {"from_attributes": True}
@@ -439,7 +439,7 @@ class UserLoginModel(BaseModel):
 
 class UserModel(BaseModel):
     user_id: str
-    username: str
+    email: str
     created_at: datetime
     updated_at: datetime
 
