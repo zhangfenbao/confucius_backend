@@ -525,7 +525,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Function to authenticate a user with email and password
-CREATE OR REPLACE FUNCTION get_user_for_login(p_email VARCHAR(64))
+CREATE OR REPLACE FUNCTION get_user_for_login(p_email VARCHAR(255))
 RETURNS TABLE (user_id VARCHAR(64), email VARCHAR(255), password_hash TEXT) AS $$
 BEGIN
     RETURN QUERY
@@ -535,9 +535,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-REVOKE ALL ON FUNCTION get_user_for_login(VARCHAR(64)) FROM PUBLIC;
+REVOKE ALL ON FUNCTION get_user_for_login(VARCHAR(255)) FROM PUBLIC;
 
-CREATE OR REPLACE FUNCTION check_rate_limit(p_email VARCHAR(64), p_max_attempts INT, p_window_minutes INT)
+CREATE OR REPLACE FUNCTION check_rate_limit(p_email VARCHAR(255), p_max_attempts INT, p_window_minutes INT)
 RETURNS BOOLEAN AS $$
 DECLARE
     attempt_count INT;
@@ -556,7 +556,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-REVOKE ALL ON FUNCTION check_rate_limit(VARCHAR(64), INT, INT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION check_rate_limit(VARCHAR(255), INT, INT) FROM PUBLIC;
 
 -- ========================
 -- Create Public Role
