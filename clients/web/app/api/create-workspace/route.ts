@@ -6,6 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const workspace: WorkspaceModel = await request.json();
+    const apiKeys = structuredClone(workspace.config.api_keys ?? {});
+    delete workspace.config.api_keys;
 
     const apiClient = await getApiClient();
     const response = await apiClient.api.createWorkspaceApiWorkspacesPost({
@@ -16,7 +18,7 @@ export async function POST(request: NextRequest) {
     if (response.ok) {
       const json = await response.json();
 
-      await syncWorkspaceServices(json as WorkspaceModel);
+      await syncWorkspaceServices(json as WorkspaceModel, apiKeys);
 
       return NextResponse.json(json);
     } else {

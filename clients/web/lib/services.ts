@@ -32,16 +32,16 @@ interface ServiceConfig {
   workspaceId?: string;
 }
 
-export async function syncWorkspaceServices(workspace: WorkspaceModel) {
+export async function syncWorkspaceServices(workspace: WorkspaceModel, apiKeys: Record<string, string>) {
   const apiClient = await getApiClient();
   const services = await getServices();
 
   const map: Record<string, ServiceConfig> = {};
   Object.entries(serviceProviderTypeMap).forEach(([provider, type]) => {
-    if (!workspace.config.api_keys) return;
-    if (provider in workspace.config.api_keys) {
+    if (!apiKeys) return;
+    if (provider in apiKeys) {
       map[type] = {
-        apiKey: workspace.config.api_keys[provider],
+        apiKey: apiKeys[provider],
         provider,
         workspaceId: workspace.workspace_id,
       };
