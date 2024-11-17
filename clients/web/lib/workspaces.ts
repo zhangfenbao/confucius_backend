@@ -18,10 +18,16 @@ export async function getWorkspaces() {
       `Error fetching workspaces: ${response.status} ${response.statusText}`
     );
   }
-  return (json as WorkspaceWithConversations[]).sort(
-    (a, b) =>
-      new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-  );
+  return (json as WorkspaceWithConversations[])
+    .map((ws) => {
+      const cleanedUp = structuredClone(ws);
+      delete cleanedUp.config.api_keys;
+      return cleanedUp;
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
 }
 
 export async function getWorkspace(id: string) {
@@ -31,7 +37,9 @@ export async function getWorkspace(id: string) {
       await apiClient.api.getWorkspaceApiWorkspacesWorkspaceIdGet(id);
     const json = await response.json();
     if (response.ok) {
-      return json as WorkspaceModel;
+      const cleanedUp = structuredClone<WorkspaceModel>(json);
+      delete cleanedUp.config.api_keys;
+      return cleanedUp;
     } else {
       throw new Error(
         `Error fetching workspace: ${response.status} ${response.statusText}`
