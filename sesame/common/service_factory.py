@@ -236,6 +236,12 @@ ServiceFactory.register_service(
     optional_params=["model"],
 )
 
+ServiceFactory.register_service(
+    "pipecat.services.google:GoogleLLMService",
+    "google",
+    ServiceType.ServiceLLM,
+    optional_params=["model"],
+)
 
 ServiceFactory.register_service(
     "pipecat.services.anthropic:AnthropicLLMService",
