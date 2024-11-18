@@ -50,6 +50,7 @@ export default async function WorkspaceLayout({
       {/* Sidebar */}
       <Sidebar
         conversations={workspace.conversations}
+        signOut={!process.env.SESAME_USER_TOKEN}
         workspace={workspace}
         workspaces={workspaces}
       />

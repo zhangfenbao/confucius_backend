@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "An Open Source multi-modal LLM environment",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
