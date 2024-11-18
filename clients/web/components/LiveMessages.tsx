@@ -234,16 +234,11 @@ export default function LiveMessages({
         // TODO: Move to StorageItemStored handler, once that is emitted in text-mode
         setTimeout(revalidateAndRefresh, 2000);
       }
-    }, [
-      addMessageChunk,
-      revalidateAndRefresh,
-      structuredWorkspace.tts.interactionMode,
-      workspaceId,
-    ])
+    }, [addMessageChunk, revalidateAndRefresh, structuredWorkspace.tts.interactionMode])
   );
 
   useRTVIClientEvent(
-    RTVIEvent.BotTtsStarted,
+    RTVIEvent.BotStartedSpeaking,
     useCallback(() => {
       if (structuredWorkspace.tts.interactionMode !== "conversational") return;
       if (!firstBotResponseTime.current) {
@@ -280,7 +275,7 @@ export default function LiveMessages({
   );
 
   useRTVIClientEvent(
-    RTVIEvent.BotTtsStopped,
+    RTVIEvent.BotStoppedSpeaking,
     useCallback(() => {
       if (structuredWorkspace.tts.interactionMode !== "conversational") return;
       const createdAt = firstBotResponseTime.current;
