@@ -47,6 +47,4 @@ USER user
 COPY --from=builder /usr/local/lib/python3.12/site-packages/ /usr/local/lib/python3.12/site-packages/
 COPY --chown=user . .
 
-EXPOSE 80
-
-CMD ["python", "-m", "uvicorn", "webapp.main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
+CMD ["sh", "-c", "python -m uvicorn webapp.main:app --host 0.0.0.0 --port ${PORT:-8080} --proxy-headers"]
