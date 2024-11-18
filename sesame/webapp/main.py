@@ -30,7 +30,7 @@ default_session_factory = DatabaseSessionFactory()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.cache = TTLCache(maxsize=100, ttl=5 * 60)
+    app.state.cache = TTLCache(maxsize=100, ttl=300)
 
     try:
         async with default_session_factory.engine.connect() as session:
