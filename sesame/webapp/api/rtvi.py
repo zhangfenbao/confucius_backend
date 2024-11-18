@@ -13,7 +13,7 @@ from common.service_factory import (
     ServiceType,
     UnsupportedServiceError,
 )
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -98,6 +98,7 @@ async def _validate_services(
 
 @router.post("/action", response_class=StreamingResponse)
 async def stream_action(
+    request: Request,
     params: BotParams,
     user: Auth = Depends(get_user),
 ):
@@ -111,7 +112,16 @@ async def stream_action(
         async with get_authenticated_db_context(user) as db:
             config, conversation = await _get_config_and_conversation(params.conversation_id, db)
             messages = [msg.content for msg in conversation.messages]
-            services = await _validate_services(db, config, conversation, ServiceType.ServiceLLM)
+            logger.info(f"Checking cache for services in conversation {params.conversation_id}")
+            cache_key = f"services_{params.conversation_id}"
+            if cache_key in request.app.state.cache:
+                services = request.app.state.cache[cache_key]
+            else:
+                logger.info("No cached services. Fetching from database...")
+                services = await _validate_services(
+                    db, config, conversation, ServiceType.ServiceLLM
+                )
+                request.app.state.cache[cache_key] = services
             gen, task = await http_bot_pipeline(
                 params, config, services, messages, db, conversation.language_code
             )

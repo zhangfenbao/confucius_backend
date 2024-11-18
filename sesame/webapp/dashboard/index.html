@@ -34,7 +34,7 @@
     data() {
       return {
         isMounting: true,
-        username: "",
+        email: "",
         password: "",
         responseMessage: "",
         isFetching: false,
@@ -86,13 +86,13 @@
         this.isFetching = true;
         this.responseMessage = "";
         try {
-          const response = await fetch("/api/users/login", {
+          const response = await fetch("/api/auth/login", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              username: this.username,
+              email: this.email,
               password: this.password,
             }),
           });
@@ -156,8 +156,8 @@
       async fetchTokens() {
         this.isFetchingTokens = true;
         try {
-          const response = await fetch("/api/users/tokens", {
-            method: "POST",
+          const response = await fetch("/api/tokens", {
+            method: "GET",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${this.token}`,
@@ -174,7 +174,7 @@
             this.responseMessage =
               "Tokens revoked. Log in to create new token.";
           } else {
-            this.responseMessage = "Incorrect username or password";
+            this.responseMessage = "Incorrect Email or password";
           }
           this.isAuthenticated = false;
         } finally {
@@ -186,7 +186,7 @@
         this.isCreateTokenModalActive = false;
         this.isFetchingTokens = true;
         try {
-          const response = await fetch("/api/users/token", {
+          const response = await fetch("/api/tokens/token", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -223,7 +223,7 @@
         }
 
         try {
-          const response = await fetch("/api/users/revoke_token", {
+          const response = await fetch("/api/tokens/revoke", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

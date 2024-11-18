@@ -2,6 +2,7 @@ import os
 import sys
 from contextlib import asynccontextmanager
 
+from cachetools import TTLCache
 from common.database import DatabaseSessionFactory
 from common.models import Base
 from dotenv import load_dotenv
@@ -29,6 +30,8 @@ default_session_factory = DatabaseSessionFactory()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.cache = TTLCache(maxsize=100, ttl=300)
+
     try:
         async with default_session_factory.engine.connect() as session:
             if bool(int(os.getenv("SESAME_DATABASE_USE_REFLECTION", "0"))):

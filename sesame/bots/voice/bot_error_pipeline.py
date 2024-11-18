@@ -1,12 +1,11 @@
 from typing import Awaitable, Callable
 
+from bots.types import BotCallbacks
 from pipecat.frames.frames import EndFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.task import PipelineTask
-from pipecat.processors.frameworks.rtvi import RTVIProcessor, RTVIProcessorParams
+from pipecat.processors.frameworks.rtvi import RTVIProcessor
 from pipecat.transports.services.daily import DailyTransport
-
-from bots.types import BotCallbacks
 
 
 async def bot_error_pipeline_task(
@@ -15,7 +14,7 @@ async def bot_error_pipeline_task(
     async def create_task(callbacks: BotCallbacks) -> PipelineTask:
         transport = DailyTransport(room_url, token, "Open Sesame")
 
-        rtvi = RTVIProcessor(params=RTVIProcessorParams(send_bot_ready=False))
+        rtvi = RTVIProcessor()
         pipeline = Pipeline(
             [
                 rtvi,

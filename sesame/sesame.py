@@ -309,6 +309,11 @@ async def check_schema_exists() -> bool:
         await admin_engine.dispose()
 
 
+def is_valid_email(email: str) -> bool:
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+    return bool(re.match(pattern, email))
+
+
 # ========================
 # Initialize
 # ========================
@@ -693,7 +698,7 @@ async def _run_schema():
 @app.command()
 @require_env_and_schema
 def create_user(
-    username: str = typer.Option(None, "--username", "-u", help="Username for the new user"),
+    email: str = typer.Option(None, "--email", "-u", help="Email for the new user"),
     password: str = typer.Option(None, "--password", "-p", help="Password for the new user"),
 ):
     """Create a new user with secure password hashing."""
@@ -710,31 +715,31 @@ def create_user(
             raise typer.Exit(1)
 
         # Run the async user creation
-        asyncio.run(_create_user(username, password))
+        asyncio.run(_create_user(email, password))
     except Exception as e:
         console.print(f"Error creating user: {str(e)}", style="red bold")
         raise typer.Exit(1)
 
 
-async def _create_user(username: Optional[str] = None, password: Optional[str] = None):
+async def _create_user(email: Optional[str] = None, password: Optional[str] = None):
     """Async function to create a new user."""
     # Validate database connection first
     await _test_db(as_admin=True)
 
     console.print("\nUser Creation", style="blue bold")
 
-    # Validate or prompt for username
-    if username:
-        if len(username) <= 2:
-            console.print("Provided username must be more than 2 characters", style="red")
-            username = None
+    # Validate or prompt for email
+    if email:
+        if not is_valid_email(email):
+            console.print("Please enter a valid Email address", style="red")
+            email = None
 
-    # Prompt for username if not provided or invalid
-    while not username:
-        username = Prompt.ask("Enter a username")
-        if len(username) <= 2:
-            console.print("Username must be more than 2 characters", style="red")
-            username = None
+    # Prompt for email if not provided or invalid
+    while not email:
+        email = Prompt.ask("Enter a email")
+        if not is_valid_email(email):
+            console.print("Please enter a valid Email address", style="red")
+            email = None
 
     # Validate or prompt for password
     if password:
@@ -751,14 +756,21 @@ async def _create_user(username: Optional[str] = None, password: Optional[str] =
     # Prompt for password if not provided, invalid, or confirmation failed
     while not password:
         password = Prompt.ask("Enter a password (min 8 characters)", password=True)
+
+        # Check length and reset if too short
         if len(password) < 8:
             console.print("Password must be at least 8 characters", style="red")
+            password = None  # Reset password
             continue
 
         password_confirm = Prompt.ask("Confirm your password", password=True)
-        if password == password_confirm:
-            break
-        console.print("Passwords do not match", style="red")
+        if password != password_confirm:
+            console.print("Passwords do not match", style="red")
+            password = None  # Reset password
+            continue
+
+        # If we get here, password is valid and confirmed
+        break
 
     # Generate user_id and hash password
     user_id = generate_user_id()
@@ -775,23 +787,26 @@ async def _create_user(username: Optional[str] = None, password: Optional[str] =
     with Status("[blue]Creating user...", spinner="dots") as status:
         try:
             async with admin_engine.begin() as conn:
-                # Check if username already exists
-                result = await conn.execute(
-                    text("SELECT COUNT(*) FROM users WHERE username = :username"),
-                    {"username": username},
-                )
-                count = result.scalar()
+                # Check if email already exists
+                try:
+                    result = await conn.execute(
+                        text("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)"),
+                        {"email": email},
+                    )
+                    exists = result.scalar()
+                    if exists:
+                        raise ValueError("Email already exists")
 
-                if not count or count > 0:
-                    raise ValueError("Username already exists")
+                except Exception as e:
+                    console.print(str(e), style="red")
 
                 # Insert new user
                 await conn.execute(
                     text("""
-                        INSERT INTO users (user_id, username, password_hash)
-                        VALUES (:user_id, :username, :password_hash)
+                        INSERT INTO users (user_id, email, password_hash)
+                        VALUES (:user_id, :email, :password_hash)
                     """),
-                    {"user_id": user_id, "username": username, "password_hash": password_hash},
+                    {"user_id": user_id, "email": email, "password_hash": password_hash},
                 )
             status.stop()
             console.print("\n✓ User successfully created!", style="green bold")
@@ -811,7 +826,7 @@ async def _create_user(username: Optional[str] = None, password: Optional[str] =
         table.add_column("Field", style="green dim")
         table.add_column("Value", style="green bold")
 
-        table.add_row("Username", username)
+        table.add_row("Email", email)
         table.add_row("Password", password)
 
         # Create a panel containing the table

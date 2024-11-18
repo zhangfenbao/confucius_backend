@@ -4,6 +4,7 @@ import PageTransitionLink from "@/components/PageTransitionLink";
 import QueryClientProvider, {
   queryClient,
 } from "@/components/QueryClientProvider";
+import SignOutButton from "@/components/SignOutButton";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -30,12 +31,14 @@ import SidebarTitle from "./SidebarTitle";
 
 interface SidebarProps {
   conversations: ConversationModel[];
+  signOut?: boolean;
   workspace?: WorkspaceModel | null;
   workspaces?: WorkspaceModel[];
 }
 
 export default function Sidebar({
   conversations,
+  signOut = false,
   workspace,
   workspaces = [],
 }: SidebarProps) {
@@ -131,6 +134,10 @@ export default function Sidebar({
           )
         ) : null}
       </QueryClientProvider>
+
+      {signOut && (
+        <SignOutButton className="sticky bottom-0 z-10 mt-auto">Sign out</SignOutButton>
+      )}
     </>
   );
 
@@ -151,14 +158,14 @@ export default function Sidebar({
               />
             </SheetTitle>
             <SheetDescription></SheetDescription>
-            <div className="flex flex-col gap-6 p-4">{content}</div>
+            <div className="flex flex-col gap-6 p-4 min-h-full">{content}</div>
           </SheetContent>
         </Sheet>
       </div>
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:block lg:w-[var(--sidebar-width)] bg-secondary sticky top-0 overflow-y-auto h-dvh">
-        <div className="flex flex-col gap-6 p-4">
+        <div className="flex flex-col gap-6 p-4 min-h-full">
           <SidebarTitle
             className="bg-secondary"
             workspace={workspace}
