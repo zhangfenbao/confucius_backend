@@ -37,7 +37,7 @@ export default function APIKeysSection({ formState, setFormState }: Props) {
   const config = {
     daily: {
       key: dailyKey,
-      required: true,
+      required: false,
     },
     [llmProvider]: {
       key: llmKey,
