@@ -102,6 +102,9 @@ export default function ConfigurationSection({
             <ToggleGroupItem id="openai" value="openai" aria-label="OpenAI">
               OpenAI
             </ToggleGroupItem>
+            <ToggleGroupItem id="google" value="google" aria-label="Google">
+              Google
+            </ToggleGroupItem>
           </ToggleGroup>
         </ConfigurationItem>
       </fieldset>
