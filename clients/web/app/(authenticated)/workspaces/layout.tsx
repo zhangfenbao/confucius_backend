@@ -1,6 +1,6 @@
 "use server";
 
-import DeleteWorkspaceModal from "@/app/workspaces/DeleteWorkspaceModal";
+import DeleteWorkspaceModal from "@/app/(authenticated)/workspaces/DeleteWorkspaceModal";
 import ErrorPage from "@/components/ErrorPage";
 import { WorkspaceWithConversations } from "@/lib/sesameApi";
 import { getWorkspaces } from "@/lib/workspaces";
@@ -31,7 +31,7 @@ export default async function WorkspacesLayout({
   return (
     <div className="lg:grid lg:grid-cols-[var(--sidebar-width)_1fr] min-h-dvh">
       {/* Sidebar */}
-      <Sidebar workspaces={workspaces} />
+      <Sidebar signOut={!process.env.SESAME_USER_TOKEN} workspaces={workspaces} />
 
       {/* Main content area */}
       <div className="flex flex-col min-h-dvh w-full">

@@ -28,7 +28,7 @@ export interface ConversationCreateModel {
    */
   workspace_id: string;
   /** Title */
-  title: string | null;
+  title?: string | null;
   /**
    * Language Code
    * @default "english"
@@ -201,6 +201,20 @@ export interface ServiceCreateModel {
   options?: object | null;
 }
 
+/** ServiceInfo */
+export interface ServiceInfo {
+  /** Service Name */
+  service_name: string;
+  /** Service Type */
+  service_type: string;
+  /** Requires Api Key */
+  requires_api_key: boolean;
+  /** Optional Params */
+  optional_params: string[];
+  /** Required Params */
+  required_params: string[];
+}
+
 /** ServiceModel */
 export interface ServiceModel {
   /**
@@ -246,8 +260,8 @@ export interface ServiceUpdateModel {
 
 /** UserLoginModel */
 export interface UserLoginModel {
-  /** Username */
-  username: string;
+  /** Email */
+  email: string;
   /** Password */
   password: string;
 }
@@ -574,14 +588,14 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     /**
      * No description
      *
-     * @tags Users
-     * @name LoginWithCredentialsApiUsersLoginPost
+     * @tags Auth, Auth
+     * @name LoginWithCredentialsApiAuthLoginPost
      * @summary Login With Credentials
-     * @request POST:/api/users/login
+     * @request POST:/api/auth/login
      */
-    loginWithCredentialsApiUsersLoginPost: (data: UserLoginModel, params: RequestParams = {}) =>
+    loginWithCredentialsApiAuthLoginPost: (data: UserLoginModel, params: RequestParams = {}) =>
       this.request<any, HTTPValidationError>({
-        path: `/api/users/login`,
+        path: `/api/auth/login`,
         method: "POST",
         body: data,
         type: ContentType.Json,
@@ -592,16 +606,16 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     /**
      * No description
      *
-     * @tags Users
-     * @name RetrieveUserTokensApiUsersTokensPost
-     * @summary Retrieve User Tokens
-     * @request POST:/api/users/tokens
+     * @tags Auth, Auth
+     * @name GetTokenApiAuthTokenGet
+     * @summary Get Token
+     * @request GET:/api/auth/token
      * @secure
      */
-    retrieveUserTokensApiUsersTokensPost: (params: RequestParams = {}) =>
+    getTokenApiAuthTokenGet: (params: RequestParams = {}) =>
       this.request<any, any>({
-        path: `/api/users/tokens`,
-        method: "POST",
+        path: `/api/auth/token`,
+        method: "GET",
         secure: true,
         format: "json",
         ...params,
@@ -610,15 +624,33 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     /**
      * No description
      *
-     * @tags Users
-     * @name CreateAUserTokenApiUsersTokenPost
-     * @summary Create A User Token
-     * @request POST:/api/users/token
+     * @tags Tokens
+     * @name RetrieveUserTokensApiTokensGet
+     * @summary Retrieve User Tokens
+     * @request GET:/api/tokens
      * @secure
      */
-    createAUserTokenApiUsersTokenPost: (data: CreateTokenRequest, params: RequestParams = {}) =>
+    retrieveUserTokensApiTokensGet: (params: RequestParams = {}) =>
+      this.request<Record<string, boolean | object[]>, any>({
+        path: `/api/tokens`,
+        method: "GET",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Tokens
+     * @name CreateAUserTokenApiTokensTokenPost
+     * @summary Create A User Token
+     * @request POST:/api/tokens/token
+     * @secure
+     */
+    createAUserTokenApiTokensTokenPost: (data: CreateTokenRequest, params: RequestParams = {}) =>
       this.request<any, HTTPValidationError>({
-        path: `/api/users/token`,
+        path: `/api/tokens/token`,
         method: "POST",
         body: data,
         secure: true,
@@ -630,15 +662,15 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
     /**
      * No description
      *
-     * @tags Users
-     * @name RevokeAUserTokenApiUsersRevokeTokenPost
+     * @tags Tokens
+     * @name RevokeAUserTokenApiTokensRevokePost
      * @summary Revoke A User Token
-     * @request POST:/api/users/revoke_token
+     * @request POST:/api/tokens/revoke
      * @secure
      */
-    revokeAUserTokenApiUsersRevokeTokenPost: (data: RevokeTokenRequest, params: RequestParams = {}) =>
+    revokeAUserTokenApiTokensRevokePost: (data: RevokeTokenRequest, params: RequestParams = {}) =>
       this.request<any, HTTPValidationError>({
-        path: `/api/users/revoke_token`,
+        path: `/api/tokens/revoke`,
         method: "POST",
         body: data,
         secure: true,
@@ -973,7 +1005,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       },
       params: RequestParams = {},
     ) =>
-      this.request<string[], HTTPValidationError>({
+      this.request<ServiceInfo[], HTTPValidationError>({
         path: `/api/services/supported`,
         method: "GET",
         query: query,

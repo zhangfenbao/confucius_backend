@@ -1,6 +1,7 @@
 "use client";
 
 import PageTransitionLink from "@/components/PageTransitionLink";
+import SignOutButton from "@/components/SignOutButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,10 +24,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface SidebarProps {
+  signOut?: boolean;
   workspaces: WorkspaceModel[];
 }
 
-export default function Sidebar({ workspaces }: SidebarProps) {
+export default function Sidebar({ signOut = false, workspaces }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const pathname = usePathname();
@@ -74,7 +76,7 @@ export default function Sidebar({ workspaces }: SidebarProps) {
 
       <span className="text-xl font-semibold">Your Workspaces</span>
 
-      <ul>
+      <ul className="flex-grow flex flex-col">
         {hasWorkspaces ? (
           workspaces.map((workspace) => {
             const isActive = pathname.includes(workspace.workspace_id);
@@ -89,7 +91,9 @@ export default function Sidebar({ workspaces }: SidebarProps) {
                   }
                 )}
               >
-                <PageTransitionLink href={`/workspaces/${workspace.workspace_id}`}>
+                <PageTransitionLink
+                  href={`/workspaces/${workspace.workspace_id}`}
+                >
                   <div className="text-nowrap text-ellipsis overflow-hidden">
                     {workspace.title}
                   </div>
@@ -111,9 +115,7 @@ export default function Sidebar({ workspaces }: SidebarProps) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
-                      <PageTransitionLink
-                        href={`/${workspace.workspace_id}`}
-                      >
+                      <PageTransitionLink href={`/${workspace.workspace_id}`}>
                         Go to Workspace
                       </PageTransitionLink>
                     </DropdownMenuItem>
@@ -134,6 +136,11 @@ export default function Sidebar({ workspaces }: SidebarProps) {
           <li className="text-md font-bold mb-2 text-secondary-foreground">
             No workspaces
           </li>
+        )}
+        {signOut && (
+          <SignOutButton className="sticky bottom-0 z-10 mt-auto">
+            Sign out
+          </SignOutButton>
         )}
       </ul>
     </div>
