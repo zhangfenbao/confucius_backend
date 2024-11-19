@@ -46,6 +46,7 @@ const ConversationList = ({
         return await searchConversations(workspaceId, searchQuery, pageParam);
       return await getConversations(workspaceId, pageParam);
     },
+    refetchOnMount: false,
   });
 
   useEffect(() => {
