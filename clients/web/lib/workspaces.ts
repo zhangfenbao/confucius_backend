@@ -32,19 +32,8 @@ export async function getWorkspaces() {
 
 export async function getWorkspace(id: string) {
   try {
-    const apiClient = await getApiClient();
-    const response =
-      await apiClient.api.getWorkspaceApiWorkspacesWorkspaceIdGet(id);
-    const json = await response.json();
-    if (response.ok) {
-      const cleanedUp = structuredClone<WorkspaceModel>(json);
-      delete cleanedUp.config.api_keys;
-      return cleanedUp;
-    } else {
-      throw new Error(
-        `Error fetching workspace: ${response.status} ${response.statusText}`
-      );
-    }
+    const workspaces = await getWorkspaces();
+    return workspaces.find(ws => ws.workspace_id === id);
   } catch (e) {
     console.error(e);
     return null;
