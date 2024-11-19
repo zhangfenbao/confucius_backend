@@ -1,7 +1,6 @@
 "use client";
 
 import ExpiryCountdown from "@/components/ExpiryCountdown";
-import { queryClient } from "@/components/QueryClientProvider";
 import emitter from "@/lib/eventEmitter";
 import { cn } from "@/lib/utils";
 import {
@@ -160,10 +159,7 @@ const ChatControls: React.FC<Props> = ({
   );
 
   const invalidateAndRedirect = async (redirect: string) => {
-    await queryClient.invalidateQueries({
-      queryKey: ["conversations", workspaceId],
-      type: "all",
-    });
+    emitter.emit("updateSidebar");
     emitter.emit("showPageTransitionLoader");
     push(redirect);
   };

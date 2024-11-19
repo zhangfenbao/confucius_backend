@@ -54,7 +54,6 @@ export default function Sidebar({
     const updateSidebar = () =>
       queryClient.invalidateQueries({
         queryKey: ["conversations", workspace?.workspace_id],
-        type: "all",
       });
     const handleResize = () => {
       if (window.innerWidth >= 1024) setIsOpen(false);
