@@ -9,7 +9,6 @@ import {
 } from "react";
 
 import ChatMessage from "@/components/ChatMessage";
-import { queryClient } from "@/components/QueryClientProvider";
 import emitter from "@/lib/eventEmitter";
 import { LLMMessageRole } from "@/lib/llm";
 import type { Message } from "@/lib/messages";
@@ -35,7 +34,6 @@ interface Props {
   isBotSpeaking?: boolean;
   messages: Message[];
   structuredWorkspace: WorkspaceStructuredData;
-  workspaceId: string;
 }
 
 const addNewLinesBeforeCodeblocks = (markdown: string) =>
@@ -52,20 +50,12 @@ interface MessageChunk {
   updatedAt?: Date;
 }
 
-const revalidateConversation = async (workspaceId: string) => {
-  queryClient.invalidateQueries({
-    queryKey: ["conversations", workspaceId],
-    type: "all",
-  });
-};
-
 export default function LiveMessages({
   autoscroll,
   conversationId,
   isBotSpeaking,
   messages,
   structuredWorkspace,
-  workspaceId,
 }: Props) {
   const { refresh } = useRouter();
   const [liveMessages, setLiveMessages] = useState<LiveMessage[]>([]);
@@ -170,9 +160,9 @@ export default function LiveMessages({
   const isTextResponse = useRef(false);
 
   const revalidateAndRefresh = useCallback(async () => {
-    await revalidateConversation(workspaceId);
+    emitter.emit("updateSidebar");
     refresh();
-  }, [refresh, workspaceId]);
+  }, [refresh]);
 
   useRTVIClientEvent(
     RTVIEvent.BotLlmStarted,

@@ -170,7 +170,6 @@ export default function ClientPage({
                 conversationId={conversationId}
                 messages={messages}
                 structuredWorkspace={structuredWorkspace}
-                workspaceId={workspaceId}
               />
             ) : (
               <div className="flex flex-col gap-4 items-center justify-center h-full my-auto">

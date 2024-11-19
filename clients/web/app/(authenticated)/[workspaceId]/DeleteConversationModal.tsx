@@ -1,6 +1,5 @@
 "use client";
 
-import { queryClient } from "@/components/QueryClientProvider";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -48,10 +47,7 @@ export default function DeleteConversationModal({
         }),
       });
       if (response.ok) {
-        queryClient.invalidateQueries({
-          queryKey: ["conversations", workspaceId],
-          type: "all",
-        });
+        emitter.emit("updateSidebar");
         emitter.emit("showPageTransitionLoader");
         push(`/${workspaceId}`);
         emitter.emit("updateSidebar");
