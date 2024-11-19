@@ -8,27 +8,29 @@ import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import emitter from "@/lib/eventEmitter";
 import { LLMMessageRole, LLMProvider } from "@/lib/llm";
-import { MessageCreateModel, WorkspaceModel } from "@/lib/sesameApi";
+import {
+  MessageCreateModel,
+  ServiceInfo,
+  ServiceModel,
+  WorkspaceModel,
+} from "@/lib/sesameApi";
 import { InteractionMode, TTSService, voiceOptions } from "@/lib/voice";
 import { getWorkspaceStructuredData } from "@/lib/workspaces";
 import equal from "fast-deep-equal";
 import { ArrowRightIcon, LoaderCircle, SaveIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useMemo, useState } from "react";
-import APIKeysSection from "./APIKeysSection";
 import ConfigurationSection from "./ConfigurationSection";
 import VoiceSettingsSection from "./VoiceSettingsSection";
 import WorkspaceOptionsSection from "./WorkspaceOptionsSection";
 
 interface Props {
+  availableServices: ServiceInfo[];
+  services: ServiceModel[];
   workspace: Pick<WorkspaceModel, "config" | "title" | "workspace_id">;
 }
 
 export interface WorkspaceFormConfig {
-  apiKeys: Array<{
-    service: string;
-    apiKey: string;
-  }>;
   configuration: {
     model: {
       llmProvider: LLMProvider;
@@ -56,7 +58,11 @@ export interface WorkspaceFormConfig {
   };
 }
 
-export default function ConfigurationForm({ workspace }: Props) {
+export default function ConfigurationForm({
+  availableServices,
+  services,
+  workspace,
+}: Props) {
   const { push } = useRouter();
   const { toast } = useToast();
   const structuredData = getWorkspaceStructuredData(workspace.config);
@@ -142,13 +148,6 @@ export default function ConfigurationForm({ workspace }: Props) {
     > = {
       workspace_id: workspace.workspace_id,
       config: {
-        api_keys: formState.apiKeys.reduce<Record<string, string>>(
-          (o, config) => {
-            o[config.service] = config.apiKey;
-            return o;
-          },
-          {}
-        ),
         default_llm_context: formState.configuration.prompt,
         services: {
           llm: formState.configuration.model.llmProvider,
@@ -290,9 +289,20 @@ export default function ConfigurationForm({ workspace }: Props) {
         formState={formState}
         setFormState={setFormState}
       />
-      <ConfigurationSection formState={formState} setFormState={setFormState} />
-      <VoiceSettingsSection formState={formState} setFormState={setFormState} />
-      <APIKeysSection formState={formState} setFormState={setFormState} />
+      <ConfigurationSection
+        availableServices={availableServices}
+        services={services.filter((s) => s.service_type === "llm")}
+        formState={formState}
+        setFormState={setFormState}
+        workspace={workspace as WorkspaceModel}
+      />
+      <VoiceSettingsSection
+        availableServices={availableServices}
+        services={services.filter((s) => s.service_type === "tts")}
+        formState={formState}
+        setFormState={setFormState}
+        workspace={workspace as WorkspaceModel}
+      />
       <div className="flex lg:justify-end">
         <Button
           className="flex-grow lg:flex-grow-0 gap-2 items-center"

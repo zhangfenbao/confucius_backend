@@ -6,6 +6,8 @@ interface LanguageOption {
   label: string;
   cartesia?: string;
   elevenlabs?: string;
+  openai?: string;
+  playht?: string;
 }
 
 interface VoiceOption {
@@ -14,7 +16,7 @@ interface VoiceOption {
   ttsProvider: string;
   languages: string[];
   voiceId: string;
-  ttsModel: string;
+  ttsModel?: string;
   sttModel: string;
 }
 
@@ -43,6 +45,8 @@ export const languageOptions: LanguageOption[] = [
     label: "English",
     cartesia: "en",
     elevenlabs: "en",
+    openai: "en",
+    playht: "en",
   },
   {
     label: "Finnish",
@@ -781,6 +785,152 @@ export const voiceOptions: VoiceOption[] = [
     voiceId: "bIHbv24MWmeRgasZH58o",
     ttsModel: "eleven_turbo_v2_5",
     sttModel: "nova-2-conversationalai",
+  },
+  // OpenAI TTS voices
+  {
+    value: "alloy",
+    label: "Alloy",
+    ttsProvider: "openai",
+    languages: ["en"],
+    voiceId: "alloy",
+    ttsModel: "tts-1",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "echo",
+    label: "Echo",
+    ttsProvider: "openai",
+    languages: ["en"],
+    voiceId: "echo",
+    ttsModel: "tts-1",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "fable",
+    label: "Fable",
+    ttsProvider: "openai",
+    languages: ["en"],
+    voiceId: "fable",
+    ttsModel: "tts-1",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "onyx",
+    label: "Onyx",
+    ttsProvider: "openai",
+    languages: ["en"],
+    voiceId: "onyx",
+    ttsModel: "tts-1",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "nova",
+    label: "Nova",
+    ttsProvider: "openai",
+    languages: ["en"],
+    voiceId: "nova",
+    ttsModel: "tts-1",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "shimmer",
+    label: "Shimmer",
+    ttsProvider: "openai",
+    languages: ["en"],
+    voiceId: "shimmer",
+    ttsModel: "tts-1",
+    sttModel: "nova-2-general",
+  },
+  // PlayHT voices
+  {
+    value: "adrian",
+    label: "Adrian (US)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/d99d35e6-e625-4fa4-925a-d65172d358e1/adriansaad/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "benton",
+    label: "Benton (US)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/b41d1a8c-2c99-4403-8262-5808bc67c3e0/bentonsaad/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "charles",
+    label: "Charles (US)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/9f1ee23a-9108-4538-90be-8e62efc195b6/charlessaad/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "delilah",
+    label: "Delilah (US)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/1afba232-fae0-4b69-9675-7f1aac69349f/delilahsaad/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "nova",
+    label: "Nova (US)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/2a7ddfc5-d16a-423a-9441-5b13290998b8/novasaad/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "susan",
+    label: "Susan (US)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/65e66dc8-9273-43c8-889a-83e858bf2bb8/susansaad/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "amelia",
+    label: "Amelia (UK)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/34eaa933-62cb-4e32-adb8-c1723ef85097/original/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "frederick",
+    label: "Frederick (UK)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/2879ab87-3775-4992-a228-7e4f551658c2/fredericksaad2/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "indigo",
+    label: "Indigo (UK)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/97580643-b568-4198-aaa4-3e07e4a06c47/original/manifest.json",
+    sttModel: "nova-2-general",
+  },
+  {
+    value: "isabella",
+    label: "Isabella (UK)",
+    ttsProvider: "playht",
+    languages: ["en"],
+    voiceId:
+      "s3://voice-cloning-zero-shot/a0fa25cc-5f42-4dd0-8a78-a950dd5297cd/original/manifest.json",
+    sttModel: "nova-2-general",
   },
 ];
 

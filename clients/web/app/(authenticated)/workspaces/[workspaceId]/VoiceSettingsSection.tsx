@@ -1,3 +1,4 @@
+import AddServiceModal from "@/app/(authenticated)/workspaces/services/AddServiceModal";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -8,22 +9,33 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ServiceInfo, ServiceModel, WorkspaceModel } from "@/lib/sesameApi";
 import { getVoicesByProvider, InteractionMode, languageOptions, TTSService } from "@/lib/voice";
-import { HelpCircleIcon } from "lucide-react";
+import { HelpCircleIcon, PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { WorkspaceFormConfig } from "./ConfigurationForm";
 import ConfigurationGroup from "./ConfigurationGroup";
 import ConfigurationItem from "./ConfigurationItem";
 
 interface Props {
+  availableServices: ServiceInfo[];
+  services: ServiceModel[];
   formState: WorkspaceFormConfig;
   setFormState: React.Dispatch<React.SetStateAction<WorkspaceFormConfig>>;
+  workspace: WorkspaceModel;
 }
 
 export default function VoiceSettingsSection({
+  availableServices,
+  services,
   formState,
   setFormState,
+  workspace
 }: Props) {
   const { mainLanguage, defaultVoice, interactionMode } = formState.voiceSettings;
+  const { refresh } = useRouter();
+  const [addService, setAddService] = useState(false);
 
   const validVoices = getVoicesByProvider(
     defaultVoice.ttsProvider,
@@ -59,6 +71,20 @@ export default function VoiceSettingsSection({
 
   return (
     <ConfigurationGroup label="Voice Settings">
+      {addService && (
+        <AddServiceModal
+          initialType="tts"
+          initialWorkspaceId={workspace.workspace_id}
+          onClose={() => setAddService(false)}
+          onSaved={() => {
+            refresh();
+            setAddService(false)
+          }}
+          services={availableServices}
+          workspaces={[workspace]}
+        />
+      )}
+
       {/* TTS Provider */}
       <fieldset>
         <ConfigurationItem>
@@ -70,19 +96,19 @@ export default function VoiceSettingsSection({
             value={defaultVoice.ttsProvider}
             onValueChange={handleProviderChange}
           >
-            <ToggleGroupItem
-              id="cartesia"
-              value="cartesia"
-              aria-label="Cartesia"
-            >
-              Cartesia
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              id="elevenlabs"
-              value="elevenlabs"
-              aria-label="ElevenLabs"
-            >
-              ElevenLabs
+            {services.map((s) => (
+              <ToggleGroupItem
+                key={s.service_id}
+                id={s.service_id}
+                value={s.service_provider!}
+                aria-label={s.title}
+              >
+                {s.title}
+              </ToggleGroupItem>
+            ))}
+            <ToggleGroupItem onClick={() => setAddService(true)} value="">
+              <PlusIcon size={16} />
+              Add
             </ToggleGroupItem>
           </ToggleGroup>
         </ConfigurationItem>

@@ -1,4 +1,5 @@
 import PageRefresher from "@/components/PageRefresher";
+import { getAvailableServices, getServices } from "@/lib/services";
 import { defaultWorkspace, getWorkspace } from "@/lib/workspaces";
 import ConfigurationForm from "./ConfigurationForm";
 
@@ -11,8 +12,17 @@ export default async function EditWorkspacePage({
 }: WorkspacePageProps) {
   const { workspaceId } = await params;
 
+  const services = await getServices();
+  const availableServices = await getAvailableServices();
+
   if (workspaceId === "new") {
-    return <ConfigurationForm workspace={defaultWorkspace} />;
+    return (
+      <ConfigurationForm
+        availableServices={availableServices}
+        services={services}
+        workspace={defaultWorkspace}
+      />
+    );
   }
 
   // Fetch workspace config
@@ -24,7 +34,11 @@ export default async function EditWorkspacePage({
 
   return (
     <>
-      <ConfigurationForm workspace={workspace} />
+      <ConfigurationForm
+        availableServices={availableServices}
+        services={services}
+        workspace={workspace}
+      />
       <PageRefresher />
     </>
   );

@@ -19,7 +19,7 @@ import emitter from "@/lib/eventEmitter";
 import { WorkspaceModel } from "@/lib/sesameApi";
 import { cn } from "@/lib/utils";
 import { getWorkspaceStructuredData } from "@/lib/workspaces";
-import { EllipsisIcon, SquarePlusIcon } from "lucide-react";
+import { CloudIcon, EllipsisIcon, SquarePlusIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -56,7 +56,7 @@ export default function Sidebar({ signOut = false, workspaces }: SidebarProps) {
         </h2>
       )}
 
-      <div>
+      <div className="space-y-1">
         <PageTransitionLink
           href="/workspaces/new"
           className={cn(
@@ -69,6 +69,20 @@ export default function Sidebar({ signOut = false, workspaces }: SidebarProps) {
         >
           <SquarePlusIcon size={16} />
           Create new workspaces
+        </PageTransitionLink>
+
+        <PageTransitionLink
+          href="/workspaces/services"
+          className={cn(
+            "flex gap-2 items-center px-3 py-2 rounded-lg transition-colors hover:bg-input",
+            {
+              "bg-input": pathname === `/workspaces/services`,
+            }
+          )}
+          onClick={() => setIsOpen(false)}
+        >
+          <CloudIcon size={16} />
+          Services
         </PageTransitionLink>
       </div>
 
