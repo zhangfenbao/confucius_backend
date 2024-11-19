@@ -1,4 +1,4 @@
-import { ServiceModel, WorkspaceModel } from "@/lib/sesameApi";
+import { ServiceInfo, ServiceModel, WorkspaceModel } from "@/lib/sesameApi";
 import { getApiClient } from "@/lib/sesameApiClient";
 
 export async function getAvailableServices() {
@@ -11,7 +11,7 @@ export async function getAvailableServices() {
       `Error fetching available services: ${response.status} ${response.statusText}`
     );
   }
-  return json as string[];
+  return json as ServiceInfo[];
 }
 
 export async function getServices() {
