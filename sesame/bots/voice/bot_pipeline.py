@@ -12,6 +12,7 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.processors.frame_processor import FrameDirection
 from pipecat.processors.frameworks.rtvi import (
     RTVIBotLLMProcessor,
+    RTVIBotTranscriptionProcessor,
     RTVIBotTTSProcessor,
     RTVISpeakingProcessor,
     RTVIUserTranscriptionProcessor,
@@ -116,6 +117,9 @@ async def voice_bot_pipeline(
     # This will send `user-transcription` messages.
     rtvi_user_transcription = RTVIUserTranscriptionProcessor()
 
+    # This will send `bot-transcription` messages.
+    rtvi_bot_transcription = RTVIBotTranscriptionProcessor()
+
     # This will send `bot-llm-*` messages.
     rtvi_bot_llm = RTVIBotLLMProcessor()
 
@@ -132,6 +136,7 @@ async def voice_bot_pipeline(
         context_storage.create_processor(),
         llm,
         rtvi_bot_llm,
+        rtvi_bot_transcription,
         tts,
         transport.output(),
         rtvi_bot_tts,

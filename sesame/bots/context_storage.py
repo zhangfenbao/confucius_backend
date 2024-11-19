@@ -70,7 +70,7 @@ class PersistentContextStorage:
         self._db = db
         self._conversation_id = conversation_id
         self._language_code = language_code
-        self._messages = deepcopy(context.messages) if context else []
+        self._messages = deepcopy(context.get_messages_for_persistent_storage()) if context else []
         self._queue = asyncio.Queue()
         self._worker_task = asyncio.create_task(self._worker())
         self._running = True
@@ -89,7 +89,10 @@ class PersistentContextStorage:
         return_action = None
         return_items = None
 
-        messages = context.messages
+        messages = context.get_messages_for_persistent_storage()
+
+        logger.info("--------")
+        logger.info(f"Messages: {messages}")
 
         if len(messages) >= len(self._messages) and compare(
             messages[: len(self._messages)], self._messages
@@ -141,9 +144,11 @@ class PersistentContextStorage:
             pass
 
     async def store_messages(self, context_messages, erase_before_store=False):
+        logger.info(f"Storing {len(context_messages)} messages")
         try:
             ms = []
             for i, message_data in enumerate(context_messages, start=1):
+                logger.info(f"Message data: {message_data}")
                 m = Message(
                     conversation_id=self._conversation_id,
                     content=message_data,
@@ -175,6 +180,9 @@ class PersistentContextStorage:
                 await self._db.execute(delete_query)
 
             # Add the new messages to the session and flush
+            logger.info(f"Adding {len(ms)} messages to the session")
+            for m in ms:
+                logger.info(f"Message: {m.__dict__}")
             self._db.add_all(ms)
 
             await self._db.flush()
