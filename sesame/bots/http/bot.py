@@ -5,7 +5,7 @@ from bots.http.frame_serializer import BotFrameSerializer
 from bots.persistent_context import PersistentContext
 from bots.rtvi import create_rtvi_processor
 from bots.types import BotConfig, BotParams
-from common.models import Service
+from common.models import Message, Service
 from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
 from loguru import logger
@@ -63,7 +63,7 @@ async def http_bot_pipeline(
     user_aggregator = context_aggregator.user()
     assistant_aggregator = context_aggregator.assistant()
 
-    storage = PersistentContext(context, normalize_context=True)
+    storage = PersistentContext(context=context, normalize_context=True)
 
     async_generator = AsyncGeneratorProcessor(serializer=BotFrameSerializer())
 
@@ -101,10 +101,13 @@ async def http_bot_pipeline(
 
     @storage.on_context_message
     async def on_context_message(messages: list[Any]):
-        # Do storage things here (runs async in a task)
-        # Received messages are optionally normalized by the context
-        logger.info(f"Received messages: {messages}")
-        return None
+        logger.debug(f"{len(messages)} message(s) received for storage: {messages}")
+
+        try:
+            await Message.save_messages(params.conversation_id, language_code, messages, db)
+        except Exception as e:
+            logger.error(f"Error storing messages: {e}")
+            raise e
 
     @rtvi.event_handler("on_bot_started")
     async def on_bot_started(rtvi: RTVIProcessor):

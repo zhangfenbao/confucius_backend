@@ -2,7 +2,7 @@ import base64
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from common.encryption import decrypt_with_secret
 from common.errors import ServiceConfigurationError
@@ -24,6 +24,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import (
     Mapped,
@@ -274,6 +275,27 @@ class Message(Base):
             .order_by(Message.message_number)
         )
         return result.scalars().all()
+
+    @classmethod
+    async def save_messages(
+        cls, conversation_id: str, language_code: str, messages: List[Any], db: AsyncSession
+    ):
+        ms = []
+        for i, message_data in enumerate(messages, start=1):
+            m = Message(
+                conversation_id=conversation_id,
+                content=message_data,
+                language_code=language_code or "english",
+            )
+            ms.append(m)
+        try:
+            db.add_all(ms)
+            await db.flush()
+        except IntegrityError:
+            await db.rollback()
+        except Exception as e:
+            await db.rollback()
+            raise e
 
 
 class Attachment(Base):

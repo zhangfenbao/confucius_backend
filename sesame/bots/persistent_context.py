@@ -2,23 +2,24 @@ import asyncio
 from copy import deepcopy
 from typing import Any, Callable, Coroutine, List, Optional
 
+from deepcompare import compare
 from loguru import logger
-from pipecat.frames.frames import EndFrame, Frame
+from pipecat.frames.frames import EndFrame, Frame, TransportMessageUrgentFrame
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.services.openai import OpenAILLMContext, OpenAILLMContextFrame
+from pydantic import BaseModel
 
-"""
+
 class RTVIItemStoredMessageData(BaseModel):
-    action: Literal["append", "replace"]
+    # action: Literal["append", "replace"]
     items: List[Any]
 
 
 class RTVIItemStoredMessage(BaseModel):
-    label: Literal["rtvi-ai"] = "rtvi-ai"
-    type: Literal["bot-tts-text"] = "storage-item-stored"
+    label: str = "rtvi-ai"
+    type: str = "storage-item-stored"
     id: str
     data: RTVIItemStoredMessageData
-"""
 
 
 class PersistentContextProcessor(FrameProcessor):
@@ -43,26 +44,21 @@ class PersistentContextProcessor(FrameProcessor):
         await super().process_frame(frame, direction)
 
         if isinstance(frame, OpenAILLMContextFrame):
-            await self._storage.save(frame.context)
-            # action, id, items = await self._storage.save(frame.context)
-            await self._push_transport_save_message()  # (action, id, items)
+            id, items = await self._storage.save(frame.context)
+            if items is not None:
+                await self._push_transport_save_message(id, items)
         elif isinstance(frame, EndFrame):
             await self._call_event_handler("endframe")
 
         await self.push_frame(frame, direction)
 
-    async def _push_transport_save_message(self):  # action, id, items):
-        logger.info("Item has been saved. Pushing transport message")
-
-    """
-    async def _push_transport_save_message(self, action, id, items):
+    async def _push_transport_save_message(self, id, items):
         message = RTVIItemStoredMessage(
             id=id,
-            data=RTVIItemStoredMessageData(action=action, items=items),
+            data=RTVIItemStoredMessageData(items=items),
         )
         frame = TransportMessageUrgentFrame(message=message.model_dump(exclude_none=True))
         await self.push_frame(frame, self._push_transport_message_direction)
-    """
 
 
 class PersistentContext:
@@ -72,10 +68,15 @@ class PersistentContext:
         context: OpenAILLMContext,
         normalize_context: bool = True,
     ):
-        # @TODO specify return type
         self._context_handler: Optional[Callable[[List[Any]], Coroutine[Any, Any, None]]] = None
 
-        self._messages = deepcopy(context.messages) if context else []
+        initial_messages = (
+            context.get_messages_for_persistent_storage()
+            if normalize_context
+            else context.get_messages()
+        )
+
+        self._messages = deepcopy(initial_messages) if initial_messages else []
         self._normalize_context = normalize_context
         self._queue = asyncio.Queue()
         self._worker_task = asyncio.create_task(self._worker())
@@ -98,26 +99,41 @@ class PersistentContext:
         self._context_handler = func
         return func
 
-    async def save(self, context: OpenAILLMContext):
+    async def save(self, context: OpenAILLMContext) -> tuple[str, Optional[List[Any]]]:
         if not self._running:
-            return
+            return ("0", None)
 
         logger.debug("Appending messages to persistence queue")
 
-        if self._normalize_context:
-            messages = context.get_messages_for_persistent_storage()
+        # Get messages based on normalization setting
+        messages = (
+            context.get_messages_for_persistent_storage()
+            if self._normalize_context
+            else context.get_messages()
+        )
+
+        # Determine if we have new messages to append or need to replace everything
+        if len(messages) >= len(self._messages) and compare(
+            messages[: len(self._messages)], self._messages
+        ):
+            # Append only new messages
+            return_items = messages[len(self._messages) :]
         else:
-            messages = context.get_messages()
+            # Replace all messages
+            return_items = messages
 
-        # @TODO Compare the new messages with the old ones
+        # Queue items for processing
+        await self._queue.put(return_items)
 
-        await self._queue.put(messages)
+        # Update stored messages
+        self._messages = deepcopy(messages)
+
+        return (str(len(self._messages)), return_items)
 
     async def _worker(self):
         if self._context_handler is None:
             logger.error("on_context_message handler not defined for PersistentContext")
             await self.close()
-            logger.error("Worker closed")
             raise RuntimeError("No on_context_message handler defined")
 
         while self._running:
