@@ -1,3 +1,4 @@
+import AddServiceModal from "@/app/(authenticated)/workspaces/services/AddServiceModal";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -17,22 +18,32 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getLLMModelsByService, LLMMessageRole, LLMProvider } from "@/lib/llm";
-import { PlusSquareIcon, TrashIcon } from "lucide-react";
-import { Fragment } from "react";
+import { ServiceInfo, ServiceModel, WorkspaceModel } from "@/lib/sesameApi";
+import { PlusIcon, PlusSquareIcon, TrashIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Fragment, useState } from "react";
 import { WorkspaceFormConfig } from "./ConfigurationForm";
 import ConfigurationGroup from "./ConfigurationGroup";
 import ConfigurationItem from "./ConfigurationItem";
 
 interface Props {
+  availableServices: ServiceInfo[];
+  services: ServiceModel[];
   formState: WorkspaceFormConfig;
   setFormState: React.Dispatch<React.SetStateAction<WorkspaceFormConfig>>;
+  workspace: WorkspaceModel;
 }
 
 export default function ConfigurationSection({
+  availableServices,
+  services,
   formState,
   setFormState,
+  workspace,
 }: Props) {
   const { model, prompt } = formState.configuration;
+  const { refresh } = useRouter();
+  const [addService, setAddService] = useState(false);
 
   // Handle provider selection
   const handleProviderChange = (provider: LLMProvider) => {
@@ -70,6 +81,19 @@ export default function ConfigurationSection({
 
   return (
     <ConfigurationGroup label="Configuration">
+      {addService && (
+        <AddServiceModal
+          initialType="llm"
+          initialWorkspaceId={workspace.workspace_id}
+          onClose={() => setAddService(false)}
+          onSaved={() => {
+            refresh();
+            setAddService(false)
+          }}
+          services={availableServices}
+          workspaces={[workspace]}
+        />
+      )}
       {/* LLM Provider */}
       <fieldset>
         <ConfigurationItem>
@@ -82,28 +106,19 @@ export default function ConfigurationSection({
             value={model.llmProvider}
             onValueChange={handleProviderChange}
           >
-            {/* <ToggleGroupItem
-              id="anthropic"
-              value="anthropic"
-              aria-label="Anthropic"
-            >
-              Anthropic
-            </ToggleGroupItem> */}
-            <ToggleGroupItem
-              id="together"
-              value="together"
-              aria-label="Together.ai"
-            >
-              Together.ai
-            </ToggleGroupItem>
-            <ToggleGroupItem id="groq" value="groq" aria-label="Groq">
-              Groq
-            </ToggleGroupItem>
-            <ToggleGroupItem id="openai" value="openai" aria-label="OpenAI">
-              OpenAI
-            </ToggleGroupItem>
-            <ToggleGroupItem id="google" value="google" aria-label="Google">
-              Google
+            {services.map((s) => (
+              <ToggleGroupItem
+                key={s.service_id}
+                id={s.service_id}
+                value={s.service_provider!}
+                aria-label={s.title}
+              >
+                {s.title}
+              </ToggleGroupItem>
+            ))}
+            <ToggleGroupItem onClick={() => setAddService(true)} value="">
+              <PlusIcon size={16} />
+              Add
             </ToggleGroupItem>
           </ToggleGroup>
         </ConfigurationItem>

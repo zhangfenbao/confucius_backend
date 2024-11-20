@@ -10,11 +10,31 @@ export interface LLMModel {
 
 const llmModels: LLMModel[] = [
   // Anthropic
-  // {
-  //   service: "anthropic",
-  //   model: "claude-3-5-sonnet-20240620",
-  //   label: "Claude 3.5 Sonnet",
-  // },
+  {
+    service: "anthropic",
+    model: "claude-3-5-sonnet-20241022",
+    label: "Claude 3.5 Sonnet (2024-10-22)",
+  },
+  {
+    service: "anthropic",
+    model: "claude-3-5-sonnet-20240620",
+    label: "Claude 3.5 Sonnet (2024-06-20)",
+  },
+  {
+    service: "anthropic",
+    model: "claude-3-5-sonnet-latest",
+    label: "Claude 3.5 Sonnet (Latest)",
+  },
+  {
+    service: "anthropic",
+    model: "claude-3-5-haiku-20241022",
+    label: "Claude 3.5 Haiku (2024-10-22)",
+  },
+  {
+    service: "anthropic",
+    model: "claude-3-5-haiku-latest",
+    label: "Claude 3.5 Haiku (Latest)",
+  },
   // Together AI
   {
     service: "together",

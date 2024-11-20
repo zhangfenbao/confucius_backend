@@ -13,7 +13,6 @@ interface Props {
   conversationId: string;
   messages: Message[];
   structuredWorkspace: WorkspaceStructuredData;
-  workspaceId: string;
 }
 
 export default function ChatMessages({
@@ -21,7 +20,6 @@ export default function ChatMessages({
   conversationId,
   messages,
   structuredWorkspace,
-  workspaceId,
 }: Props) {
   const [isBotSpeaking, setIsBotSpeaking] = useState(false);
 
@@ -65,7 +63,6 @@ export default function ChatMessages({
         isBotSpeaking={isBotSpeaking}
         messages={messages}
         structuredWorkspace={structuredWorkspace}
-        workspaceId={workspaceId}
       />
     </div>
   );

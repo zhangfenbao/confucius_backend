@@ -258,7 +258,12 @@ class Message(Base):
         CheckConstraint("token_count >= 0", name="non_negative_token_count"),
         Index("idx_messages_conversation_id", "conversation_id"),
         Index("idx_messages_language_code", "language_code"),
-        Index("idx_messages_conversation_number", "conversation_id", "message_number", unique=True),
+        Index(
+            "idx_messages_conversation_number",
+            "conversation_id",
+            "message_number",
+            unique=True,
+        ),
     )
 
     @classmethod
@@ -276,7 +281,9 @@ class Attachment(Base):
 
     attachment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     message_id = Column(
-        UUID(as_uuid=True), ForeignKey("messages.message_id", ondelete="CASCADE"), nullable=False
+        UUID(as_uuid=True),
+        ForeignKey("messages.message_id", ondelete="CASCADE"),
+        nullable=False,
     )
     file_url = Column(String, nullable=False)
     file_name = Column(String(255), nullable=False)
@@ -328,7 +335,9 @@ class Service(Base):
     service_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     workspace_id = Column(
-        UUID(as_uuid=True), ForeignKey("workspaces.workspace_id", ondelete="CASCADE"), nullable=True
+        UUID(as_uuid=True),
+        ForeignKey("workspaces.workspace_id", ondelete="CASCADE"),
+        nullable=True,
     )
     title = Column(String(255), nullable=False)
     service_type = Column(String(255), nullable=False)
@@ -339,10 +348,16 @@ class Service(Base):
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
-        UniqueConstraint("workspace_id", "service_provider", name="unique_provider_per_workspace"),
+        UniqueConstraint(
+            "workspace_id",
+            "service_provider",
+            "service_type",
+            name="unique_provider_per_workspace",
+        ),
         UniqueConstraint(
             "user_id",
             "service_provider",
+            "service_type",
             name="unique_provider_per_user",
             info=dict(where="workspace_id IS NULL"),
         ),
@@ -519,7 +534,11 @@ class WorkspaceDefaultConfigModel(BaseModel):
     services: Optional[dict] = None
     default_llm_context: Optional[list[MessageCreateModel]] = Field(default_factory=list)
 
-    model_config = {"extra": "allow", "from_attributes": True, "arbitrary_types_allowed": True}
+    model_config = {
+        "extra": "allow",
+        "from_attributes": True,
+        "arbitrary_types_allowed": True,
+    }
 
 
 class WorkspaceModel(BaseModel):

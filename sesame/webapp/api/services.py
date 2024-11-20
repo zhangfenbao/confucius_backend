@@ -128,7 +128,7 @@ async def update_service(
         result = await db.execute(select(Service).where(Service.service_id == service_id))
         service = result.scalar_one_or_none()
 
-    return ServiceModel.model_validate(service)
+    return service
 
 
 @router.delete("/{service_id}", status_code=204)

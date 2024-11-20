@@ -307,7 +307,7 @@ CREATE TABLE IF NOT EXISTS services (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     -- Prevent duplicate providers within the same workspace
-    CONSTRAINT unique_provider_per_workspace UNIQUE (workspace_id, service_provider)
+    CONSTRAINT unique_provider_per_workspace UNIQUE (workspace_id, service_provider, service_type)
 );
 
 -- Indexes for better query performance
@@ -317,7 +317,7 @@ CREATE INDEX IF NOT EXISTS idx_services_service_type ON services(service_type);
 
 -- Create a unique partial index for user-level services
 CREATE UNIQUE INDEX IF NOT EXISTS unique_provider_per_user 
-ON services (user_id, service_provider) 
+ON services (user_id, service_provider, service_type) 
 WHERE workspace_id IS NULL;
 
 -- Enable row-level security

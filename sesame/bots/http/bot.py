@@ -1,13 +1,14 @@
 import asyncio
 from typing import Any, AsyncGenerator, Tuple, cast
 
-from bots.context_storage import PersistentContextStorage
 from bots.http.frame_serializer import BotFrameSerializer
+from bots.persistent_context import PersistentContext
 from bots.rtvi import create_rtvi_processor
 from bots.types import BotConfig, BotParams
 from common.models import Service
 from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
+from loguru import logger
 from openai._types import NOT_GIVEN
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -62,9 +63,7 @@ async def http_bot_pipeline(
     user_aggregator = context_aggregator.user()
     assistant_aggregator = context_aggregator.assistant()
 
-    context_storage = PersistentContextStorage(
-        db=db, conversation_id=params.conversation_id, context=context, language_code=language_code
-    )
+    storage = PersistentContext(context, normalize_context=True)
 
     async_generator = AsyncGeneratorProcessor(serializer=BotFrameSerializer())
 
@@ -84,12 +83,12 @@ async def http_bot_pipeline(
     processors = [
         rtvi,
         user_aggregator,
-        context_storage.create_processor(),
+        storage.create_processor(),
         llm,
         rtvi_bot_llm,
         async_generator,
         assistant_aggregator,
-        context_storage.create_processor(exit_on_endframe=True),
+        storage.create_processor(exit_on_endframe=True),
     ]
 
     pipeline = Pipeline(processors)
@@ -99,6 +98,13 @@ async def http_bot_pipeline(
     task = PipelineTask(pipeline)
 
     runner_task = asyncio.create_task(runner.run(task))
+
+    @storage.on_context_message
+    async def on_context_message(messages: list[Any]):
+        # Do storage things here (runs async in a task)
+        # Received messages are optionally normalized by the context
+        logger.info(f"Received messages: {messages}")
+        return None
 
     @rtvi.event_handler("on_bot_started")
     async def on_bot_started(rtvi: RTVIProcessor):
