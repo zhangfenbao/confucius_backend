@@ -4,10 +4,11 @@ from typing import Any, Callable, Coroutine, List, Optional
 
 from deepcompare import compare
 from loguru import logger
+from pydantic import BaseModel
+
 from pipecat.frames.frames import EndFrame, Frame, TransportMessageUrgentFrame
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
 from pipecat.services.openai import OpenAILLMContext, OpenAILLMContextFrame
-from pydantic import BaseModel
 
 
 class RTVIItemStoredMessageData(BaseModel):
@@ -62,22 +63,11 @@ class PersistentContextProcessor(FrameProcessor):
 
 
 class PersistentContext:
-    def __init__(
-        self,
-        *,
-        context: OpenAILLMContext,
-        normalize_context: bool = True,
-    ):
+    def __init__(self, *, context: OpenAILLMContext):
         self._context_handler: Optional[Callable[[List[Any]], Coroutine[Any, Any, None]]] = None
 
-        initial_messages = (
-            context.get_messages_for_persistent_storage()
-            if normalize_context
-            else context.get_messages()
-        )
-
+        initial_messages = context.get_messages_for_persistent_storage()
         self._messages = deepcopy(initial_messages) if initial_messages else []
-        self._normalize_context = normalize_context
         self._queue = asyncio.Queue()
         self._worker_task = asyncio.create_task(self._worker())
         self._running = True
@@ -105,12 +95,7 @@ class PersistentContext:
 
         logger.debug("Appending messages to persistence queue")
 
-        # Get messages based on normalization setting
-        messages = (
-            context.get_messages_for_persistent_storage()
-            if self._normalize_context
-            else context.get_messages()
-        )
+        messages = context.get_messages_for_persistent_storage()
 
         # Determine if we have new messages to append or need to replace everything
         if len(messages) >= len(self._messages) and compare(

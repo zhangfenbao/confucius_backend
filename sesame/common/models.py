@@ -7,7 +7,6 @@ from typing import Any, List, Optional
 from common.encryption import decrypt_with_secret
 from common.errors import ServiceConfigurationError
 from common.service_factory import ServiceType
-from pipecat.processors.frameworks.rtvi import RTVIServiceConfig
 from pydantic import BaseModel, Field
 from sqlalchemy import (
     TIMESTAMP,
@@ -34,6 +33,8 @@ from sqlalchemy.orm import (
     relationship,
 )
 from sqlalchemy.sql import expression
+
+from pipecat.processors.frameworks.rtvi import RTVIServiceConfig
 
 Base = declarative_base()
 
@@ -266,6 +267,14 @@ class Message(Base):
             unique=True,
         ),
     )
+    """
+    # Enable this to normalize content shape on save
+    @validates("content")
+    def validate_content(self, key, content):
+        from common.utils.llm import llm_message_normalize
+        normalized = llm_message_normalize(content)
+        return normalized
+    """
 
     @classmethod
     async def get_messages_by_conversation_id(cls, conversation_id: str, db: AsyncSession):
@@ -291,8 +300,9 @@ class Message(Base):
         try:
             db.add_all(ms)
             await db.flush()
-        except IntegrityError:
+        except IntegrityError as e:
             await db.rollback()
+            raise e
         except Exception as e:
             await db.rollback()
             raise e
