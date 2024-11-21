@@ -14,7 +14,7 @@ from common.models import (
     Workspace,
     WorkspaceWithConversations,
 )
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -178,7 +178,6 @@ async def update_conversation(
 )
 async def get_conversation_messages(
     conversation_id: str,
-    background_tasks: BackgroundTasks,
     db_and_auth: Tuple[AsyncSession, Auth] = Depends(get_db_with_token),
 ):
     db, auth = db_and_auth
@@ -201,10 +200,6 @@ async def get_conversation_messages(
     )
 
     messages = result.scalars().all()
-    message_count = len(messages)
-
-    if not conversation.title and message_count > 4:
-        background_tasks.add_task(generate_conversation_summary, conversation_id, auth)
 
     return {
         "conversation": ConversationModel.model_validate(conversation),
@@ -279,3 +274,17 @@ async def search_messages(
         )
 
     return response
+
+
+@router.post("/summarize", response_model=ConversationModel, name="Summarize a conversation")
+async def summarize_conversation(
+    conversation_id: str,
+    db_and_auth: Tuple[AsyncSession, Auth] = Depends(get_db_with_token),
+):
+    db, auth = db_and_auth
+
+    try:
+        conversation = await generate_conversation_summary(conversation_id, db)
+        return ConversationModel.model_validate(conversation)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

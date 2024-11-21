@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, Optional, cast
 
-from common.auth import Auth, get_authenticated_db_context
 from common.models import Conversation, Service
 from common.service_factory import ServiceFactory, ServiceType
 from loguru import logger
@@ -125,6 +124,8 @@ async def update_conversation_title(db: AsyncSession, conversation_id: str, new_
 
         conversation.title = new_title
         await db.commit()
+        await db.refresh(conversation)
+
         logger.info(f"Successfully updated conversation title to: {new_title}")
         return True
 
@@ -133,57 +134,55 @@ async def update_conversation_title(db: AsyncSession, conversation_id: str, new_
         return False
 
 
-async def generate_conversation_summary(conversation_id: str, auth: Auth):
+async def generate_conversation_summary(conversation_id: str, db) -> Optional[Conversation]:
     """
     Background task to process conversation summary with comprehensive error handling
     """
     logger.info(f"Starting summary generation for conversation {conversation_id}")
 
     try:
-        async with get_authenticated_db_context(auth) as db:
-            # Get conversation and validate
-            conversation = await Conversation.get_conversation_by_id(conversation_id, db)
-            if not conversation:
-                logger.error(f"Conversation {conversation_id} not found")
-                return
+        # Get conversation and validate
+        conversation = await Conversation.get_conversation_by_id(conversation_id, db)
+        if not conversation:
+            logger.error(f"Conversation {conversation_id} not found")
+            return
 
-            messages = [msg.content for msg in conversation.messages]
-            if not messages:
-                logger.info(f"No messages found in conversation {conversation_id}")
-                return
+        messages = [msg.content for msg in conversation.messages]
+        if not messages:
+            logger.info(f"No messages found in conversation {conversation_id}")
+            return
 
-            workspace = conversation.workspace
-            if not workspace:
-                logger.error(f"No workspace found for conversation {conversation_id}")
-                return
+        workspace = conversation.workspace
+        if not workspace:
+            logger.error(f"No workspace found for conversation {conversation_id}")
+            return
 
-            logger.info(
-                f"Processing {len(messages)} messages from workspace {workspace.workspace_id}"
-            )
+        logger.info(f"Processing {len(messages)} messages from workspace {workspace.workspace_id}")
 
-            # Get LLM service
-            llm = await get_llm_service(workspace.config, db, workspace.workspace_id)
-            if not llm:
-                logger.error("Failed to initialize LLM service")
-                return
+        # Get LLM service
+        llm = await get_llm_service(workspace.config, db, workspace.workspace_id)
+        if not llm:
+            logger.error("Failed to initialize LLM service")
+            return
 
-            # Generate summary
-            summary = await generate_summary_with_llm(messages, llm)
-            if not summary:
-                logger.error("Failed to generate summary")
-                return
+        # Generate summary
+        summary = await generate_summary_with_llm(messages, llm)
+        if not summary:
+            logger.error("Failed to generate summary")
+            return
 
-            # Update conversation title
-            success = await update_conversation_title(db, conversation_id, summary)
-            if not success:
-                logger.error("Failed to update conversation title")
-                return
+        # Update conversation title
+        success = await update_conversation_title(db, conversation_id, summary)
+        if not success:
+            logger.error("Failed to update conversation title")
+            return
 
-            logger.info(
-                f"Successfully completed summary generation for conversation {conversation_id}"
-            )
+        logger.info(f"Successfully completed summary generation for conversation {conversation_id}")
 
     except Exception as e:
         logger.exception(f"Unexpected error in summary generation: {str(e)}")
+        raise e
     finally:
         logger.info(f"Finished processing conversation {conversation_id}")
+
+    return conversation
