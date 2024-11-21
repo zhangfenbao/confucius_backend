@@ -41,9 +41,16 @@ const contentForErrorBoundary = (content: unknown): React.ReactNode => {
 export default function ChatMessage({ isSpeaking = false, message }: Props) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
 
+  const normalizedText = Array.isArray(message.content.content)
+    ? message.content.content
+        .filter((tc) => tc.type === "text")
+        .map((tc) => tc.text)
+        .join(" ")
+    : message.content.content;
+
   const handleCopy = () => {
     try {
-      navigator.clipboard.writeText(message.content.content);
+      navigator.clipboard.writeText(normalizedText);
       setCopyState("copied");
     } catch {
       setCopyState("error");
@@ -186,7 +193,7 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
                 },
               }}
             >
-              {message.content.content}
+              {normalizedText}
             </Markdown>
           ) : (
             <div className="flex gap-2">
