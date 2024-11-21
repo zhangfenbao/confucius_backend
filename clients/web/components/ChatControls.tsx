@@ -7,6 +7,7 @@ import {
   ArrowUpIcon,
   Keyboard,
   LoaderCircle,
+  LoaderCircleIcon,
   Maximize2Icon,
   MicIcon,
   MicOffIcon,
@@ -16,7 +17,7 @@ import {
   TriangleAlertIcon,
   VideoIcon,
   VideoOffIcon,
-  X,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -33,6 +34,7 @@ import {
   RTVIClientVideo,
   useRTVIClient,
   useRTVIClientEvent,
+  useRTVIClientMediaTrack,
   useRTVIClientTransportState,
   VoiceVisualizer,
 } from "realtime-ai-react";
@@ -313,6 +315,8 @@ const ChatControls: React.FC<Props> = ({
   const ToggledCamIcon = isCamMuted ? VideoOffIcon : VideoIcon;
   const ToggledMicIcon = isMicMuted ? MicOffIcon : MicIcon;
 
+  const camTrack = useRTVIClientMediaTrack("video", "local");
+
   return (
     <div className="relative w-full">
       <BotReadyAudio active={isVoiceMode} />
@@ -467,6 +471,11 @@ const ChatControls: React.FC<Props> = ({
               fit="cover"
               className="w-full h-full"
             />
+            {!camTrack && (
+              <div className="absolute top-0 left-0 z-10 w-full h-full flex items-center justify-center">
+                <LoaderCircleIcon className="animate-spin" size={16} />
+              </div>
+            )}
             <Button
               className="absolute top-1 right-1"
               size="icon"
