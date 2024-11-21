@@ -1,10 +1,11 @@
-from typing import cast
+from typing import Any, cast
 
-from bots.context_storage import PersistentContextStorage
+from bots.persistent_context import PersistentContext
 from bots.rtvi import create_rtvi_processor
 from bots.types import BotCallbacks, BotConfig, BotParams
-from common.models import Conversation, Service
+from common.models import Conversation, Message, Service
 from common.service_factory import ServiceFactory, ServiceType
+from loguru import logger
 from openai._types import NOT_GIVEN
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
@@ -12,6 +13,7 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.processors.frame_processor import FrameDirection
 from pipecat.processors.frameworks.rtvi import (
     RTVIBotLLMProcessor,
+    RTVIBotTranscriptionProcessor,
     RTVIBotTTSProcessor,
     RTVISpeakingProcessor,
     RTVIUserTranscriptionProcessor,
@@ -96,13 +98,7 @@ async def voice_bot_pipeline(
     user_aggregator = context_aggregator.user()
     assistant_aggregator = context_aggregator.assistant()
 
-    conversation_id = getattr(params, "conversation_id")
-    context_storage = PersistentContextStorage(
-        db=db,
-        conversation_id=conversation_id,
-        context=context,
-        language_code=conversation.language_code,
-    )
+    storage = PersistentContext(context=context)
 
     #
     # RTVI
@@ -115,6 +111,9 @@ async def voice_bot_pipeline(
 
     # This will send `user-transcription` messages.
     rtvi_user_transcription = RTVIUserTranscriptionProcessor()
+
+    # This will send `bot-transcription` messages.
+    rtvi_bot_transcription = RTVIBotTranscriptionProcessor()
 
     # This will send `bot-llm-*` messages.
     rtvi_bot_llm = RTVIBotLLMProcessor()
@@ -129,19 +128,33 @@ async def voice_bot_pipeline(
         stt,
         rtvi_user_transcription,
         user_aggregator,
-        context_storage.create_processor(),
+        storage.create_processor(),
         llm,
         rtvi_bot_llm,
+        rtvi_bot_transcription,
         tts,
         transport.output(),
         rtvi_bot_tts,
         assistant_aggregator,
-        context_storage.create_processor(
-            exit_on_endframe=True, push_transport_message_upstream=True
-        ),
+        storage.create_processor(exit_on_endframe=True, push_transport_message_upstream=True),
     ]
 
     pipeline = Pipeline(processors)
+
+    @storage.on_context_message
+    async def on_context_message(messages: list[Any]):
+        logger.debug(f"{len(messages)} message(s) received for storage: {messages}")
+
+        try:
+            await Message.save_messages(
+                str(conversation.get("conversation_id")),
+                conversation.get("language_code"),
+                messages,
+                db,
+            )
+        except Exception as e:
+            logger.error(f"Error storing messages: {e}")
+            raise e
 
     @rtvi.event_handler("on_client_ready")
     async def on_client_ready(rtvi):

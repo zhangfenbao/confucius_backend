@@ -1,14 +1,17 @@
 import asyncio
 from typing import Any, AsyncGenerator, Tuple, cast
 
-from bots.context_storage import PersistentContextStorage
 from bots.http.frame_serializer import BotFrameSerializer
+from bots.persistent_context import PersistentContext
 from bots.rtvi import create_rtvi_processor
 from bots.types import BotConfig, BotParams
-from common.models import Service
+from common.models import Message, Service
 from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
+from loguru import logger
 from openai._types import NOT_GIVEN
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineTask
@@ -20,7 +23,6 @@ from pipecat.processors.frameworks.rtvi import (
     RTVIProcessor,
 )
 from pipecat.services.ai_services import LLMService, OpenAILLMContext
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def http_bot_pipeline(
@@ -62,9 +64,7 @@ async def http_bot_pipeline(
     user_aggregator = context_aggregator.user()
     assistant_aggregator = context_aggregator.assistant()
 
-    context_storage = PersistentContextStorage(
-        db=db, conversation_id=params.conversation_id, context=context, language_code=language_code
-    )
+    storage = PersistentContext(context=context)
 
     async_generator = AsyncGeneratorProcessor(serializer=BotFrameSerializer())
 
@@ -84,12 +84,12 @@ async def http_bot_pipeline(
     processors = [
         rtvi,
         user_aggregator,
-        context_storage.create_processor(),
+        storage.create_processor(),
         llm,
         rtvi_bot_llm,
         async_generator,
         assistant_aggregator,
-        context_storage.create_processor(exit_on_endframe=True),
+        storage.create_processor(exit_on_endframe=True),
     ]
 
     pipeline = Pipeline(processors)
@@ -100,11 +100,17 @@ async def http_bot_pipeline(
 
     runner_task = asyncio.create_task(runner.run(task))
 
+    @storage.on_context_message
+    async def on_context_message(messages: list[Any]):
+        logger.debug(f"{len(messages)} message(s) received for storage: {messages}")
+        try:
+            await Message.save_messages(params.conversation_id, language_code, messages, db)
+        except Exception as e:
+            logger.error(f"Error storing messages: {e}")
+            raise e
+
     @rtvi.event_handler("on_bot_started")
     async def on_bot_started(rtvi: RTVIProcessor):
-        # Handle RTVI messages. Usually (mostly always) we want to push frames, but
-        # since `rtvi` is the first element of the pipeline it's OK to call
-        # `handle_message()` directly.
         for message in params.actions:
             await rtvi.handle_message(message)
 

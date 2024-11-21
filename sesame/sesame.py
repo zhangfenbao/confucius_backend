@@ -9,6 +9,7 @@ import string
 import subprocess
 from pathlib import Path
 from typing import Callable, Dict, Literal, Optional
+from urllib.parse import quote_plus
 
 import typer
 from argon2 import PasswordHasher
@@ -109,7 +110,7 @@ def construct_admin_database_url() -> str:
         f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+"
         f"{os.getenv('SESAME_DATABASE_ASYNC_DRIVER', 'asyncpg')}://"
         f"{os.getenv('SESAME_DATABASE_ADMIN_USER', 'postgres')}:"
-        f"{os.getenv('SESAME_DATABASE_ADMIN_PASSWORD', '')}@"
+        f"{quote_plus(os.getenv('SESAME_DATABASE_ADMIN_PASSWORD', ''))}@"
         f"{os.getenv('SESAME_DATABASE_HOST', 'localhost')}:"
         f"{os.getenv('SESAME_DATABASE_PORT', '5432')}/"
         f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"

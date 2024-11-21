@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.12.7-slim-bookworm AS builder
+FROM python:3.12-slim AS builder
 
 # Set up environment variables
 ARG DEBIAN_FRONTEND=noninteractive
@@ -13,9 +13,11 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     build-essential \
+    python3-dev portaudio19-dev libgomp1 libsndfile1 \
     libpq-dev \
     gcc \
     libc-dev \
+    && apt clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 # Install Python dependencies (removing additions to reduce layer size)
@@ -25,8 +27,11 @@ RUN pip3 install --no-cache-dir --prefer-binary -r webapp/requirements.txt -r bo
     && rm -rf /usr/local/lib/python3.12/site-packages/*.dist-info \
     && rm -rf /usr/local/lib/python3.12/site-packages/*.egg-inf
 
+COPY .env .
+ENV $(cat .env | xargs)
+
 # Final stage
-FROM python:3.12.7-slim-bookworm
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app

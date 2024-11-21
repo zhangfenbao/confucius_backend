@@ -217,6 +217,8 @@ ServiceFactory.register_service(
     "pipecat.services.deepgram:DeepgramSTTService",
     "deepgram",
     ServiceType.ServiceSTT,
+    optional_params=["model"],
+    default_params={"model": "nova-2-general"},
 )
 
 # LLM services
@@ -241,6 +243,7 @@ ServiceFactory.register_service(
     "google",
     ServiceType.ServiceLLM,
     optional_params=["model"],
+    default_params={"model": "gemini-1.5-flash-latest"},
 )
 
 ServiceFactory.register_service(

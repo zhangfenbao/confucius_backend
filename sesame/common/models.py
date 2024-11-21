@@ -2,12 +2,11 @@ import base64
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from common.encryption import decrypt_with_secret
 from common.errors import ServiceConfigurationError
 from common.service_factory import ServiceType
-from pipecat.processors.frameworks.rtvi import RTVIServiceConfig
 from pydantic import BaseModel, Field
 from sqlalchemy import (
     TIMESTAMP,
@@ -24,6 +23,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import (
     Mapped,
@@ -33,6 +33,8 @@ from sqlalchemy.orm import (
     relationship,
 )
 from sqlalchemy.sql import expression
+
+from pipecat.processors.frameworks.rtvi import RTVIServiceConfig
 
 Base = declarative_base()
 
@@ -48,9 +50,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     tokens: Mapped[List["Token"]] = relationship("Token", back_populates="user")
 
@@ -87,9 +87,7 @@ class Token(Base):
     __tablename__ = "tokens"
 
     token_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(
-        String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
-    )
+    user_id = Column(String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     token = Column(String(64), nullable=False, unique=True)
     title = Column(String(255))
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
@@ -136,16 +134,10 @@ class Token(Base):
         expiration_minutes: Optional[int] = None,
     ):
         try:
-            query = (
-                select(Token)
-                .where(Token.user_id == user_id, Token.revoked.is_(False))
-                .limit(1)
-            )
+            query = select(Token).where(Token.user_id == user_id, Token.revoked.is_(False)).limit(1)
             token = (await db.execute(query)).scalar_one_or_none()
             if not token:
-                expiry = expiration_minutes or int(
-                    os.getenv("SESAME_TOKEN_EXPIRY", 525600)
-                )
+                expiry = expiration_minutes or int(os.getenv("SESAME_TOKEN_EXPIRY", 525600))
                 token = await Token.create_token_for_user(
                     user_id=user_id,
                     db=db,
@@ -184,9 +176,7 @@ class Workspace(Base):
     title = Column(String(255), nullable=False)
     config = Column(JSONB, nullable=False, default=dict)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     conversations: Mapped[List["Conversation"]] = relationship(
         "Conversation", back_populates="workspace"
@@ -220,16 +210,10 @@ class Conversation(Base):
     archived = Column(Boolean, default=False)
     language_code: Mapped[str] = mapped_column(String(20), default="english")
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    workspace: Mapped["Workspace"] = relationship(
-        "Workspace", back_populates="conversations"
-    )
-    messages: Mapped[List["Message"]] = relationship(
-        "Message", back_populates="conversation"
-    )
+    workspace: Mapped["Workspace"] = relationship("Workspace", back_populates="conversations")
+    messages: Mapped[List["Message"]] = relationship("Message", back_populates="conversation")
 
     __table_args__ = (
         Index("idx_conversations_language_code", "language_code"),
@@ -265,18 +249,12 @@ class Message(Base):
     content_tsv = Column(TSVECTOR, nullable=True)
     language_code = Column(String(20), default="english")
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
     token_count = Column(Integer, default=0)
     extra_metadata = Column(JSONB, nullable=True)
 
-    conversation: Mapped[Conversation] = relationship(
-        "Conversation", back_populates="messages"
-    )
-    attachments: Mapped[List["Attachment"]] = relationship(
-        "Attachment", back_populates="message"
-    )
+    conversation: Mapped[Conversation] = relationship("Conversation", back_populates="messages")
+    attachments: Mapped[List["Attachment"]] = relationship("Attachment", back_populates="message")
 
     __table_args__ = (
         CheckConstraint("token_count >= 0", name="non_negative_token_count"),
@@ -289,17 +267,45 @@ class Message(Base):
             unique=True,
         ),
     )
+    """
+    # Enable this to normalize content shape on save
+    @validates("content")
+    def validate_content(self, key, content):
+        from common.utils.llm import llm_message_normalize
+        normalized = llm_message_normalize(content)
+        return normalized
+    """
 
     @classmethod
-    async def get_messages_by_conversation_id(
-        cls, conversation_id: str, db: AsyncSession
-    ):
+    async def get_messages_by_conversation_id(cls, conversation_id: str, db: AsyncSession):
         result = await db.execute(
             select(Message)
             .where(Message.conversation_id == conversation_id)
             .order_by(Message.message_number)
         )
         return result.scalars().all()
+
+    @classmethod
+    async def save_messages(
+        cls, conversation_id: str, language_code: str, messages: List[Any], db: AsyncSession
+    ):
+        ms = []
+        for i, message_data in enumerate(messages, start=1):
+            m = Message(
+                conversation_id=conversation_id,
+                content=message_data,
+                language_code=language_code or "english",
+            )
+            ms.append(m)
+        try:
+            db.add_all(ms)
+            await db.flush()
+        except IntegrityError as e:
+            await db.rollback()
+            raise e
+        except Exception as e:
+            await db.rollback()
+            raise e
 
 
 class Attachment(Base):
@@ -340,9 +346,7 @@ class Attachment(Base):
         return new_attachment
 
     @classmethod
-    async def get_attachments_by_message_id(
-        cls, message_id: uuid.UUID, db: AsyncSession
-    ):
+    async def get_attachments_by_message_id(cls, message_id: uuid.UUID, db: AsyncSession):
         result = await db.execute(select(cls).where(cls.message_id == message_id))
         return result.scalars().all()
 
@@ -361,9 +365,7 @@ class Service(Base):
     __tablename__ = "services"
 
     service_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(
-        String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
-    )
+    user_id = Column(String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     workspace_id = Column(
         UUID(as_uuid=True),
         ForeignKey("workspaces.workspace_id", ondelete="CASCADE"),
@@ -375,9 +377,7 @@ class Service(Base):
     api_key = Column(String, nullable=False)
     options = Column(JSONB, nullable=True, default=dict)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
         UniqueConstraint(
@@ -424,11 +424,7 @@ class Service(Base):
 
         if workspace_id:
             workspace_service = next(
-                (
-                    service
-                    for service in services
-                    if str(service.workspace_id) == str(workspace_id)
-                ),
+                (service for service in services if str(service.workspace_id) == str(workspace_id)),
                 None,
             )
             service = workspace_service or services[0]
@@ -455,9 +451,7 @@ class Service(Base):
                 Service.service_type == service_type_str,
                 Service.service_provider == provider if provider else True,
             ]
-            services_to_check = {
-                service_type_str: workspace_services.get(service_type_str)
-            }
+            services_to_check = {service_type_str: workspace_services.get(service_type_str)}
         else:
             conditions = [
                 Service.service_type.in_(workspace_services.keys()),
@@ -474,9 +468,7 @@ class Service(Base):
         services_by_type: dict[str, list[Service]] = {}
         for service in services:
             # Convert Column to string for comparison
-            if str(service.service_provider) == str(
-                workspace_services[str(service.service_type)]
-            ):
+            if str(service.service_provider) == str(workspace_services[str(service.service_type)]):
                 service_type = str(service.service_type)
                 if service_type not in services_by_type:
                     services_by_type[service_type] = []
@@ -572,9 +564,7 @@ class WorkspaceDefaultConfigModel(BaseModel):
     config: Optional[List[RTVIServiceConfig]] = None
     api_keys: Optional[dict] = None
     services: Optional[dict] = None
-    default_llm_context: Optional[list[MessageCreateModel]] = Field(
-        default_factory=list
-    )
+    default_llm_context: Optional[list[MessageCreateModel]] = Field(default_factory=list)
 
     model_config = {
         "extra": "allow",
