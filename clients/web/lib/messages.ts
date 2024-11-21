@@ -1,11 +1,23 @@
 import { LLMMessageRole } from "./llm";
 import { getApiClient } from "./sesameApiClient";
 
+interface TextContent {
+  type: "text";
+  text: string;
+}
+
+interface ImageContent {
+  type: "image_url";
+  image_url: {
+    url: string;
+  };
+}
+
 export interface Message {
   created_at: string;
   content: {
     role: LLMMessageRole;
-    content: string;
+    content: string | Array<TextContent | ImageContent>;
   };
   conversation_id: string;
   extra_metadata: Record<string, unknown> | null;
