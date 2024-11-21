@@ -116,7 +116,7 @@ export default function ConfigurationSection({
                 {s.title}
               </ToggleGroupItem>
             ))}
-            <ToggleGroupItem onClick={() => setAddService(true)} value="">
+            <ToggleGroupItem className="gap-1" onClick={() => setAddService(true)} value="">
               <PlusIcon size={16} />
               Add
             </ToggleGroupItem>

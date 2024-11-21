@@ -7,7 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import emitter from "@/lib/eventEmitter";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -18,12 +23,13 @@ import {
 
 interface Props {
   conversationId: string;
+  vision?: boolean;
   workspaceId: string;
 }
 
-export default function Settings({ conversationId }: Props) {
+export default function Settings({ conversationId, vision }: Props) {
   const [isOpen, setIsOpen] = useState(false);
-  const { availableMics, selectedMic } =
+  const { availableCams, availableMics, selectedCam, selectedMic } =
     useRTVIClientMediaDevices();
 
   const rtviClient = useRTVIClient();
@@ -36,7 +42,7 @@ export default function Settings({ conversationId }: Props) {
       navigator.mediaDevices
         .getUserMedia({
           audio: true,
-          video: false,
+          video: true,
         })
         .then(() => {
           setDeviceError(false);
@@ -45,10 +51,10 @@ export default function Settings({ conversationId }: Props) {
             rtviClient.updateMic(
               rtviClient.selectedMic?.deviceId ?? mics[0]?.deviceId
             );
-            // const cams = await rtviClient.getAllCams();
-            // rtviClient.updateCam(
-            //   rtviClient.selectedCam?.deviceId ?? cams[0]?.deviceId
-            // );
+            const cams = await rtviClient.getAllCams();
+            rtviClient.updateCam(
+              rtviClient.selectedCam?.deviceId ?? cams[0]?.deviceId
+            );
           });
         })
         .catch(() => {
@@ -75,8 +81,8 @@ export default function Settings({ conversationId }: Props) {
 
   const loadingMics =
     !availableMics.length || availableMics.every((d) => d.deviceId === "");
-  // const loadingCams =
-  //   !availableCams.length || availableCams.every((d) => d.deviceId === "");
+  const loadingCams =
+    !availableCams.length || availableCams.every((d) => d.deviceId === "");
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -166,33 +172,33 @@ export default function Settings({ conversationId }: Props) {
             </div>
 
             {/* Vision Settings */}
-            {/*
-            <div className="flex flex-col gap-2">
-              <h3 className="text-sm font-semibold mb-2">Vision</h3>
-              <div className="flex items-center justify-between">
-                <Label className="text-base font-normal" htmlFor="microphone">
-                  Camera
-                </Label>
-                <Select
-                  disabled={deviceError}
-                  onValueChange={(id) => rtviClient?.updateCam(id)}
-                  value={selectedCam?.deviceId}
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Select…" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {!loadingCams &&
-                      availableCams.map((cam) => (
-                        <SelectItem key={cam.deviceId} value={cam.deviceId}>
-                          {cam.label}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
+            {vision && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-sm font-semibold mb-2">Vision</h3>
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-normal" htmlFor="microphone">
+                    Camera
+                  </Label>
+                  <Select
+                    disabled={deviceError}
+                    onValueChange={(id) => rtviClient?.updateCam(id)}
+                    value={selectedCam?.deviceId}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Select…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {!loadingCams &&
+                        availableCams.map((cam) => (
+                          <SelectItem key={cam.deviceId} value={cam.deviceId}>
+                            {cam.label}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-            */}
+            )}
 
             {/* Style Settings */}
             <div className="flex flex-col gap-2">
