@@ -102,7 +102,7 @@ async def http_bot_pipeline(
 
     @storage.on_context_message
     async def on_context_message(messages: list[Any]):
-        logger.info(f"{len(messages)} message(s) received for storage: {messages}")
+        logger.debug(f"{len(messages)} message(s) received for storage: {messages}")
         try:
             await Message.save_messages(params.conversation_id, language_code, messages, db)
         except Exception as e:
