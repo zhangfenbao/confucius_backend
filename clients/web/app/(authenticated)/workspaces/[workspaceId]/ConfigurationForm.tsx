@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import emitter from "@/lib/eventEmitter";
 import { LLMMessageRole, LLMProvider } from "@/lib/llm";
 import {
+  BotProfile,
   MessageCreateModel,
   ServiceInfo,
   ServiceModel,
@@ -54,6 +55,7 @@ export interface WorkspaceFormConfig {
     interactionMode: InteractionMode;
   };
   workspaceOptions: {
+    botProfile: BotProfile;
     name: string;
   };
 }
@@ -103,6 +105,7 @@ export default function ConfigurationForm({
         interactionMode: structuredData.tts.interactionMode,
       },
       workspaceOptions: {
+        botProfile: structuredData.botProfile,
         name: workspace.title,
       },
     }),
@@ -148,6 +151,7 @@ export default function ConfigurationForm({
     > = {
       workspace_id: workspace.workspace_id,
       config: {
+        bot_profile: formState.workspaceOptions.botProfile,
         default_llm_context: formState.configuration.prompt,
         services: {
           llm: formState.configuration.model.llmProvider,

@@ -289,6 +289,8 @@ export interface WorkspaceDefaultConfigModelInput {
   [key: string]: any;
 }
 
+export type BotProfile = "voice" | "vision";
+
 /** WorkspaceDefaultConfigModel */
 export interface WorkspaceDefaultConfigModelOutput {
   /** Config */
@@ -299,6 +301,8 @@ export interface WorkspaceDefaultConfigModelOutput {
   services?: Record<string, string> | null;
   /** Default Llm Context */
   default_llm_context?: MessageCreateModel[] | null;
+  /** Bot Profile */
+  bot_profile?: BotProfile;
   [key: string]: any;
 }
 

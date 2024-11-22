@@ -7,11 +7,17 @@ import {
   ArrowUpIcon,
   Keyboard,
   LoaderCircle,
-  Mic,
+  LoaderCircleIcon,
+  Maximize2Icon,
+  MicIcon,
+  MicOffIcon,
+  Minimize2Icon,
   PaperclipIcon,
   Speech,
   TriangleAlertIcon,
-  X,
+  VideoIcon,
+  VideoOffIcon,
+  X
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -25,8 +31,10 @@ import {
 } from "react";
 import { RTVIClient, RTVIEvent, RTVIMessage } from "realtime-ai";
 import {
+  RTVIClientVideo,
   useRTVIClient,
   useRTVIClientEvent,
+  useRTVIClientMediaTrack,
   useRTVIClientTransportState,
   VoiceVisualizer,
 } from "realtime-ai-react";
@@ -51,12 +59,16 @@ import {
 interface Props {
   conversationId: string;
   onChangeMode?: (isVoiceMode: boolean) => void;
+  vision?: boolean;
   workspaceId: string;
 }
+
+type VideoSize = "small" | "large";
 
 const ChatControls: React.FC<Props> = ({
   conversationId,
   onChangeMode,
+  vision = false,
   workspaceId,
 }) => {
   const { push, replace } = useRouter();
@@ -66,7 +78,9 @@ const ChatControls: React.FC<Props> = ({
   const [isVoiceMode, setIsVoiceMode] = useState(
     Boolean(searchParams.get("v"))
   ); // Track whether we're in voice mode
-  const [isMuted, setIsMuted] = useState(false); // Track mute/unmute state
+  const [isCamMuted, setIsCamMuted] = useState(!vision);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [videoSize, setVideoSize] = useState<VideoSize>("small");
   const [, setSelectedImages] = useState<File[]>([]); // Track selected image files
   const [previewUrls, setPreviewUrls] = useState<string[]>([]); // Track preview URLs
   const [imageZoom, setImageZoom] = useState(false);
@@ -185,15 +199,17 @@ const ChatControls: React.FC<Props> = ({
 
   const handleConnect = useCallback(async () => {
     setIsVoiceMode(true);
-    setIsMuted(false);
+    setIsMicMuted(false);
     rtviClient?.enableMic(true);
+    if (vision) rtviClient?.enableCam(true);
     onChangeMode?.(true);
     setEndDate(new Date(Number(rtviClient?.transportExpiry) * 1000));
   }, [onChangeMode, rtviClient]);
 
   const handleDisconnect = useCallback(() => {
     setIsVoiceMode(false);
-    setIsMuted(false);
+    setIsMicMuted(false);
+    rtviClient?.enableCam(false);
     rtviClient?.enableMic(false);
     onChangeMode?.(false);
     setEndDate(null);
@@ -242,9 +258,17 @@ const ChatControls: React.FC<Props> = ({
     )
   );
 
-  // Toggle between mute and unmute in voice mode
-  const handleMuteToggle = useCallback(() => {
-    setIsMuted((muted) => {
+  // Toggle between cam mute and unmute in voice mode
+  const handleCamToggle = useCallback(() => {
+    setIsCamMuted((muted) => {
+      rtviClient?.enableCam(muted);
+      return !muted;
+    });
+  }, [rtviClient]);
+
+  // Toggle between mic mute and unmute in voice mode
+  const handleMicToggle = useCallback(() => {
+    setIsMicMuted((muted) => {
       rtviClient?.enableMic(muted);
       return !muted;
     });
@@ -287,6 +311,11 @@ const ChatControls: React.FC<Props> = ({
 
   const feedbackClassName =
     "bg-gradient-to-t from-background absolute w-full bottom-full translate-y-2 pt-4 flex gap-2 items-center justify-center z-10";
+
+  const ToggledCamIcon = isCamMuted ? VideoOffIcon : VideoIcon;
+  const ToggledMicIcon = isMicMuted ? MicOffIcon : MicIcon;
+
+  const camTrack = useRTVIClientMediaTrack("video", "local");
 
   return (
     <div className="relative w-full">
@@ -347,7 +376,7 @@ const ChatControls: React.FC<Props> = ({
       ) : transportState === "ready" ? (
         <div className={feedbackClassName}>
           <span>
-            {isMuted
+            {isMicMuted
               ? "Tap to unmute"
               : processingAction
               ? "Thinking…"
@@ -428,47 +457,109 @@ const ChatControls: React.FC<Props> = ({
           </Tooltip>
         </TooltipProvider>
 
+        {vision && isVoiceMode && !isCamMuted && (
+          <div
+            className={cn(
+              "absolute z-20 bottom-20 left-2 max-w-40 bg-secondary rounded-md aspect-video overflow-hidden transition-all",
+              {
+                "max-w-80": videoSize === "large",
+              }
+            )}
+          >
+            <RTVIClientVideo
+              participant="local"
+              fit="cover"
+              className="w-full h-full"
+            />
+            {!camTrack && (
+              <div className="absolute top-0 left-0 z-10 w-full h-full flex items-center justify-center">
+                <LoaderCircleIcon className="animate-spin" size={16} />
+              </div>
+            )}
+            <Button
+              className="absolute top-1 right-1"
+              size="icon"
+              variant="ghost"
+              onClick={() =>
+                setVideoSize((vs) => (vs === "small" ? "large" : "small"))
+              }
+            >
+              {videoSize === "small" ? (
+                <Maximize2Icon size={16} />
+              ) : (
+                <Minimize2Icon size={16} />
+              )}
+            </Button>
+          </div>
+        )}
+
         {/* Chat input area */}
         <div className="flex-grow flex items-end gap-3 p-2 relative">
           {/* Text input or Voice indicator based on mode */}
           {isVoiceMode ? (
             // Voice mode with mute/unmute toggle and voice indicator
-            <div className="border border-border rounded-full w-full flex items-center gap-3 p-1 pe-4">
+            <div className="border border-border rounded-full w-full flex items-center gap-2 p-1 pe-4">
+              {/* Cam button for mute/unmute */}
+              {vision && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleCamToggle}
+                        className={cn(
+                          "p-1 rounded-full focus:outline-none hover:bg-secondary",
+                          {
+                            "bg-destructive hover:bg-destructive text-destructive-foreground":
+                              isCamMuted,
+                          }
+                        )}
+                      >
+                        <ToggledCamIcon className="w-6 h-6 m-auto" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-secondary text-secondary-foreground">
+                      {isCamMuted ? "Turn on camera" : "Turn off camera"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
               {/* Mic button for mute/unmute */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      onClick={handleMuteToggle}
+                      onClick={handleMicToggle}
                       className={cn(
                         "p-1 rounded-full focus:outline-none hover:bg-secondary",
                         {
-                          "bg-destructive hover:bg-destructive text-destructive-foreground w-28":
-                            isMuted,
+                          "bg-destructive hover:bg-destructive text-destructive-foreground":
+                            isMicMuted,
                         }
                       )}
                     >
-                      <Mic className="w-6 h-6 m-auto" />
+                      <ToggledMicIcon className="w-6 h-6 m-auto" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-secondary text-secondary-foreground">
-                    {isMuted ? "Unmute microphone" : "Mute microphone"}
+                    {isMicMuted ? "Unmute microphone" : "Mute microphone"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
               {/* Voice Indicator when microphone is active and not muted */}
-              {isReadyToSpeak && !isMuted ? (
+              {isReadyToSpeak && !isMicMuted ? (
                 <VoiceVisualizer
                   backgroundColor="transparent"
-                  barColor={isMuted ? "gray" : "black"}
+                  barColor={isMicMuted ? "gray" : "black"}
                   barGap={4}
                   barWidth={8}
                   barMaxHeight={20}
                   participantType="local"
                 />
-              ) : isMuted ? null : (
+              ) : isMicMuted ? null : (
                 <div className="w-5 h-5 animate-spin">
                   <LoaderCircle size={20} />
                 </div>

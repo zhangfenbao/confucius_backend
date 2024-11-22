@@ -106,15 +106,15 @@ export default function ClientPage({
             options: [
               {
                 name: "model",
-                value: model
-              }
-            ]
-          }
-        ])
+                value: model,
+              },
+            ],
+          },
+        ]);
       } else {
         const config = client.params.config;
         if (config) {
-          const llmConfig = config.find(c => c.service === "llm");
+          const llmConfig = config.find((c) => c.service === "llm");
           client.params.config = [
             ...config,
             {
@@ -123,10 +123,10 @@ export default function ClientPage({
                 ...(llmConfig?.options ?? []),
                 {
                   name: "model",
-                  value: model
-                }
-              ]
-            }
+                  value: model,
+                },
+              ],
+            },
           ];
         } else {
           client.params.config = [
@@ -135,10 +135,10 @@ export default function ClientPage({
               options: [
                 {
                   name: "model",
-                  value: model
-                }
-              ]
-            }
+                  value: model,
+                },
+              ],
+            },
           ];
         }
       }
@@ -215,13 +215,18 @@ export default function ClientPage({
           <div className="bg-background sticky bottom-0 z-10">
             <ChatControls
               conversationId={conversationId}
+              vision={structuredWorkspace.botProfile === "vision"}
               workspaceId={workspaceId}
             />
           </div>
         </div>
 
         <RTVIClientAudio />
-        <Settings conversationId={conversationId} workspaceId={workspaceId} />
+        <Settings
+          conversationId={conversationId}
+          vision={structuredWorkspace.botProfile === "vision"}
+          workspaceId={workspaceId}
+        />
       </QueryClientProvider>
     </RTVIClientProvider>
   );

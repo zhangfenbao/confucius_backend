@@ -1,6 +1,7 @@
 import equal from "fast-deep-equal";
 import { defaultModel, getLLMModel, LLMProvider } from "./llm";
 import {
+  BotProfile,
   MessageCreateModel,
   WorkspaceModel,
   WorkspaceWithConversations,
@@ -42,6 +43,7 @@ export async function getWorkspace(id: string) {
 
 export interface WorkspaceStructuredData {
   apiKeys: Record<string, string>;
+  botProfile: BotProfile;
   llm: {
     apiKey?: string;
     service: LLMProvider;
@@ -186,6 +188,7 @@ export function getWorkspaceStructuredData(
 
   return {
     apiKeys: workspaceConfig?.api_keys ?? {},
+    botProfile: workspaceConfig?.bot_profile ?? "voice",
     llm: {
       apiKey:
         workspaceConfig?.api_keys?.[workspaceConfig?.services?.llm as string],
