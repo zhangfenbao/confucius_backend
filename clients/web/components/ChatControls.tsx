@@ -1,7 +1,9 @@
 "use client";
 
 import ExpiryCountdown from "@/components/ExpiryCountdown";
+import { useToast } from "@/hooks/use-toast";
 import emitter from "@/lib/eventEmitter";
+import { ImageContent, Message } from "@/lib/messages";
 import { cn } from "@/lib/utils";
 import {
   ArrowUpIcon,
@@ -17,7 +19,7 @@ import {
   TriangleAlertIcon,
   VideoIcon,
   VideoOffIcon,
-  X
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -55,6 +57,18 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+
+const MAX_TOTAL_FILE_SIZE = 0.9 * 1e6; // 0.9 MB
+
+function getHumanReadableFilesize(size: number) {
+  if (size < 1e3) {
+    return `${size} bytes`;
+  } else if (size >= 1e3 && size < 1e6) {
+    return `${(size / 1e3).toFixed(1)} KB`;
+  } else {
+    return `${(size / 1e6).toFixed(1)} MB`;
+  }
+}
 
 interface Props {
   conversationId: string;
@@ -95,6 +109,8 @@ const ChatControls: React.FC<Props> = ({
   const [error, setError] = useState("");
   const [processingAction, setProcessingAction] = useState(false);
 
+  const { toast } = useToast();
+
   const formRef = useRef<HTMLFormElement>(null);
 
   const handleTextKeyDown = (ev: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -108,7 +124,25 @@ const ChatControls: React.FC<Props> = ({
   const newConversationIdRef = useRef<string>("");
 
   const sendTextMessage = async (client: RTVIClient, message: string) => {
-    emitter.emit("userTextMessage", message);
+    const content: Message["content"]["content"] = [
+      {
+        type: "text",
+        text: message,
+      },
+    ];
+    if (previewUrls.length) {
+      content.push(
+        ...previewUrls.map<ImageContent>((url) => ({
+          type: "image_url",
+          image_url: {
+            url,
+          },
+        }))
+      );
+      setPreviewUrls([]);
+    }
+
+    emitter.emit("userTextMessage", content);
     setText("");
 
     try {
@@ -121,7 +155,7 @@ const ChatControls: React.FC<Props> = ({
             value: [
               {
                 role: "user",
-                content: message,
+                content,
               },
             ],
           },
@@ -225,6 +259,7 @@ const ChatControls: React.FC<Props> = ({
   const handleSwitchToVoiceMode = useCallback(
     async (createIfNew = true) => {
       setIsVoiceMode(true);
+      setError("");
       if (conversationId === "new" && createIfNew) {
         await createConversation(true);
         return;
@@ -233,6 +268,7 @@ const ChatControls: React.FC<Props> = ({
         await rtviClient?.connect();
       } catch (e) {
         console.error(e);
+        setError("An error occurred while trying to start voice mode.");
         handleSwitchToTextMode();
       }
     },
@@ -278,11 +314,35 @@ const ChatControls: React.FC<Props> = ({
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []);
     if (files.length) {
-      setSelectedImages((images) => [...images, ...files]);
-      setPreviewUrls((urls) => [
-        ...urls,
-        ...files.map((f) => URL.createObjectURL(f)),
-      ]);
+      const allowedFiles: File[] = [];
+      let total = 0;
+      let notifyUser = false;
+      files.forEach((file) => {
+        if (total + file.size < MAX_TOTAL_FILE_SIZE) {
+          allowedFiles.push(file);
+          total += file.size;
+        } else {
+          notifyUser = true;
+        }
+      });
+      setSelectedImages((images) => [...images, ...allowedFiles]);
+      allowedFiles.forEach((f) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64String = e.target?.result?.toString();
+          if (base64String) {
+            setPreviewUrls((urls) => [...urls, base64String]);
+          }
+        };
+        reader.readAsDataURL(f);
+      });
+      if (notifyUser) {
+        toast({
+          title: `Exceeded maximum allowed attachment size of ${getHumanReadableFilesize(
+            MAX_TOTAL_FILE_SIZE
+          )}`,
+        });
+      }
     }
     event.target.value = "";
   };
@@ -434,19 +494,18 @@ const ChatControls: React.FC<Props> = ({
             <TooltipTrigger asChild>
               <Button
                 className="rounded-full relative mb-2 p-2 h-10 w-10 border border-secondary"
+                disabled={isVoiceMode}
                 size="icon"
                 variant="secondary"
-                onClick={() => {
-                  emitter.emit("disabledInSandboxMode");
-                }}
               >
                 <PaperclipIcon />
                 {/* File input (visually hidden) */}
                 <input
                   type="file"
                   accept="image/*"
+                  disabled={isVoiceMode}
                   multiple
-                  className="absolute hidden inset-0 opacity-0 file:cursor-pointer file:inset-0 file:absolute"
+                  className="absolute inset-0 opacity-0 file:cursor-pointer file:inset-0 file:absolute"
                   onChange={handleImageChange}
                 />
               </Button>

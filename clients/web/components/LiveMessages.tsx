@@ -11,7 +11,13 @@ import {
 import ChatMessage from "@/components/ChatMessage";
 import emitter from "@/lib/eventEmitter";
 import { LLMMessageRole } from "@/lib/llm";
-import type { Message } from "@/lib/messages";
+import {
+  addNewLinesBeforeCodeblocks,
+  ImageContent,
+  normalizeMessageText,
+  TextContent,
+  type Message,
+} from "@/lib/messages";
 import { WorkspaceStructuredData } from "@/lib/workspaces";
 import { useRouter } from "next/navigation";
 import {
@@ -35,11 +41,6 @@ interface Props {
   messages: Message[];
   structuredWorkspace: WorkspaceStructuredData;
 }
-
-const addNewLinesBeforeCodeblocks = (markdown: string) =>
-  markdown.match(/([^\n])(\n```)/)
-    ? markdown.replace(/([^\n])(\n```)/g, "$1\n$2")
-    : markdown;
 
 interface MessageChunk {
   createdAt?: Date;
@@ -92,7 +93,7 @@ export default function LiveMessages({
 
         const isSameMessage =
           matchingMessage?.final === final &&
-          matchingMessage?.content?.content ===
+          normalizeMessageText(matchingMessage) ===
             addNewLinesBeforeCodeblocks(text);
 
         if (isSameMessage) return liveMessages;
@@ -101,7 +102,7 @@ export default function LiveMessages({
           // Append new message
           const message: LiveMessage = {
             content: {
-              content: addNewLinesBeforeCodeblocks(text),
+              content: text,
               role,
             },
             conversation_id: conversationId,
@@ -116,7 +117,9 @@ export default function LiveMessages({
         }
 
         const updatedMessages = [...liveMessages];
-        const prevText = updatedMessages[matchingMessageIdx].content.content;
+        const prevText = normalizeMessageText(
+          updatedMessages[matchingMessageIdx]
+        );
         const updatedMessage: LiveMessage = {
           ...updatedMessages[matchingMessageIdx],
           content: {
@@ -134,8 +137,9 @@ export default function LiveMessages({
             idx === matchingMessageIdx ? updatedMessage : liveMessage
           )
           .filter((m, idx, arr) => {
+            const normalizedText = normalizeMessageText(m);
             const isEmptyMessage =
-              m.content.content.trim() === "" && idx < arr.length - 1;
+              normalizedText.trim() === "" && idx < arr.length - 1;
             return !isEmptyMessage;
           });
       });
@@ -145,14 +149,14 @@ export default function LiveMessages({
 
   const firstBotResponseTime = useRef<Date>();
   const userStartedSpeakingTime = useRef<Date>();
-  const userStoppedSpeakingTimeout =
-    useRef<ReturnType<typeof setTimeout>>();
+  const userStoppedSpeakingTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const cleanupUserMessages = useCallback(() => {
     setLiveMessages((messages) => {
       return messages.filter((m) => {
         if (m.content.role !== "user") return true;
-        return m.content.content.length > 0;
+        const normalizedText = normalizeMessageText(m);
+        return normalizedText.length > 0;
       });
     });
   }, []);
@@ -224,7 +228,11 @@ export default function LiveMessages({
         // TODO: Move to StorageItemStored handler, once that is emitted in text-mode
         setTimeout(revalidateAndRefresh, 2000);
       }
-    }, [addMessageChunk, revalidateAndRefresh, structuredWorkspace.tts.interactionMode])
+    }, [
+      addMessageChunk,
+      revalidateAndRefresh,
+      structuredWorkspace.tts.interactionMode,
+    ])
   );
 
   useRTVIClientEvent(
@@ -343,13 +351,26 @@ export default function LiveMessages({
   );
 
   useEffect(() => {
-    const handleUserTextMessage = (text: string) => {
+    const handleUserTextMessage = (content: Array<TextContent | ImageContent>) => {
       isTextResponse.current = true;
-      addMessageChunk({
-        createdAt: new Date(),
-        final: true,
-        role: "user",
-        text,
+      const now = new Date();
+      setLiveMessages((liveMessages) => {
+        return [
+          ...liveMessages,
+          {
+            content: {
+              role: "user",
+              content
+            },
+            conversation_id: conversationId,
+            created_at: now.toISOString(),
+            extra_metadata: {},
+            final: true,
+            message_id: uuidv4(),
+            message_number: messages.length + liveMessages.length + 1,
+            updated_at: now.toISOString(),
+          }
+        ]
       });
     };
     emitter.on("userTextMessage", handleUserTextMessage);
