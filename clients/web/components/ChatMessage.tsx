@@ -1,5 +1,5 @@
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { Message } from "@/lib/messages";
+import { extractMessageImages, Message, normalizeMessageText } from "@/lib/messages";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
@@ -41,12 +41,8 @@ const contentForErrorBoundary = (content: unknown): React.ReactNode => {
 export default function ChatMessage({ isSpeaking = false, message }: Props) {
   const [copyState, setCopyState] = useState<CopyState>("idle");
 
-  const normalizedText = Array.isArray(message.content.content)
-    ? message.content.content
-        .filter((tc) => tc.type === "text")
-        .map((tc) => tc.text)
-        .join(" ")
-    : message.content.content;
+  const normalizedText = normalizeMessageText(message);
+  const images = extractMessageImages(message);
 
   const handleCopy = () => {
     try {
@@ -101,13 +97,13 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
                   View original message
                 </summary>
                 <div className="whitespace-pre-wrap">
-                  {contentForErrorBoundary(message.content.content)}
+                  {contentForErrorBoundary(normalizedText)}
                 </div>
               </details>
             </div>
           }
         >
-          {message.content.content ? (
+          {normalizedText ? (
             <Markdown
               options={{
                 wrapper: Fragment,
@@ -198,6 +194,18 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
           ) : (
             <div className="flex gap-2">
               <span className="animate-pulseGrow w-4 h-4 rounded-full bg-foreground/40" />
+            </div>
+          )}
+          {images.length > 0 && (
+            <div className="flex gap-1 mt-2">
+              {images.map((imgUrl, i) => (
+                <img
+                  key={i}
+                  src={imgUrl}
+                  alt=""
+                  className="aspect-square object-cover h-32 rounded-md"
+                />
+              ))}
             </div>
           )}
         </ErrorBoundary>

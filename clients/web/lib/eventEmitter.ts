@@ -1,5 +1,6 @@
 "use client";
 
+import { ImageContent, TextContent } from "@/lib/messages";
 import { WorkspaceModel } from "@/lib/sesameApi";
 import { EventEmitter } from "events";
 
@@ -13,7 +14,7 @@ interface EventMap {
   toggleSettings: [];
   toggleSidebar: [];
   updateSidebar: [];
-  userTextMessage: [text: string];
+  userTextMessage: [text: Array<TextContent | ImageContent>];
 }
 
 const emitter = new EventEmitter<EventMap>();
