@@ -177,8 +177,8 @@ async def vision_bot_pipeline(
 
         try:
             await Message.save_messages(
-                str(conversation.get("conversation_id")),
-                conversation.get("language_code"),
+                str(params.conversation_id),
+                conversation.language_code,
                 messages,
                 db,
             )
