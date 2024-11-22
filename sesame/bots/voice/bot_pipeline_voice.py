@@ -7,6 +7,8 @@ from common.models import Conversation, Message, Service
 from common.service_factory import ServiceFactory, ServiceType
 from loguru import logger
 from openai._types import NOT_GIVEN
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.pipeline.pipeline import Pipeline
@@ -23,7 +25,6 @@ from pipecat.services.ai_services import (
     OpenAILLMContext,
 )
 from pipecat.transports.services.daily import DailyParams, DailyTransport
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def voice_bot_pipeline(

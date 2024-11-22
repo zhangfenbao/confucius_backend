@@ -1,12 +1,14 @@
 from typing import Any, Awaitable, Callable, List, Mapping
 
-from pipecat.processors.frameworks.rtvi import RTVIMessage, RTVIServiceConfig
 from pydantic import BaseModel
+
+from pipecat.processors.frameworks.rtvi import RTVIMessage, RTVIServiceConfig
 
 
 class BotConfig(BaseModel):
     services: Mapping[str, str] = {}
     config: List[RTVIServiceConfig] = []
+    bot_profile: str = "vision"
 
 
 class BotParams(BaseModel):

@@ -55,7 +55,7 @@ tools = [
 ]
 
 
-async def voice_bot_pipeline(
+async def vision_bot_pipeline(
     params: BotParams,
     config: BotConfig,
     services: dict[str, Service],

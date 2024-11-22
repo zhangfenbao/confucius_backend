@@ -7,19 +7,21 @@ from typing import Awaitable, Callable
 import aiohttp
 from bots.types import BotCallbacks, BotConfig, BotParams
 from bots.voice.bot_error_pipeline import bot_error_pipeline_task
-from bots.voice.bot_pipeline import voice_bot_pipeline
 from bots.voice.bot_pipeline_runner import BotPipelineRunner
+from bots.voice.bot_pipeline_vision import vision_bot_pipeline
+from bots.voice.bot_pipeline_voice import voice_bot_pipeline
 from common.auth import Auth, get_authenticated_db_context
 from common.database import DatabaseSessionFactory
 from common.models import Service
 from fastapi import HTTPException, status
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from pipecat.pipeline.task import PipelineParams, PipelineTask
 from pipecat.transports.services.helpers.daily_rest import (
     DailyRESTHelper,
     DailyRoomParams,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 MAX_SESSION_TIME = int(os.getenv("SESAME_MAX_VOICE_SESSION_TIME", 15 * 60)) or 15 * 60
 
@@ -57,10 +59,18 @@ async def _voice_pipeline_task(
     room_token: str,
     db: AsyncSession,
 ) -> Callable[[BotCallbacks], Awaitable[PipelineTask]]:
+    # @TODO: load relevant pipeline based on config param
+
     async def create_task(callbacks: BotCallbacks) -> PipelineTask:
-        pipeline = await voice_bot_pipeline(
-            params, config, services, callbacks, room_url, room_token, db
-        )
+        logger.info(f"Running {config.bot_profile} bot pipeline")
+        if config.bot_profile == "vision":
+            pipeline = await vision_bot_pipeline(
+                params, config, services, callbacks, room_url, room_token, db
+            )
+        else:
+            pipeline = await voice_bot_pipeline(
+                params, config, services, callbacks, room_url, room_token, db
+            )
 
         task = PipelineTask(
             pipeline,
