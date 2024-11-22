@@ -17,6 +17,7 @@ RUN apt-get update && \
     libpq-dev \
     gcc \
     libc-dev \
+    git \
     && apt clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
@@ -26,9 +27,6 @@ COPY bots/requirements.txt bots/
 RUN pip3 install --no-cache-dir --prefer-binary -r webapp/requirements.txt -r bots/requirements.txt \
     && rm -rf /usr/local/lib/python3.12/site-packages/*.dist-info \
     && rm -rf /usr/local/lib/python3.12/site-packages/*.egg-inf
-
-COPY .env .
-ENV $(cat .env | xargs)
 
 # Final stage
 FROM python:3.12-slim

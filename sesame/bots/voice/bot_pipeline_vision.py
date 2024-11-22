@@ -6,6 +6,7 @@ from bots.types import BotCallbacks, BotConfig, BotParams
 from common.models import Conversation, Message, Service
 from common.service_factory import ServiceFactory, ServiceType
 from loguru import logger
+from openai.types.chat import ChatCompletionToolParam
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
@@ -34,24 +35,23 @@ async def get_image(function_name, tool_call_id, arguments, llm, context, result
 
 
 tools = [
-    {
-        "function_declarations": [
-            {
-                "name": "get_image",
-                "description": "Get and image from the camera or video stream.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "question": {
-                            "type": "string",
-                            "description": "The question to to use when running inference on the acquired image.",
-                        }
-                    },
-                    "required": ["question"],
+    ChatCompletionToolParam(
+        type="function",
+        function={
+            "name": "get_image",
+            "description": "Get and image from the camera or video stream.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "The question to to use when running inference on the acquired image.",
+                    }
                 },
-            }
-        ]
-    }
+                "required": ["question"],
+            },
+        },
+    )
 ]
 
 
