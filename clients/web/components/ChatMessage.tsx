@@ -1,5 +1,11 @@
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { extractMessageImages, Message, normalizeMessageText } from "@/lib/messages";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  extractMessageImages,
+  Message,
+  normalizeMessageText,
+} from "@/lib/messages";
 import { cn } from "@/lib/utils";
 import {
   AlertTriangle,
@@ -55,6 +61,16 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
         setCopyState("idle");
       }, 2000);
     }
+  };
+
+  const [selectedImage, setSelectedImage] = useState<string>("");
+
+  const openModal = (imgUrl: string) => {
+    setSelectedImage(imgUrl);
+  };
+
+  const closeModal = () => {
+    setSelectedImage("");
   };
 
   return (
@@ -147,7 +163,12 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
                   p: {
                     component: ({ className, children, ...props }) => {
                       return (
-                        <p className={className} {...props}>
+                        // It's possible there's a <div> inside <p>, due to the way Markdown is rendered, e.g. codeblock inside p
+                        <p
+                          className={className}
+                          {...props}
+                          suppressHydrationWarning
+                        >
                           {Children.map(children, (child) =>
                             typeof child === "string"
                               ? child.split("\n").map((line, i) => (
@@ -197,16 +218,32 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
             </div>
           )}
           {images.length > 0 && (
-            <div className="flex gap-1 mt-2">
-              {images.map((imgUrl, i) => (
+            <ScrollArea className="w-full whitespace-nowrap rounded-md mt-2">
+              <div className="flex w-max gap-1">
+                {images.map((imgUrl, i) => (
+                  <img
+                    key={i}
+                    src={imgUrl}
+                    alt=""
+                    className="object-cover h-32 rounded-md cursor-zoom-in"
+                    onClick={() => openModal(imgUrl)}
+                  />
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          )}
+          {selectedImage && (
+            <Dialog open={true} onOpenChange={closeModal}>
+              <DialogContent className="h-auto max-h-full w-auto max-w-full">
+                <DialogTitle className="sr-only">Zoomed image view</DialogTitle>
                 <img
-                  key={i}
-                  src={imgUrl}
+                  src={selectedImage}
                   alt=""
-                  className="aspect-square object-cover h-32 rounded-md"
+                  className="w-full h-auto rounded-md"
                 />
-              ))}
-            </div>
+              </DialogContent>
+            </Dialog>
           )}
         </ErrorBoundary>
       </div>

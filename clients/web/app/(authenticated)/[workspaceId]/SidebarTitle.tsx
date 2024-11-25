@@ -16,7 +16,7 @@ import { CheckIcon, ChevronsUpDownIcon, LayoutGridIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-interface SidebarTitleProps {
+interface SidebarTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
   className: string;
   onSwitchWorkspace?: () => void;
   workspace?: WorkspaceModel | null;
@@ -28,6 +28,7 @@ const SidebarTitle = ({
   onSwitchWorkspace,
   workspace,
   workspaces = [],
+  ...h1Props
 }: SidebarTitleProps) => {
   const { push } = useRouter();
   return (
@@ -37,7 +38,7 @@ const SidebarTitle = ({
         className
       )}
     >
-      <h1 className="font-semibold text-nowrap text-ellipsis flex-grow overflow-hidden">
+      <h1 className="font-semibold text-nowrap text-ellipsis flex-grow overflow-hidden" {...h1Props}>
         {workspace?.title ?? "No workspace"}
       </h1>
       <DropdownMenu>

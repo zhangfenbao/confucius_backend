@@ -17,11 +17,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/",
-    "/workspaces",
-    "/workspaces/:workspaceId*",
-    "/:workspaceId",
-    "/:workspaceId/c",
-    "/:workspaceId/c/:conversationId*",
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|sign-in).*)",
   ],
 };

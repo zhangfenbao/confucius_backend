@@ -37,8 +37,8 @@ const ConversationList = ({
           pageParams: [0],
         },
     initialPageParam: 0,
-    getNextPageParam: (_lastPage, _allPages, lastPageParam) => {
-      if (_lastPage.length < 20) return undefined;
+    getNextPageParam: (lastPage = [], _allPages, lastPageParam) => {
+      if (lastPage.length < 20) return undefined;
       return lastPageParam + 1;
     },
     queryFn: async ({ pageParam }) => {
