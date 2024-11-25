@@ -147,7 +147,8 @@ export default function ChatMessage({ isSpeaking = false, message }: Props) {
                   p: {
                     component: ({ className, children, ...props }) => {
                       return (
-                        <p className={className} {...props}>
+                        // It's possible there's a <div> inside <p>, due to the way Markdown is rendered, e.g. codeblock inside p
+                        <p className={className} {...props} suppressHydrationWarning>
                           {Children.map(children, (child) =>
                             typeof child === "string"
                               ? child.split("\n").map((line, i) => (
