@@ -351,7 +351,9 @@ export default function LiveMessages({
   );
 
   useEffect(() => {
-    const handleUserTextMessage = (content: Array<TextContent | ImageContent>) => {
+    const handleUserTextMessage = (
+      content: Array<TextContent | ImageContent>
+    ) => {
       isTextResponse.current = true;
       const now = new Date();
       setLiveMessages((liveMessages) => {
@@ -360,7 +362,7 @@ export default function LiveMessages({
           {
             content: {
               role: "user",
-              content
+              content,
             },
             conversation_id: conversationId,
             created_at: now.toISOString(),
@@ -369,15 +371,15 @@ export default function LiveMessages({
             message_id: uuidv4(),
             message_number: messages.length + liveMessages.length + 1,
             updated_at: now.toISOString(),
-          }
-        ]
+          },
+        ];
       });
     };
     emitter.on("userTextMessage", handleUserTextMessage);
     return () => {
       emitter.off("userTextMessage", handleUserTextMessage);
     };
-  }, [addMessageChunk]);
+  }, [addMessageChunk, conversationId, messages.length]);
 
   useLayoutEffect(() => {
     if (!autoscroll) return;
