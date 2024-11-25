@@ -1,7 +1,7 @@
 "use client";
 
 import ChatMessage from "@/components/ChatMessage";
-import { Message } from "@/lib/messages";
+import { Message, normalizeMessageText } from "@/lib/messages";
 import { WorkspaceStructuredData } from "@/lib/workspaces";
 import { useCallback, useState } from "react";
 import { RTVIEvent } from "realtime-ai";
@@ -46,6 +46,7 @@ export default function ChatMessages({
     <div className="flex flex-col gap-4">
       {messages
         .filter((m) => m.content.role !== "system")
+        .filter((m) => normalizeMessageText(m).trim() !== "")
         .map((message, index) => (
           <ChatMessage
             key={index}
