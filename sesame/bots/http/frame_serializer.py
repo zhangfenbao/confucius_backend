@@ -15,6 +15,10 @@ class BotFrameSerializer(FrameSerializer):
     def __init__(self):
         super().__init__()
 
+    @property
+    def type(self) -> str:
+        return "bot"
+
     def serialize(self, frame: Frame) -> str | bytes | None:
         if isinstance(frame, TransportMessageUrgentFrame):
             return encode_response(frame.message)

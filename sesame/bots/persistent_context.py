@@ -65,11 +65,10 @@ class PersistentContextProcessor(FrameProcessor):
 class PersistentContext:
     def __init__(self, *, context: OpenAILLMContext):
         self._context_handler: Optional[Callable[[List[Any]], Coroutine[Any, Any, None]]] = None
-
+        self._worker_task: Optional[asyncio.Task] = None
         initial_messages = context.get_messages_for_persistent_storage()
         self._messages = deepcopy(initial_messages) if initial_messages else []
         self._queue = asyncio.Queue()
-        self._worker_task = asyncio.create_task(self._worker())
         self._running = True
 
     def create_processor(
@@ -87,6 +86,8 @@ class PersistentContext:
             raise RuntimeError("on_context_message handler has already been registered")
 
         self._context_handler = func
+        if self._worker_task is None:
+            self._worker_task = asyncio.create_task(self._worker())
         return func
 
     async def save(self, context: OpenAILLMContext) -> tuple[str, Optional[List[Any]]]:
@@ -139,8 +140,9 @@ class PersistentContext:
         logger.debug("Closing PersistentContext...")
         self._running = False
         await self._queue.join()
-        self._worker_task.cancel()
-        try:
-            await self._worker_task
-        except asyncio.CancelledError:
-            pass
+        if self._worker_task is not None:
+            self._worker_task.cancel()
+            try:
+                await self._worker_task
+            except asyncio.CancelledError:
+                pass
