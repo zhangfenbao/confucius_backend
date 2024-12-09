@@ -525,11 +525,16 @@ export class HttpClient<SecurityDataType = unknown> {
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
+    console.log("secure:", this.securityData);
+    console.log("secureParams:", secureParams);
     const requestParams = this.mergeRequestParams(params, secureParams);
     const queryString = query && this.toQueryString(query);
     const payloadFormatter = this.contentFormatters[type || ContentType.Json];
     const responseFormat = format || requestParams.format;
-
+    console.log("requestParams:", requestParams);
+    console.log("queryString:", queryString);
+    console.log("payloadFormatter:", payloadFormatter);
+    console.log("responseFormat:", responseFormat);
     return this.customFetch(`${baseUrl || this.baseUrl || ""}${path}${queryString ? `?${queryString}` : ""}`, {
       ...requestParams,
       headers: {
@@ -836,15 +841,19 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
         limit?: number;
       },
       params: RequestParams = {},
-    ) =>
-      this.request<WorkspaceWithConversations[], HTTPValidationError>({
+    ) => {
+      console.log('查询参数:', query);
+      console.log('请求参数:', params);
+      
+      return this.request<WorkspaceWithConversations[], HTTPValidationError>({
         path: `/api/conversations/`,
         method: "GET",
         query: query,
         secure: true,
         format: "json",
         ...params,
-      }),
+      });
+    },
 
     /**
      * No description

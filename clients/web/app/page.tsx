@@ -8,6 +8,7 @@ export default async function WorkspaceConversationPage() {
   try {
     workspaces = await getWorkspaces();
   } catch (e) {
+    console.error(e);
     return (
       <ErrorPage
         title="Unable to fetch from server"

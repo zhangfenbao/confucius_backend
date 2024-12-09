@@ -13,7 +13,6 @@ from urllib.parse import quote_plus
 
 import typer
 from argon2 import PasswordHasher
-from common.database import construct_database_url
 from dotenv import load_dotenv
 from rich import box
 from rich.console import Console
@@ -513,7 +512,6 @@ def test_db(
 
 async def _test_db(as_admin=True):
     """Async function to test database connection."""
-
     if as_admin:
         console.print("Running Database Connection Test (Admin Role)", style="blue bold")
         # Set up the admin engine
@@ -524,6 +522,7 @@ async def _test_db(as_admin=True):
         )
     else:
         console.print("Running Database Connection Test (User Role)", style="blue bold")
+        from common.database import construct_database_url
         user_url = construct_database_url()
         engine_for_role = create_async_engine(
             user_url,

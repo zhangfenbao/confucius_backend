@@ -15,10 +15,16 @@ export async function getWorkspaces() {
     await apiClient.api.getRecentConversationsWithWorkspaceApiConversationsGet();
   const json = await response.json();
   if (!response.ok) {
+    console.error('API响应错误:', {
+      status: response.status,
+      statusText: response.statusText,
+      body: json
+    });
     throw new Error(
       `Error fetching workspaces: ${response.status} ${response.statusText}`
     );
   }
+  console.log(json);
   return (json as WorkspaceWithConversations[])
     .map((ws) => {
       const cleanedUp = structuredClone(ws);

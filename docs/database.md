@@ -41,18 +41,18 @@ SESAME_DATABASE_PORT=5432
 
 ### Supabase (supabase.com)
 
-You can find your database credentials URL in the Supabase dashboard at: `https://supabase.com/dashboard/project/<YOUR-PROJECT-ID>/settings/database`. **Note: Be sure to use the URI for `Mode: session` to get the correct port for session mode.**
+You can find your database credentials URL in the Supabase dashboard at: `https://supabase.com/dashboard/project/mpodkwxxymffedxjmsqv/settings/database`. **Note: Be sure to use the URI for `Mode: session` to get the correct port for session mode.**
 
 ![](./supabaseurl.png)
 
 Your database credentials in `.env` should look something like this:
 
 ```bash
-SESAME_DATABASE_ADMIN_USER="postgres.namespace"
+SESAME_DATABASE_ADMIN_USER="postgres.mpodkwxxymffedxjmsqv"
 SESAME_DATABASE_ADMIN_PASSWORD="password"
 SESAME_DATABASE_NAME="postgres"
-SESAME_DATABASE_HOST="region.pooler.supabase.com"
-SESAME_DATABASE_PORT=5432
+SESAME_DATABASE_HOST="aws-0-us-east-1.pooler.supabase.com"
+SESAME_DATABASE_PORT=6543
 ```
 
 #### Configuring the User Role
