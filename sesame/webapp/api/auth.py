@@ -27,6 +27,8 @@ router = APIRouter(
     prefix="/auth",
     include_in_schema=AuthProvider is not None,
     tags=["Auth"] if AuthProvider is not None else [],
+    # include_in_schema=True,
+    # tags=["Auth"],
 )
 
 

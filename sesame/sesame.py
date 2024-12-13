@@ -856,7 +856,7 @@ async def _create_user(email: Optional[str] = None, password: Optional[str] = No
 def run(
     host: str = typer.Option(None, "--host", "-h", help="Bind socket to this host."),
     port: int = typer.Option(None, "--port", "-p", help="Bind socket to this port."),
-    reload: bool = typer.Option(True, "--reload/--no-reload", help="Enable auto-reload."),
+    reload: bool = typer.Option(False, "--reload/--no-reload", help="Enable auto-reload."),
 ):
     """Run the FastAPI server using uvicorn."""
     load_dotenv(env_file)
