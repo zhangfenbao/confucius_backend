@@ -9,7 +9,7 @@ from .workspaces import router as workspaces_router
 
 router = APIRouter()
 
-router.include_router(auth_router, tags=["Auth"], include_in_schema=False)
+router.include_router(auth_router, tags=["Auth"], include_in_schema=True)
 router.include_router(tokens_router, tags=["Tokens"])
 router.include_router(workspaces_router, tags=["Workspaces"])
 router.include_router(conversations_router, tags=["Conversations"])
