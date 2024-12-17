@@ -693,3 +693,11 @@ class ServiceModel(BaseModel):
     model_config = {
         "from_attributes": True,
     }
+
+class FileParseResponse(BaseModel):
+    attachment_id: uuid.UUID
+    content: dict
+
+    model_config = {
+        "from_attributes": True,
+    }

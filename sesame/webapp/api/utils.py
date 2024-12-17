@@ -5,12 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from common.models import Attachment
 from webapp import get_db
 import uuid
-
+from typing import Optional
+from common.models import FileParseResponse
 router = APIRouter(prefix="/utils")
 
-class FileParseResponse(BaseModel):
-    attachment_id: uuid.UUID
-    content: dict
+# 定义默认的 UUID
+DEFAULT_MESSAGE_ID = uuid.UUID('00000000-0000-0000-0000-000000000000')
 
 @router.post(
     "/parse-file", 
@@ -18,7 +18,7 @@ class FileParseResponse(BaseModel):
     status_code=status.HTTP_200_OK
 )
 async def parse_file(
-    message_id: str,
+    message_id: Optional[uuid.UUID] = None,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
 ):
@@ -38,9 +38,12 @@ async def parse_file(
         # 解析PDF
         markdown_content = await parse_pdf_to_markdown(content)
         
+        # 如果 message_id 为 None，使用默认值
+        actual_message_id = message_id if message_id is not None else DEFAULT_MESSAGE_ID
+        
         # 创建附件记录
         attachment = await Attachment.create_attachment(
-            message_id=message_id,
+            message_id=actual_message_id,
             file_url=None,  # 暂时为None
             file_name=file.filename.split('.')[0],
             file_type=file.filename.split('.')[-1].lower(),
