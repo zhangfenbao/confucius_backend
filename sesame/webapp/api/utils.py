@@ -35,15 +35,14 @@ async def parse_file(
     # 获取数据库用户和权限信息
     debug_info = {}
     try:
-        async with db.begin():
-            result = await db.execute(text("SELECT current_user"))
-            debug_info['current_user'] = result.scalar()
-            
-            result = await db.execute(text("""
-                SELECT has_table_privilege(current_user, 'attachments', 'INSERT') as has_insert,
-                        has_table_privilege(current_user, 'attachments', 'SELECT') as has_select
-            """))
-            debug_info['privileges'] = dict(result.mappings().first())
+        result = await db.execute(text("SELECT current_user"))
+        debug_info['current_user'] = result.scalar()
+        
+        result = await db.execute(text("""
+            SELECT has_table_privilege(current_user, 'attachments', 'INSERT') as has_insert,
+                    has_table_privilege(current_user, 'attachments', 'SELECT') as has_select
+        """))
+        debug_info['privileges'] = dict(result.mappings().first())
     except Exception as debug_e:
         debug_info['error'] = str(debug_e)
     print(f"调试信息: {debug_info}")
