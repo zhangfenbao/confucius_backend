@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../server/common')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sesame/')))
 
 config = context.config
 
@@ -20,10 +20,10 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 
-database_module = importlib.import_module('database')
-config.set_main_option('sqlalchemy.url', database_module.DATABASE_URL)
+database_module = importlib.import_module('common.database')
+config.set_main_option('sqlalchemy.url', database_module.construct_database_url())
 
-models_modules = importlib.import_module('models')
+models_modules = importlib.import_module('common.models')
 target_metadata = models_modules.Base.metadata
 
 
