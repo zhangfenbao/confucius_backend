@@ -2,11 +2,12 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, status, Depends
 from pydantic import BaseModel
 from common.utils.parser import parse_pdf_to_markdown
 from sqlalchemy.ext.asyncio import AsyncSession
-from common.models import Attachment
+from common.models import Attachment, FileParseResponse
 from webapp import get_db
 import uuid
 from typing import Optional
-from common.models import FileParseResponse
+from sqlalchemy import text
+
 router = APIRouter(prefix="/utils")
 
 # 定义默认的 UUID
@@ -57,7 +58,22 @@ async def parse_file(
         )
         
     except Exception as e:
+        # 获取数据库用户和权限信息
+        debug_info = {}
+        try:
+            async with db.begin():
+                result = await db.execute(text("SELECT current_user"))
+                debug_info['current_user'] = result.scalar()
+                
+                result = await db.execute(text("""
+                    SELECT has_table_privilege(current_user, 'attachments', 'INSERT') as has_insert,
+                           has_table_privilege(current_user, 'attachments', 'SELECT') as has_select
+                """))
+                debug_info['privileges'] = dict(result.mappings().first())
+        except Exception as debug_e:
+            debug_info['error'] = str(debug_e)
+            
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail=f"PDF解析失败: {str(e)}"
+            detail=f"PDF解析失败: {str(e)}\n调试信息: {debug_info}"
         )
