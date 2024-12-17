@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from common.utils.parser import parse_pdf_to_markdown
 from sqlalchemy.ext.asyncio import AsyncSession
 from common.models import Attachment
-from common.database import get_db
+from webapp import get_db
 import uuid
 
 router = APIRouter(prefix="/utils")
