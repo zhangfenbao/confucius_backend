@@ -9,7 +9,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
+from urllib.parse import quote_plus
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../sesame/')))
 
@@ -19,9 +19,21 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+def construct_admin_database_url() -> str:
+    """Construct database URL using admin credentials."""
+    db_url = (
+        f"{os.getenv('SESAME_DATABASE_PROTOCOL', 'postgresql')}+"
+        f"{os.getenv('SESAME_DATABASE_ASYNC_DRIVER', 'asyncpg')}://"
+        f"{os.getenv('SESAME_DATABASE_ADMIN_USER', 'postgres')}:"
+        f"{quote_plus(os.getenv('SESAME_DATABASE_ADMIN_PASSWORD', ''))}@"
+        f"{os.getenv('SESAME_DATABASE_HOST', 'localhost')}:"
+        f"{os.getenv('SESAME_DATABASE_PORT', '5432')}/"
+        f"{os.getenv('SESAME_DATABASE_NAME', 'sesame')}"
+    )
+    return db_url
 
 database_module = importlib.import_module('common.database')
-config.set_main_option('sqlalchemy.url', database_module.construct_admin_database_url())
+config.set_main_option('sqlalchemy.url', construct_admin_database_url())
 
 models_modules = importlib.import_module('common.models')
 target_metadata = models_modules.Base.metadata
