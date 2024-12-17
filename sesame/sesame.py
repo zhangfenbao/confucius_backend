@@ -946,49 +946,51 @@ async def _update_table(table_name: str):
         echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
     )
 
-    with Status(f"[blue]正在更新表 {table_name}...", spinner="dots") as status:
-        try:
-            async with admin_engine.begin() as conn:
-                # 使用 run_sync 来检查表是否存在
-                has_table = await conn.run_sync(
-                    lambda sync_conn: inspect(sync_conn).has_table(table_name)
-                )
-                
-                if has_table:
-                    # 删除现有表
-                    await conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
-                    console.print(f"\n✓ 已删除现有表 {table_name}", style="yellow")
-                
-                # 创建新表
-                await conn.run_sync(lambda sync_conn: table_model.create(sync_conn))
-                
-            status.stop()
-            console.print(f"\n✓ 表 {table_name} 已成功更新!", style="green bold")
+    try:
+        console.print(f"\n开始更新表 {table_name}...", style="blue bold")
+        
+        async with admin_engine.begin() as conn:
+            # 检查表是否存在
+            console.print("检查表是否存在...", style="blue")
+            has_table = await conn.run_sync(
+                lambda sync_conn: inspect(sync_conn).has_table(table_name)
+            )
             
-            # 显示表的列信息
-            table = Table(show_header=True, box=box.ROUNDED)
-            table.add_column("列名", style="cyan")
-            table.add_column("类型", style="green")
-            table.add_column("可空", style="yellow")
+            if has_table:
+                console.print(f"删除现有表 {table_name}...", style="yellow")
+                await conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
+                console.print(f"✓ 已删除表 {table_name}", style="green")
             
-            for column in table_model.columns:
-                nullable = "是" if column.nullable else "否"
-                table.add_row(
-                    str(column.name),
-                    str(column.type),
-                    nullable
-                )
-            
-            console.print("\n表结构:", style="blue bold")
-            console.print(table)
-            
-        except Exception as e:
-            status.stop()
-            console.print(f"\n✗ 更新表失败", style="red bold")
-            console.print(f"错误: {str(e)}", style="red")
-            raise
-        finally:
-            await admin_engine.dispose()
+            # 创建新表
+            console.print(f"创建新表 {table_name}...", style="blue")
+            await conn.run_sync(lambda sync_conn: table_model.create(sync_conn))
+            console.print(f"✓ 已创建新表 {table_name}", style="green")
+        
+        console.print(f"\n✓ 表 {table_name} 更新成功!", style="green bold")
+        
+        # 显示表的列信息
+        table = Table(show_header=True, box=box.ROUNDED)
+        table.add_column("列名", style="cyan")
+        table.add_column("类型", style="green")
+        table.add_column("可空", style="yellow")
+        
+        for column in table_model.columns:
+            nullable = "是" if column.nullable else "否"
+            table.add_row(
+                str(column.name),
+                str(column.type),
+                nullable
+            )
+        
+        console.print("\n表结构:", style="blue bold")
+        console.print(table)
+        
+    except Exception as e:
+        console.print(f"\n✗ 更新表失败", style="red bold")
+        console.print(f"错误: {str(e)}", style="red")
+        raise
+    finally:
+        await admin_engine.dispose()
 
 
 def main():
