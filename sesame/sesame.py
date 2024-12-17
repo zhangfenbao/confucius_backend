@@ -1003,16 +1003,48 @@ def terminate():
     terminated = False
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            # 检查是否是uvicorn进程且运行的是我们的应用
-            if proc.info['name'] == 'uvicorn' and proc.info['cmdline']:
-                cmdline = ' '.join(proc.info['cmdline'])
-                if 'webapp.main:app' in cmdline:
-                    # 发送SIGTERM信号给进程
-                    console.print(f"发现服务器进程 (PID: {proc.info['pid']})", style="yellow")
-                    os.kill(proc.info['pid'], signal.SIGTERM)
-                    terminated = True
-                    console.print(f"✓ 已终止进程 {proc.info['pid']}", style="green")
+            # 检查进程信息
+            cmdline = proc.cmdline() if hasattr(proc, 'cmdline') else []
+            
+            # 更精确地匹配我们的uvicorn进程
+            is_our_uvicorn = (
+                len(cmdline) >= 2 and
+                'uvicorn' in cmdline[0] and 
+                'webapp.main:app' in cmdline and
+                ('--port' in cmdline or '--host' in cmdline)
+            )
+            
+            if is_our_uvicorn:
+                # 获取进程及其子进程
+                parent = psutil.Process(proc.pid)
+                children = parent.children(recursive=True)
+                
+                # 先终止子进程
+                for child in children:
+                    console.print(f"终止子进程 (PID: {child.pid})", style="yellow")
+                    child.terminate()
+                
+                # 等待子进程完全终止
+                psutil.wait_procs(children, timeout=3)
+                
+                # 终止父进程
+                console.print(f"终止主进程 (PID: {parent.pid})", style="yellow")
+                parent.terminate()
+                parent.wait(timeout=3)
+                
+                terminated = True
+                console.print(f"✓ 已终止进程组 {parent.pid}", style="green")
+                
+                # 确保进程真的被终止，如果没有则强制终止
+                if parent.is_running():
+                    console.print(f"进程 {parent.pid} 仍在运行，尝试强制终止...", style="yellow")
+                    parent.kill()
+                    console.print(f"✓ 已强制终止进程 {parent.pid}", style="green")
+                
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+        except Exception as e:
+            console.print(f"终止进程时发生错误: {str(e)}", style="red")
             continue
     
     if not terminated:
