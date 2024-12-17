@@ -1,22 +1,29 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, status, Depends
 from pydantic import BaseModel
 from common.utils.parser import parse_pdf_to_markdown
+from sqlalchemy.ext.asyncio import AsyncSession
+from common.models import Attachment
+from common.database import get_db
+import uuid
 
 router = APIRouter(prefix="/utils")
 
-class PDFParseResponse(BaseModel):
-    content: str
+class FileParseResponse(BaseModel):
+    attachment_id: uuid.UUID
+    content: dict
 
 @router.post(
     "/parse-file", 
-    response_model=PDFParseResponse,
+    response_model=FileParseResponse,
     status_code=status.HTTP_200_OK
 )
-async def parse_pdf(
+async def parse_file(
+    message_id: str,
     file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
 ):
     """
-    解析上传的PDF文件并返回Markdown格式的内容
+    解析上传的PDF文件，保存为附件并返回Markdown格式的内容
     """
     if not file.filename.lower().endswith('.pdf'):
         raise HTTPException(
@@ -25,13 +32,26 @@ async def parse_pdf(
         )
         
     try:
-        # 直接读取上传文件的内容到内存
+        # 读取文件内容
         content = await file.read()
         
         # 解析PDF
         markdown_content = await parse_pdf_to_markdown(content)
         
-        return PDFParseResponse(content=markdown_content)
+        # 创建附件记录
+        attachment = await Attachment.create_attachment(
+            message_id=message_id,
+            file_url=None,  # 暂时为None
+            file_name=file.filename.split('.')[0],
+            file_type=file.filename.split('.')[-1].lower(),
+            content={'content': markdown_content},
+            db=db
+        )
+        
+        return FileParseResponse(
+            content=markdown_content,
+            attachment_id=attachment.attachment_id
+        )
         
     except Exception as e:
         raise HTTPException(
