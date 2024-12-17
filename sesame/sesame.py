@@ -857,8 +857,8 @@ async def _create_user(email: Optional[str] = None, password: Optional[str] = No
 @app.command()
 @require_env_and_schema
 def run(
-    host: str = typer.Option(None, "--host", "-h", help="Bind socket to this host."),
-    port: int = typer.Option(None, "--port", "-p", help="Bind socket to this port."),
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Bind socket to this host."),
+    port: int = typer.Option(80, "--port", "-p", help="Bind socket to this port."),
     reload: bool = typer.Option(False, "--reload/--no-reload", help="Enable auto-reload."),
 ):
     """Run the FastAPI server using uvicorn."""
