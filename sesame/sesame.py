@@ -21,8 +21,9 @@ from rich.prompt import Confirm, Prompt
 from rich.status import Status
 from rich.syntax import Syntax
 from rich.table import Table
-from sqlalchemy import text
+from sqlalchemy import text, MetaData, inspect
 from sqlalchemy.ext.asyncio import create_async_engine
+from common.models import Base
 
 console = Console()
 app = typer.Typer(
@@ -907,6 +908,84 @@ def services():
 
     console.print("\nAvailable Services:", style="blue bold")
     console.print(ServiceFactory.get_service_info())
+
+
+@app.command()
+@require_env_and_schema
+def update_table(
+    table_name: str = typer.Option(..., "--table", "-t", help="表名称"),
+):
+    """删除并重新创建指定的数据库表"""
+    try:
+        load_dotenv(env_file)
+        asyncio.run(_update_table(table_name))
+    except Exception as e:
+        console.print(f"\n更新表时发生错误: {str(e)}", style="red bold")
+        raise typer.Exit(1)
+
+async def _update_table(table_name: str):
+    """异步函数用于更新指定的表"""
+    # 验证数据库连接
+    await _test_db(as_admin=True)
+    
+    # 检查表是否在 models 中定义
+    if table_name not in Base.metadata.tables:
+        console.print(f"\n错误: 表 '{table_name}' 在 models.py 中未定义", style="red bold")
+        console.print("\n可用的表:", style="blue bold")
+        for t in Base.metadata.tables:
+            console.print(f"  • {t}", style="blue")
+        raise typer.Exit(1)
+
+    # 获取表的 SQLAlchemy 定义
+    table_model = Base.metadata.tables[table_name]
+    
+    # 设置数据库引擎
+    admin_url = construct_admin_database_url()
+    admin_engine = create_async_engine(
+        admin_url,
+        echo=bool(int(os.getenv("SESAME_DATABASE_ECHO_OUTPUT", "0"))),
+    )
+
+    with Status(f"[blue]正在更新表 {table_name}...", spinner="dots") as status:
+        try:
+            async with admin_engine.begin() as conn:
+                # 检查表是否存在
+                inspector = inspect(admin_engine)
+                if await admin_engine.run_sync(lambda sync_conn: inspector.has_table(table_name)):
+                    # 删除现有表
+                    await conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
+                    console.print(f"\n✓ 已删除现有表 {table_name}", style="yellow")
+                
+                # 创建新表
+                await conn.run_sync(lambda sync_conn: table_model.create(sync_conn))
+                
+            status.stop()
+            console.print(f"\n✓ 表 {table_name} 已成功更新!", style="green bold")
+            
+            # 显示表的列信息
+            table = Table(show_header=True, box=box.ROUNDED)
+            table.add_column("列名", style="cyan")
+            table.add_column("类型", style="green")
+            table.add_column("可空", style="yellow")
+            
+            for column in table_model.columns:
+                nullable = "是" if column.nullable else "否"
+                table.add_row(
+                    str(column.name),
+                    str(column.type),
+                    nullable
+                )
+            
+            console.print("\n表结构:", style="blue bold")
+            console.print(table)
+            
+        except Exception as e:
+            status.stop()
+            console.print(f"\n✗ 更新表失败", style="red bold")
+            console.print(f"错误: {str(e)}", style="red")
+            raise
+        finally:
+            await admin_engine.dispose()
 
 
 def main():
