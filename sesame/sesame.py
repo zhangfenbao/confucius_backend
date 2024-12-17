@@ -24,6 +24,8 @@ from rich.table import Table
 from sqlalchemy import text, MetaData, inspect
 from sqlalchemy.ext.asyncio import create_async_engine
 from common.models import Base
+import psutil
+import signal
 
 console = Console()
 app = typer.Typer(
@@ -991,6 +993,32 @@ async def _update_table(table_name: str):
         raise
     finally:
         await admin_engine.dispose()
+
+
+@app.command()
+def terminate():
+    """终止所有运行中的FastAPI服务器进程"""
+    console.print("\n正在查找运行中的服务器进程...", style="blue bold")
+    
+    terminated = False
+    for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+        try:
+            # 检查是否是uvicorn进程且运行的是我们的应用
+            if proc.info['name'] == 'uvicorn' and proc.info['cmdline']:
+                cmdline = ' '.join(proc.info['cmdline'])
+                if 'webapp.main:app' in cmdline:
+                    # 发送SIGTERM信号给进程
+                    console.print(f"发现服务器进程 (PID: {proc.info['pid']})", style="yellow")
+                    os.kill(proc.info['pid'], signal.SIGTERM)
+                    terminated = True
+                    console.print(f"✓ 已终止进程 {proc.info['pid']}", style="green")
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+    
+    if not terminated:
+        console.print("未发现运行中的服务器进程", style="yellow")
+    else:
+        console.print("\n✓ 所有服务器进程已成功终止", style="green bold")
 
 
 def main():
