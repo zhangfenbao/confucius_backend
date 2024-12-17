@@ -31,7 +31,23 @@ async def parse_file(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="只支持PDF文件格式"
         )
-        
+    
+    # 获取数据库用户和权限信息
+    debug_info = {}
+    try:
+        async with db.begin():
+            result = await db.execute(text("SELECT current_user"))
+            debug_info['current_user'] = result.scalar()
+            
+            result = await db.execute(text("""
+                SELECT has_table_privilege(current_user, 'attachments', 'INSERT') as has_insert,
+                        has_table_privilege(current_user, 'attachments', 'SELECT') as has_select
+            """))
+            debug_info['privileges'] = dict(result.mappings().first())
+    except Exception as debug_e:
+        debug_info['error'] = str(debug_e)
+    print(f"调试信息: {debug_info}")
+
     try:
         # 读取文件内容
         content = await file.read()
@@ -58,22 +74,7 @@ async def parse_file(
         )
         
     except Exception as e:
-        # 获取数据库用户和权限信息
-        debug_info = {}
-        try:
-            async with db.begin():
-                result = await db.execute(text("SELECT current_user"))
-                debug_info['current_user'] = result.scalar()
-                
-                result = await db.execute(text("""
-                    SELECT has_table_privilege(current_user, 'attachments', 'INSERT') as has_insert,
-                           has_table_privilege(current_user, 'attachments', 'SELECT') as has_select
-                """))
-                debug_info['privileges'] = dict(result.mappings().first())
-        except Exception as debug_e:
-            debug_info['error'] = str(debug_e)
-            
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail=f"PDF解析失败: {str(e)}\n调试信息: {debug_info}"
+            detail=f"PDF解析失败: {str(e)}"
         )
