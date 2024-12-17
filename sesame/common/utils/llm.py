@@ -1,3 +1,6 @@
+import os
+from openai import OpenAI
+
 def llm_message_normalize(messages):
     # Track if input was a single message
     is_single = isinstance(messages, dict)
@@ -16,3 +19,6 @@ def llm_message_normalize(messages):
 
     # Return single message if input was single message
     return normalized_messages[0] if is_single else normalized_messages
+
+def get_llm_client():
+    return OpenAI(api_key=os.getenv("OPENAI_API_KEY"))

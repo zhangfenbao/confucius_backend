@@ -13,3 +13,5 @@ __pycache__/
 .vscode/**
 node_modules/
 wrangler.toml
+*.ipynb
+tests/
