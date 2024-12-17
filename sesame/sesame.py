@@ -860,6 +860,7 @@ def run(
     host: str = typer.Option("0.0.0.0", "--host", "-h", help="Bind socket to this host."),
     port: int = typer.Option(80, "--port", "-p", help="Bind socket to this port."),
     reload: bool = typer.Option(False, "--reload/--no-reload", help="Enable auto-reload."),
+    timeout: int = typer.Option(60, "--timeout", "-t", help="Request timeout in seconds."),
 ):
     """Run the FastAPI server using uvicorn."""
     load_dotenv(env_file)
@@ -874,6 +875,8 @@ def run(
             app_path,
             "--port",
             str(final_port),
+            "--timeout-keep-alive",
+            str(timeout),
         ]
 
         if host:
@@ -889,6 +892,7 @@ def run(
             console.print(f"Host: {host}", style="blue")
         console.print(f"Port: {final_port}", style="blue")
         console.print(f"Reload: {'enabled' if reload else 'disabled'}", style="blue")
+        console.print(f"Timeout: {timeout} seconds", style="blue")
         console.print("\nPress CTRL+C to stop the server\n", style="yellow")
 
         # Run uvicorn
