@@ -315,7 +315,7 @@ class Attachment(Base):
     message_id = Column(
         UUID(as_uuid=True),
         ForeignKey("messages.message_id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
     file_url = Column(String, nullable=True)
     file_name = Column(String(255), nullable=False)
