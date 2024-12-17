@@ -317,11 +317,11 @@ class Attachment(Base):
         ForeignKey("messages.message_id", ondelete="CASCADE"),
         nullable=False,
     )
-    file_url = Column(String, nullable=False)
+    file_url = Column(String, nullable=True)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-
+    content = Column(JSONB, nullable=False)
     message: Mapped["Message"] = relationship("Message", back_populates="attachments")
 
     __table_args__ = (Index("idx_attachments_message_id", "message_id"),)
@@ -333,6 +333,7 @@ class Attachment(Base):
         file_url: str,
         file_name: str,
         file_type: str,
+        content: dict,
         db: AsyncSession,
     ):
         new_attachment = cls(
@@ -340,6 +341,7 @@ class Attachment(Base):
             file_url=file_url,
             file_name=file_name,
             file_type=file_type,
+            content=content,
         )
         db.add(new_attachment)
         await db.commit()
