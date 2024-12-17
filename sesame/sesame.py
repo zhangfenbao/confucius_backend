@@ -971,6 +971,17 @@ async def _update_table(table_name: str):
             console.print(f"创建新表 {table_name}...", style="blue")
             await conn.run_sync(lambda sync_conn: table_model.create(sync_conn))
             console.print(f"✓ 已创建新表 {table_name}", style="green")
+
+            # 授予权限给应用数据库用户
+            db_user = os.getenv("SESAME_DATABASE_USER")
+            if db_user:
+                console.print(f"授予权限给用户 {db_user}...", style="blue")
+                grant_sql = f"""
+                    GRANT ALL PRIVILEGES ON TABLE {table_name} TO {db_user};
+                    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {db_user};
+                """
+                await conn.execute(text(grant_sql))
+                console.print(f"✓ 已授予权限给用户 {db_user}", style="green")
         
         console.print(f"\n✓ 表 {table_name} 更新成功!", style="green bold")
         
@@ -1010,7 +1021,7 @@ def terminate():
             # 检查进程信息
             cmdline = proc.cmdline() if hasattr(proc, 'cmdline') else []
             
-            # 匹配所有uvicorn进程
+            # 匹配所���uvicorn进程
             if len(cmdline) >= 1 and 'uvicorn' in str(cmdline):
                 try:
                     # 获取进程及其子进程
@@ -1037,7 +1048,7 @@ def terminate():
                     parent.kill()  # 直接使用kill
                     
                     terminated = True
-                    console.print(f"✓ 已终止进程组 {parent.pid}", style="green")
+                    console.print(f"✓ 已终止进��组 {parent.pid}", style="green")
                     
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     # 如果上述方法失败，尝试使用系统命令强制终止
