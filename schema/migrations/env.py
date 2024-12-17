@@ -21,7 +21,7 @@ if config.config_file_name is not None:
 
 
 database_module = importlib.import_module('common.database')
-config.set_main_option('sqlalchemy.url', database_module.construct_database_url())
+config.set_main_option('sqlalchemy.url', database_module.construct_admin_database_url())
 
 models_modules = importlib.import_module('common.models')
 target_metadata = models_modules.Base.metadata
