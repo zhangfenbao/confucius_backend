@@ -976,11 +976,13 @@ async def _update_table(table_name: str):
             db_user = os.getenv("SESAME_DATABASE_USER")
             if db_user:
                 console.print(f"授予权限给用户 {db_user}...", style="blue")
-                grant_sql = f"""
-                    GRANT ALL PRIVILEGES ON TABLE {table_name} TO {db_user};
-                    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {db_user};
-                """
-                await conn.execute(text(grant_sql))
+                # 分别执行两条 GRANT 语句
+                await conn.execute(
+                    text(f"GRANT ALL PRIVILEGES ON TABLE {table_name} TO {db_user}")
+                )
+                await conn.execute(
+                    text(f"GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO {db_user}")
+                )
                 console.print(f"✓ 已授予权限给用户 {db_user}", style="green")
         
         console.print(f"\n✓ 表 {table_name} 更新成功!", style="green bold")
@@ -1021,7 +1023,7 @@ def terminate():
             # 检查进程信息
             cmdline = proc.cmdline() if hasattr(proc, 'cmdline') else []
             
-            # 匹配所���uvicorn进程
+            # 匹配所uvicorn进程
             if len(cmdline) >= 1 and 'uvicorn' in str(cmdline):
                 try:
                     # 获取进程及其子进程
@@ -1048,7 +1050,7 @@ def terminate():
                     parent.kill()  # 直接使用kill
                     
                     terminated = True
-                    console.print(f"✓ 已终止进��组 {parent.pid}", style="green")
+                    console.print(f"✓ 已终止进程组 {parent.pid}", style="green")
                     
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     # 如果上述方法失败，尝试使用系统命令强制终止
@@ -1075,7 +1077,7 @@ def terminate():
     if not terminated:
         console.print("未发现运行中的服务器进程", style="yellow")
     else:
-        console.print("\n✓ 所有服务器进程已成功终止", style="green bold")
+        console.print("\n✓ 所有服务器进程已成功终��", style="green bold")
 
 
 def main():
