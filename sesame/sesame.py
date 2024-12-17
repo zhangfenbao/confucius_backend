@@ -949,9 +949,12 @@ async def _update_table(table_name: str):
     with Status(f"[blue]正在更新表 {table_name}...", spinner="dots") as status:
         try:
             async with admin_engine.begin() as conn:
-                # 检查表是否存在
-                inspector = inspect(admin_engine)
-                if await admin_engine.run_sync(lambda sync_conn: inspector.has_table(table_name)):
+                # 使用 run_sync 来检查表是否存在
+                has_table = await conn.run_sync(
+                    lambda sync_conn: inspect(sync_conn).has_table(table_name)
+                )
+                
+                if has_table:
                     # 删除现有表
                     await conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
                     console.print(f"\n✓ 已删除现有表 {table_name}", style="yellow")
