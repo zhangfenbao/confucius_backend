@@ -1006,46 +1006,56 @@ def terminate():
             # 检查进程信息
             cmdline = proc.cmdline() if hasattr(proc, 'cmdline') else []
             
-            # 更精确地匹配我们的uvicorn进程
-            is_our_uvicorn = (
-                len(cmdline) >= 2 and
-                'uvicorn' in cmdline[0] and 
-                'webapp.main:app' in cmdline and
-                ('--port' in cmdline or '--host' in cmdline)
-            )
-            
-            if is_our_uvicorn:
-                # 获取进程及其子进程
-                parent = psutil.Process(proc.pid)
-                children = parent.children(recursive=True)
-                
-                # 先终止子进程
-                for child in children:
-                    console.print(f"终止子进程 (PID: {child.pid})", style="yellow")
-                    child.terminate()
-                
-                # 等待子进程完全终止
-                psutil.wait_procs(children, timeout=3)
-                
-                # 终止父进程
-                console.print(f"终止主进程 (PID: {parent.pid})", style="yellow")
-                parent.terminate()
-                parent.wait(timeout=3)
-                
-                terminated = True
-                console.print(f"✓ 已终止进程组 {parent.pid}", style="green")
-                
-                # 确保进程真的被终止，如果没有则强制终止
-                if parent.is_running():
-                    console.print(f"进程 {parent.pid} 仍在运行，尝试强制终止...", style="yellow")
-                    parent.kill()
-                    console.print(f"✓ 已强制终止进程 {parent.pid}", style="green")
+            # 匹配所有uvicorn进程
+            if len(cmdline) >= 1 and 'uvicorn' in str(cmdline):
+                try:
+                    # 获取进程及其子进程
+                    parent = psutil.Process(proc.pid)
+                    
+                    # 显示进程信息
+                    console.print(f"\n发现uvicorn进程:", style="yellow")
+                    console.print(f"PID: {parent.pid}", style="yellow")
+                    console.print(f"命令: {' '.join(cmdline)}", style="yellow")
+                    
+                    # 获取所有子进程
+                    children = parent.children(recursive=True)
+                    
+                    # 先终止子进程
+                    for child in children:
+                        try:
+                            console.print(f"终止子进程 (PID: {child.pid})", style="yellow")
+                            child.kill()  # 直接使用kill而不是terminate
+                        except:
+                            pass
+                    
+                    # 直接强制终止父进程
+                    console.print(f"终止主进程 (PID: {parent.pid})", style="yellow")
+                    parent.kill()  # 直接使用kill
+                    
+                    terminated = True
+                    console.print(f"✓ 已终止进程组 {parent.pid}", style="green")
+                    
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    # 如果上述方法失败，尝试使用系统命令强制终止
+                    try:
+                        os.kill(proc.pid, signal.SIGKILL)
+                        console.print(f"✓ 已强制终止进程 {proc.pid}", style="green")
+                        terminated = True
+                    except:
+                        console.print(f"无法终止进程 {proc.pid}", style="red")
                 
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
         except Exception as e:
-            console.print(f"终止进程时发生错误: {str(e)}", style="red")
+            console.print(f"处理进程时发生错误: {str(e)}", style="red")
             continue
+    
+    # 最后再检查一次，确保所有uvicorn进程都被终止
+    try:
+        # 使用系统命令查找并终止所有残留的uvicorn进程
+        os.system("pkill -9 -f uvicorn")
+    except Exception as e:
+        console.print(f"清理残留进程时发生错误: {str(e)}", style="red")
     
     if not terminated:
         console.print("未发现运行中的服务器进程", style="yellow")
