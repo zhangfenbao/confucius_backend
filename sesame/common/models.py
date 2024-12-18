@@ -380,10 +380,25 @@ class Attachment(Base):
         attachment = result.scalar_one_or_none()
         if attachment:
             attachment.message_id = message_id
-            attachment.status = "linked"
             await db.commit()
             return attachment
         return None
+
+    @classmethod
+    async def get_pending_attachments(
+        cls,
+        conversation_id: uuid.UUID,
+        db: AsyncSession,
+    ):
+        result = await db.execute(
+            select(cls)
+            .where(
+                cls.conversation_id == conversation_id,
+                cls.message_id.is_(None)
+            )
+            .order_by(cls.created_at.desc())
+        )
+        return result.scalars().all()
 
 
 class Service(Base):
