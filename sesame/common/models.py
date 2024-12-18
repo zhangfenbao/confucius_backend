@@ -720,7 +720,7 @@ class ServiceModel(BaseModel):
 
 class FileParseResponse(BaseModel):
     attachment_id: uuid.UUID
-    content: Json
+    content: List[Any]
 
     model_config = {
         "from_attributes": True,
