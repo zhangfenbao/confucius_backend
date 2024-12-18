@@ -6,7 +6,6 @@ from .rtvi import router as rtvi_router
 from .services import router as services_router
 from .tokens import router as tokens_router
 from .workspaces import router as workspaces_router
-from .utils import router as utils_router
 
 router = APIRouter()
 
