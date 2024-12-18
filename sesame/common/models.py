@@ -350,6 +350,7 @@ class Attachment(Base):
     async def create_attachment(
         cls,
         conversation_id: uuid.UUID,
+        message_id: uuid.UUID | None,
         file_url: str,
         file_name: str,
         file_type: str,
@@ -358,6 +359,7 @@ class Attachment(Base):
     ):
         new_attachment = cls(
             conversation_id=conversation_id,
+            message_id=message_id,
             file_url=file_url,
             file_name=file_name,
             file_type=file_type,
@@ -383,22 +385,6 @@ class Attachment(Base):
             await db.commit()
             return attachment
         return None
-
-    @classmethod
-    async def get_pending_attachments(
-        cls,
-        conversation_id: uuid.UUID,
-        db: AsyncSession,
-    ):
-        result = await db.execute(
-            select(cls)
-            .where(
-                cls.conversation_id == conversation_id,
-                cls.message_id.is_(None)
-            )
-            .order_by(cls.created_at.desc())
-        )
-        return result.scalars().all()
 
 
 class Service(Base):

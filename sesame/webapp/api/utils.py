@@ -16,6 +16,7 @@ router = APIRouter(prefix="/utils")
     status_code=status.HTTP_200_OK
 )
 async def parse_file(
+    conversation_id: uuid.UUID,
     message_id: Optional[uuid.UUID] = None,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
@@ -38,6 +39,7 @@ async def parse_file(
         
         # 创建附件记录
         attachment = await Attachment.create_attachment(
+            conversation_id=conversation_id,
             message_id=message_id,
             file_url=None,  # 暂时为None
             file_name=file.filename.split('.')[0],
@@ -47,8 +49,8 @@ async def parse_file(
         )
         
         return FileParseResponse(
-            content=markdown_content,
-            attachment_id=attachment.attachment_id
+            attachment_id=attachment.attachment_id,
+            content=markdown_content
         )
         
     except Exception as e:
