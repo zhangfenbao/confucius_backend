@@ -232,65 +232,61 @@ USING (
 -- ========================
 CREATE TABLE IF NOT EXISTS attachments (
     attachment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    message_id UUID NOT NULL REFERENCES messages(message_id) ON DELETE CASCADE,
-    file_url TEXT NOT NULL,
+    conversation_id UUID NOT NULL REFERENCES conversations(conversation_id) ON DELETE CASCADE,
+    message_id UUID REFERENCES messages(message_id) ON DELETE SET NULL,
+    content JSONB NOT NULL DEFAULT '{}',
     file_name VARCHAR(255) NOT NULL,
     file_type VARCHAR(50) NOT NULL,
+    file_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Index to optimize queries on message_id for faster retrieval of attachments for a message
-CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments(message_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_conversation_id ON attachments(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_attachments_message_id ON attachments(message_id) WHERE message_id IS NOT NULL;
 
 -- Enable row-level security on the attachments table
-ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE attachments ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Allow users to select (retrieve) only attachments in their own workspaces
-CREATE POLICY user_can_access_their_attachments
-ON attachments
-USING (
-    message_id IN (
-        SELECT message_id FROM messages
-        WHERE conversation_id IN (
-            SELECT conversation_id FROM conversations
-            WHERE workspace_id IN (
-                SELECT workspace_id FROM workspaces WHERE user_id = get_current_user_id()
-            )
-        )
-    )
-);
+-- CREATE POLICY user_can_access_their_attachments
+-- ON attachments
+-- USING (
+--     conversation_id IN (
+--         SELECT conversation_id FROM conversations
+--         WHERE workspace_id IN (
+--             SELECT workspace_id FROM workspaces 
+--             WHERE user_id = get_current_user_id()
+--         )
+--     )
+-- );
 
 -- Policy: Allow users to insert attachments for messages they own
-CREATE POLICY user_can_insert_attachment
-ON attachments
-FOR INSERT
-WITH CHECK (
-    message_id IN (
-        SELECT message_id FROM messages
-        WHERE conversation_id IN (
-            SELECT conversation_id FROM conversations
-            WHERE workspace_id IN (
-                SELECT workspace_id FROM workspaces WHERE user_id = get_current_user_id()
-            )
-        )
-    )
-);
+-- CREATE POLICY user_can_insert_attachment
+-- ON attachments
+-- FOR INSERT
+-- WITH CHECK (
+--     conversation_id IN (
+--         SELECT conversation_id FROM conversations
+--         WHERE workspace_id IN (
+--             SELECT workspace_id FROM workspaces 
+--             WHERE user_id = get_current_user_id()
+--         )
+--     )
+-- );
 
 -- Policy: Allow users to delete their own attachments
-CREATE POLICY user_can_delete_their_attachments
-ON attachments
-FOR DELETE
-USING (
-    message_id IN (
-        SELECT message_id FROM messages
-        WHERE conversation_id IN (
-            SELECT conversation_id FROM conversations
-            WHERE workspace_id IN (
-                SELECT workspace_id FROM workspaces WHERE user_id = get_current_user_id()
-            )
-        )
-    )
-);
+-- CREATE POLICY user_can_delete_their_attachments
+-- ON attachments
+-- FOR DELETE
+-- USING (
+--     conversation_id IN (
+--         SELECT conversation_id FROM conversations
+--         WHERE workspace_id IN (
+--             SELECT workspace_id FROM workspaces 
+--             WHERE user_id = get_current_user_id()
+--         )
+--     )
+-- );
 
 -- ========================
 -- Services Table
