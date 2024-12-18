@@ -317,21 +317,21 @@ class Attachment(Base):
 
     attachment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     conversation_id = Column(
-        UUID(as_uuid=True),
+        UUID(as_uuid=True), 
         ForeignKey("conversations.conversation_id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=False
     )
     message_id = Column(
         UUID(as_uuid=True),
         ForeignKey("messages.message_id", ondelete="SET NULL"),
-        nullable=True,
+        nullable=True
     )
     file_url = Column(String, nullable=True)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     content = Column(JSONB, nullable=False)
-    
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
     conversation: Mapped["Conversation"] = relationship(
         "Conversation", 
         back_populates="attachments"
