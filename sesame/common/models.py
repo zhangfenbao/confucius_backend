@@ -314,9 +314,13 @@ class Attachment(Base):
     attachment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     message_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("messages.message_id", ondelete="CASCADE"),
         nullable=True,
     )
+    # message_id = Column(
+    #     UUID(as_uuid=True),
+    #     ForeignKey("messages.message_id", ondelete="CASCADE"),
+    #     nullable=True,
+    # )
     file_url = Column(String, nullable=True)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
