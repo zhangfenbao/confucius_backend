@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 from bots.tasks.summarize import generate_conversation_summary
 from common.auth import Auth, get_db_with_token
@@ -13,8 +13,12 @@ from common.models import (
     MessageWithConversationModel,
     Workspace,
     WorkspaceWithConversations,
+    Attachment,
+    AttachmentModel,
+    FileParseResponse,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from common.utils.parser import parse_pdf_to_markdown
+from fastapi import APIRouter, Depends, HTTPException, Query, status, File, UploadFile
 from pydantic import ValidationError
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -288,3 +292,73 @@ async def summarize_conversation(
         return ConversationModel.model_validate(conversation)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/{conversation_id}/attachments",
+    response_model=FileParseResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_attachment(
+    conversation_id: str,
+    message_id: Optional[str] = None,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    为会话创建附件,解析上传的PDF文件并返回Markdown格式的内容
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="目前只支持PDF文件格式"
+        )
+
+    try:
+        # 读取文件内容
+        content = await file.read()
+        
+        # 解析PDF
+        markdown_content = await parse_pdf_to_markdown(content)
+        
+        # 创建附件记录
+        attachment = await Attachment.create_attachment(
+            conversation_id=conversation_id,
+            message_id=message_id,
+            file_url=None,  # 暂时为None
+            file_name=file.filename.split('.')[0],
+            file_type=file.filename.split('.')[-1].lower(),
+            content=markdown_content,
+            db=db
+        )
+        
+        return FileParseResponse(
+            attachment_id=attachment.attachment_id,
+            content=markdown_content
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"PDF解析失败: {str(e)}"
+        )
+
+
+@router.get(
+    "/{conversation_id}/attachments",
+    response_model=list[AttachmentModel],
+    name="Get Conversation Attachments"
+)
+async def get_conversation_attachments(
+    conversation_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """获取会话的所有附件"""
+    result = await db.execute(
+        select(Attachment)
+        .where(Attachment.conversation_id == conversation_id)
+        .order_by(Attachment.created_at.desc())
+    )
+    
+    attachments = result.scalars().all()
+    return [AttachmentModel.model_validate(attachment) for attachment in attachments]

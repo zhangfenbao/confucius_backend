@@ -16,4 +16,4 @@ router.include_router(workspaces_router, tags=["Workspaces"])
 router.include_router(conversations_router, tags=["Conversations"])
 router.include_router(services_router, tags=["Services"])
 router.include_router(rtvi_router, tags=["RTVI"])
-router.include_router(utils_router, tags=["Utils"])
+

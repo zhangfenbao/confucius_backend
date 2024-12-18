@@ -316,16 +316,8 @@ class Attachment(Base):
     __tablename__ = "attachments"
 
     attachment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(
-        UUID(as_uuid=True), 
-        ForeignKey("conversations.conversation_id", ondelete="CASCADE"),
-        nullable=False
-    )
-    message_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("messages.message_id", ondelete="SET NULL"),
-        nullable=True
-    )
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.conversation_id"), nullable=False)
+    message_id = Column(UUID(as_uuid=True), ForeignKey("messages.message_id", ondelete="SET NULL"), nullable=True)
     file_url = Column(String, nullable=True)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
@@ -721,6 +713,20 @@ class ServiceModel(BaseModel):
 class FileParseResponse(BaseModel):
     attachment_id: uuid.UUID
     content: List[Any]
+
+    model_config = {
+        "from_attributes": True,
+    }
+
+class AttachmentModel(BaseModel):
+    attachment_id: uuid.UUID
+    conversation_id: uuid.UUID
+    message_id: Optional[uuid.UUID]
+    file_url: Optional[str]
+    file_name: str
+    file_type: str
+    content: dict
+    created_at: datetime
 
     model_config = {
         "from_attributes": True,
