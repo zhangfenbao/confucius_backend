@@ -725,7 +725,7 @@ class AttachmentModel(BaseModel):
     file_url: Optional[str]
     file_name: str
     file_type: str
-    content: dict
+    content: List[Any]
     created_at: datetime
 
     model_config = {
