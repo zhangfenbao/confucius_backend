@@ -7,7 +7,7 @@ from typing import Any, List, Optional
 from common.encryption import decrypt_with_secret
 from common.errors import ServiceConfigurationError
 from common.service_factory import ServiceType
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, Json
 from sqlalchemy import (
     TIMESTAMP,
     Boolean,
@@ -720,7 +720,7 @@ class ServiceModel(BaseModel):
 
 class FileParseResponse(BaseModel):
     attachment_id: uuid.UUID
-    content: dict
+    content: Json
 
     model_config = {
         "from_attributes": True,
