@@ -214,6 +214,10 @@ class Conversation(Base):
 
     workspace: Mapped["Workspace"] = relationship("Workspace", back_populates="conversations")
     messages: Mapped[List["Message"]] = relationship("Message", back_populates="conversation")
+    attachments: Mapped[List["Attachment"]] = relationship(
+        "Attachment", 
+        back_populates="conversation"
+    )
 
     __table_args__ = (
         Index("idx_conversations_language_code", "language_code"),
@@ -312,28 +316,40 @@ class Attachment(Base):
     __tablename__ = "attachments"
 
     attachment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("conversations.conversation_id", ondelete="CASCADE"),
+        nullable=False,
+    )
     message_id = Column(
         UUID(as_uuid=True),
+        ForeignKey("messages.message_id", ondelete="SET NULL"),
         nullable=True,
     )
-    # message_id = Column(
-    #     UUID(as_uuid=True),
-    #     ForeignKey("messages.message_id", ondelete="CASCADE"),
-    #     nullable=True,
-    # )
     file_url = Column(String, nullable=True)
     file_name = Column(String(255), nullable=False)
     file_type = Column(String(50), nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     content = Column(JSONB, nullable=False)
-    message: Mapped["Message"] = relationship("Message", back_populates="attachments")
+    
+    conversation: Mapped["Conversation"] = relationship(
+        "Conversation", 
+        back_populates="attachments"
+    )
+    message: Mapped[Optional["Message"]] = relationship(
+        "Message", 
+        back_populates="attachments"
+    )
 
-    __table_args__ = (Index("idx_attachments_message_id", "message_id"),)
+    __table_args__ = (
+        Index("idx_attachments_conversation_id", "conversation_id"),
+        Index("idx_attachments_message_id", "message_id"),
+    )
 
     @classmethod
     async def create_attachment(
         cls,
-        message_id: uuid.UUID,
+        conversation_id: uuid.UUID,
         file_url: str,
         file_name: str,
         file_type: str,
@@ -341,7 +357,7 @@ class Attachment(Base):
         db: AsyncSession,
     ):
         new_attachment = cls(
-            message_id=message_id,
+            conversation_id=conversation_id,
             file_url=file_url,
             file_name=file_name,
             file_type=file_type,
@@ -352,19 +368,22 @@ class Attachment(Base):
         return new_attachment
 
     @classmethod
-    async def get_attachments_by_message_id(cls, message_id: uuid.UUID, db: AsyncSession):
-        result = await db.execute(select(cls).where(cls.message_id == message_id))
-        return result.scalars().all()
-
-    @classmethod
-    async def delete_attachment(cls, attachment_id: uuid.UUID, db: AsyncSession):
-        result = await db.execute(select(cls).where(cls.attachment_id == attachment_id))
+    async def link_to_message(
+        cls,
+        attachment_id: uuid.UUID,
+        message_id: uuid.UUID,
+        db: AsyncSession,
+    ):
+        result = await db.execute(
+            select(cls).where(cls.attachment_id == attachment_id)
+        )
         attachment = result.scalar_one_or_none()
         if attachment:
-            await db.delete(attachment)
+            attachment.message_id = message_id
+            attachment.status = "linked"
             await db.commit()
-            return True
-        return False
+            return attachment
+        return None
 
 
 class Service(Base):
