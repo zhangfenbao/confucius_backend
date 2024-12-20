@@ -117,20 +117,46 @@ async def http_bot_pipeline(
             logger.error(f"Error storing messages: {e}")
             raise e
         
-    # async def merge_messages_with_attachment(messages: list[Any], attachment_id: str):
-    #     attachment = await Attachment.get_attachment_by_id(attachment_id, db)
-    #     return await merge_messages_with_attachment(messages, attachment)
+    async def merge_attachment(message: RTVIMessage) -> RTVIMessage:
+        """
+        合并附件内容到RTVIMessage中
+        """
+        try:
+            # 从message中提取参数
+            arguments = message.data["arguments"]
+            messages = [arg["value"] for arg in arguments if arg["name"] == "messages"][0]
+            attachment_id = [arg["value"] for arg in arguments if arg["name"] == "attachment_id"][0]
+            
+            # 获取附件并合并
+            attachment = await Attachment.get_attachment_by_id(attachment_id, db)
+            merged_messages = await merge_messages_with_attachment(messages, attachment)
+             
+            message.data["arguments"] = [
+                {"name": "messages", "value": merged_messages},
+            ]
+            
+            return RTVIMessage(
+                type=message.type,
+                id=message.id,
+                data=message.data
+            )
+        except Exception as e:
+            logger.error(f"Error merging attachment: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error merging attachment: {e}",
+            )
 
     @rtvi.event_handler("on_bot_started")
     async def on_bot_started(rtvi: RTVIProcessor):
-        logger.debug(f"on_bot_started: {params.actions}")
         for message in params.actions:
-            # if message.action == "append_to_messages_with_attachment":
-            #     messages = await merge_messages_with_attachment(message.data.messages, message.data.attachment_id)
-            #     await rtvi.handle_message(message)
-            # else:
-            logger.debug(f"on_bot_started message: {message}")
-            await rtvi.handle_message(message)
+            if message.action == "action" \
+                and "action" in message.data \
+                and message.data["action"] == "append_to_messages_with_attachment":
+                merged_message = await merge_attachment(message)
+                await rtvi.handle_message(merged_message)
+            else:
+                await rtvi.handle_message(message)
 
         # This is a single turn, so we just push an action to stop the running
         # pipeline task.
