@@ -21,8 +21,8 @@ logger = get_webapp_logger()
 
 for logger_name in logging.root.manager.loggerDict.keys():
     if logger_name.startswith('sqlalchemy'):
-        logging.getLogger(logger_name).setLevel(logging.ERROR)
-
+        logging.getLogger(logger_name).disabled = True
+        
 default_session_factory = DatabaseSessionFactory()
 
 # ========================
