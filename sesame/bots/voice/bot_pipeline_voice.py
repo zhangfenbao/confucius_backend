@@ -5,7 +5,7 @@ from bots.rtvi import create_rtvi_processor
 from bots.types import BotCallbacks, BotConfig, BotParams
 from common.models import Conversation, Message, Service
 from common.service_factory import ServiceFactory, ServiceType
-from loguru import logger
+from common.utils.logger import get_bot_logger
 from openai._types import NOT_GIVEN
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +25,13 @@ from pipecat.services.ai_services import (
     OpenAILLMContext,
 )
 from pipecat.transports.services.daily import DailyParams, DailyTransport
+import logging
 
+logger = get_bot_logger()
+
+for logger_name in logging.root.manager.loggerDict.keys():
+    if logger_name.startswith('sqlalchemy'):
+        logging.getLogger(logger_name).setLevel(logging.ERROR)
 
 async def voice_bot_pipeline(
     params: BotParams,
