@@ -12,12 +12,14 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from common.utils.logger import get_webapp_logger
 from sqlalchemy import text
-
+import logging
 from .api import router as api_router
 
 load_dotenv(override=True)
 
 logger = get_webapp_logger()
+
+logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
 
 default_session_factory = DatabaseSessionFactory()
 
