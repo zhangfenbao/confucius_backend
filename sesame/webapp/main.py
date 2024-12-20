@@ -19,7 +19,7 @@ load_dotenv(override=True)
 
 logger = get_webapp_logger()
 
-logging.getLogger('sqlalchemy').setLevel(logging.ERROR)
+logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 default_session_factory = DatabaseSessionFactory()
 
