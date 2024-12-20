@@ -49,17 +49,14 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
     # 验证输入messages格式
     input_texts = []
     for msg in messages:
-        if not isinstance(msg, dict) or 'type' not in msg:
+        if not isinstance(msg, dict) or 'content' not in msg:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid message format"
+                detail=f"Invalid message format: {msg}"
             )
-        if msg['type'] != 'text':
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Messages can only contain text type"
-            )
-        input_texts.append(msg['text'])
+        if 'type' not in msg['content'] or msg['content']['type'] != 'text':
+            continue
+        input_texts.append(msg['content']['text'])
     
     # 验证attachment
     if not attachment or not attachment.content:
@@ -120,6 +117,6 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
             detail=f"Error processing attachment content: {str(e)}"
         )
     
-    return result_messages
+    return [{"role": "user", "content": result_messages}]
 
 
