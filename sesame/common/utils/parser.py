@@ -5,6 +5,11 @@ import re
 import json
 from typing import List, Dict, Any
 from fastapi import HTTPException, status
+from loguru import logger
+import sys
+import os
+
+logger.add(sys.stderr, level=os.getenv("SESAME_BOT_LOG_LEVEL", "INFO"))
 
 async def parse_pdf_to_markdown(pdf_bytes: bytes) -> list:
     """
@@ -71,7 +76,7 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
     
     try:
         # 处理content中的每一页
-        for page_content in attachment.content:
+        for page_index, page_content in enumerate(attachment.content, 1):
             # 使用正则表达式找出所有base64图片
             base64_pattern = r'!\[.*?\]\(data:image\/[^;]+;base64,[^)]+\)'
             image_matches = re.finditer(base64_pattern, page_content)
@@ -97,14 +102,17 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
             
             # 将处理后的文本添加到页面列表中
             if processed_content.strip():
-                processed_pages.append(processed_content.strip())
+                processed_pages.append({
+                    'page': page_index,
+                    'content': processed_content.strip()
+                })
         
         # 将所有页面内容转换为JSON字符串
         content_json = json.dumps(processed_pages, ensure_ascii=False)
         
         # 组合输入文本和内容JSON
         combined_text = f"{' '.join(input_texts)}\n\n{content_json}"
-        
+        logger.info(f"input_texts: {input_texts}")
         # 添加组合后的文本消息
         result_messages.append({
             'type': 'text',
