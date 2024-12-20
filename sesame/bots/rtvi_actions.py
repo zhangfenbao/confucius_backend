@@ -164,6 +164,17 @@ async def register_rtvi_actions(rtvi: RTVIProcessor, user_aggregator: LLMUserCon
         handler=action_llm_append_to_messages_handler,
     )
 
+    action_llm_append_to_messages_with_attachment = RTVIAction(
+        service="llm",
+        action="append_to_messages_with_attachment",
+        result="bool",
+        arguments=[
+            RTVIActionArgument(name="messages", type="array"),
+            RTVIActionArgument(name="attachment_id", type="string"),
+        ],
+        handler=action_llm_append_to_messages_handler,
+    )
+
     action_tts_say = RTVIAction(
         service="tts",
         action="say",
@@ -197,3 +208,4 @@ async def register_rtvi_actions(rtvi: RTVIProcessor, user_aggregator: LLMUserCon
     rtvi.register_action(action_tts_say)
     rtvi.register_action(action_tts_interrupt)
     rtvi.register_action(action_llm_function_result)
+    rtvi.register_action(action_llm_append_to_messages_with_attachment)

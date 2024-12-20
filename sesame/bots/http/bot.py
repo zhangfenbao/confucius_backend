@@ -1,11 +1,15 @@
 import asyncio
 from typing import Any, AsyncGenerator, Tuple, cast
+import re
+import json
+from typing import List, Dict
+from fastapi import HTTPException
 
 from bots.http.frame_serializer import BotFrameSerializer
 from bots.persistent_context import PersistentContext
 from bots.rtvi import create_rtvi_processor
 from bots.types import BotConfig, BotParams
-from common.models import Message, Service
+from common.models import Attachment, Message, Service
 from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
 from loguru import logger
@@ -23,6 +27,7 @@ from pipecat.processors.frameworks.rtvi import (
     RTVIProcessor,
 )
 from pipecat.services.ai_services import LLMService, OpenAILLMContext
+from common.utils.parser import merge_messages_with_attachment
 
 
 async def http_bot_pipeline(
@@ -108,11 +113,20 @@ async def http_bot_pipeline(
         except Exception as e:
             logger.error(f"Error storing messages: {e}")
             raise e
+        
+    # async def merge_messages_with_attachment(messages: list[Any], attachment_id: str):
+    #     attachment = await Attachment.get_attachment_by_id(attachment_id, db)
+    #     return await merge_messages_with_attachment(messages, attachment)
 
     @rtvi.event_handler("on_bot_started")
     async def on_bot_started(rtvi: RTVIProcessor):
+        logger.debug(f"on_bot_started: {params.actions}")
         for message in params.actions:
-            await rtvi.handle_message(message)
+            if message.action == "append_to_messages_with_attachment":
+                messages = await merge_messages_with_attachment(message.data.messages, message.data.attachment_id)
+                await rtvi.handle_message(message)
+            else:
+                await rtvi.handle_message(message)
 
         # This is a single turn, so we just push an action to stop the running
         # pipeline task.

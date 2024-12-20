@@ -346,7 +346,7 @@ class Attachment(Base):
         file_url: str,
         file_name: str,
         file_type: str,
-        content: dict,
+        content: List[Any],
         db: AsyncSession,
     ):
         new_attachment = cls(
@@ -360,6 +360,13 @@ class Attachment(Base):
         db.add(new_attachment)
         await db.commit()
         return new_attachment
+    
+    @classmethod
+    async def get_attachment_by_id(cls, attachment_id: str, db: AsyncSession):
+        result = await db.execute(
+            select(cls).where(Attachment.attachment_id == attachment_id)
+        )
+        return result.scalar_one_or_none()
 
     @classmethod
     async def link_to_message(
