@@ -5,9 +5,9 @@ import re
 import json
 from typing import List, Dict, Any
 from fastapi import HTTPException, status
-from common.utils.logger import get_logger
+from common.utils.logger import get_webapp_logger
 
-logger = get_logger()
+logger = get_webapp_logger()
 
 async def parse_pdf_to_markdown(pdf_bytes: bytes) -> list:
     """

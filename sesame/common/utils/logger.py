@@ -2,15 +2,29 @@ import sys
 import os
 from loguru import logger
 
-_logger_initialized = False
+_bot_logger_initialized = False
+_webapp_logger_initialized = False
 
-def get_logger():
-    global _logger_initialized
-    if not _logger_initialized:
+def get_bot_logger():
+    global _bot_logger_initialized
+    if not _bot_logger_initialized:
         try:
             logger.remove()
         except ValueError:
             pass
         logger.add(sys.stderr, level=os.getenv("SESAME_BOT_LOG_LEVEL", "DEBUG"))
-        _logger_initialized = True
+        _bot_logger_initialized = True
     return logger
+
+def get_webapp_logger():
+    # 创建一个新的 logger 实例
+    webapp_logger = logger.bind(context="webapp")
+    global _webapp_logger_initialized
+    if not _webapp_logger_initialized:
+        try:
+            webapp_logger.remove()
+        except ValueError:
+            pass
+        webapp_logger.add(sys.stderr, level=os.getenv("SESAME_WEBAPP_LOG_LEVEL", "INFO"))
+        _webapp_logger_initialized = True
+    return webapp_logger

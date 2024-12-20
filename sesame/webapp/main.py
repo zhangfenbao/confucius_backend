@@ -10,16 +10,14 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from loguru import logger
+from common.utils.logger import get_webapp_logger
 from sqlalchemy import text
 
 from .api import router as api_router
 
 load_dotenv(override=True)
 
-logger.remove(0)
-logger.add(sys.stderr, level=os.getenv("SESAME_WEBAPP_LOG_LEVEL", "DEBUG"))
-
+logger = get_webapp_logger()
 
 default_session_factory = DatabaseSessionFactory()
 
