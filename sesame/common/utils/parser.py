@@ -52,6 +52,7 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
         List[Dict]: 合并后的消息列表
     """
     # 验证输入messages格式
+    logger.info(f"messages: {messages}")
     input_texts = []
     for msg in messages:
         if not isinstance(msg, dict) or 'content' not in msg:
@@ -112,6 +113,7 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
         
         # 组合输入文本和内容JSON
         combined_text = f"{' '.join(input_texts)}\n\n{content_json}"
+
         logger.info(f"input_texts: {input_texts}")
         # 添加组合后的文本消息
         result_messages.append({
