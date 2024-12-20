@@ -27,9 +27,9 @@ from pipecat.processors.frameworks.rtvi import (
 )
 from pipecat.services.ai_services import LLMService, OpenAILLMContext
 from common.utils.parser import merge_messages_with_attachment
-from common.utils.logger import get_logger
+from common.utils.logger import get_bot_logger
 
-logger = get_logger()
+logger = get_bot_logger()
 
 async def http_bot_pipeline(
     params: BotParams,
