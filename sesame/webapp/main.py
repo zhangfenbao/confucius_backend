@@ -19,14 +19,9 @@ load_dotenv(override=True)
 
 logger = get_webapp_logger()
 
-def list_all_loggers():
-    loggers = [logging.getLogger(name) for name in logging.root.manager.loggerDict.keys()]
-    return [logger.name for logger in loggers]
-
-# 打印所有日志记录器名称
-logger_names = list_all_loggers()
-logger.info(f"Active loggers: {logger_names}")
-logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+for logger_name in logging.root.manager.loggerDict.keys():
+    if logger_name.startswith('sqlalchemy'):
+        logging.getLogger(logger_name).setLevel(logging.ERROR)
 
 default_session_factory = DatabaseSessionFactory()
 
