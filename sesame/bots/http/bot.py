@@ -150,7 +150,7 @@ async def http_bot_pipeline(
     @rtvi.event_handler("on_bot_started")
     async def on_bot_started(rtvi: RTVIProcessor):
         for message in params.actions:
-            if message.action == "action" \
+            if message.type == "action" \
                 and "action" in message.data \
                 and message.data["action"] == "append_to_messages_with_attachment":
                 merged_message = await merge_attachment(message)
