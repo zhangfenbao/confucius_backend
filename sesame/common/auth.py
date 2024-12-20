@@ -22,7 +22,7 @@ class Auth:
 
 async def authenticate(token: str, session: AsyncSession) -> Auth:
     result = await Token.get_token(token, session)
-    logger.info(f"authenticate result: {result.model_dump()}")
+    logger.info(f"authenticate result: {result.user_id} {result.token} {result.revoked} {result.expires_at}")
     if not result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
