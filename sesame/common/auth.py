@@ -7,6 +7,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+from common.utils.logger import get_webapp_logger
+
+logger = get_webapp_logger()
 
 bearer_scheme = HTTPBearer()
 default_session_factory = DatabaseSessionFactory()
@@ -19,7 +22,7 @@ class Auth:
 
 async def authenticate(token: str, session: AsyncSession) -> Auth:
     result = await Token.get_token(token, session)
-
+    logger.info(f"authenticate result: {result}")
     if not result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
