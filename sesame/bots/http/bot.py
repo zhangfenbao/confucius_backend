@@ -12,7 +12,6 @@ from bots.types import BotConfig, BotParams
 from common.models import Attachment, Message, Service
 from common.service_factory import ServiceFactory, ServiceType
 from fastapi import HTTPException, status
-from loguru import logger
 from openai._types import NOT_GIVEN
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,10 +27,9 @@ from pipecat.processors.frameworks.rtvi import (
 )
 from pipecat.services.ai_services import LLMService, OpenAILLMContext
 from common.utils.parser import merge_messages_with_attachment
-import sys
-import os
+from common.utils.logger import get_logger
 
-logger.add(sys.stderr, level=os.getenv("SESAME_BOT_LOG_LEVEL", "DEBUG"))
+logger = get_logger()
 
 async def http_bot_pipeline(
     params: BotParams,

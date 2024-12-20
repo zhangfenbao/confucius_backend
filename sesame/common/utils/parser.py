@@ -5,11 +5,9 @@ import re
 import json
 from typing import List, Dict, Any
 from fastapi import HTTPException, status
-from loguru import logger
-import sys
-import os
+from common.utils.logger import get_logger
 
-logger.add(sys.stderr, level=os.getenv("SESAME_BOT_LOG_LEVEL", "INFO"))
+logger = get_logger()
 
 async def parse_pdf_to_markdown(pdf_bytes: bytes) -> list:
     """
@@ -63,7 +61,7 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
         if 'type' not in msg['content'] or msg['content']['type'] != 'text':
             continue
         input_texts.append(msg['content']['text'])
-    
+    logger.info(f"input_texts: {input_texts}")
     # 验证attachment
     if not attachment or not attachment.content:
         raise HTTPException(
