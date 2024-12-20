@@ -130,7 +130,7 @@ async def http_bot_pipeline(
             # 获取附件并合并
             attachment = await Attachment.get_attachment_by_id(attachment_id, db)
             merged_messages = await merge_messages_with_attachment(messages, attachment)
-            logger.debug(f"merged_messages: {merged_messages}")
+            logger.info(f"before merged_messages: {messages}")
             message.data["arguments"] = [
                 {"name": "messages", "value": merged_messages},
             ]
