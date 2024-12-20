@@ -122,11 +122,12 @@ async def http_bot_pipeline(
     async def on_bot_started(rtvi: RTVIProcessor):
         logger.debug(f"on_bot_started: {params.actions}")
         for message in params.actions:
-            if message.action == "append_to_messages_with_attachment":
-                messages = await merge_messages_with_attachment(message.data.messages, message.data.attachment_id)
-                await rtvi.handle_message(message)
-            else:
-                await rtvi.handle_message(message)
+            # if message.action == "append_to_messages_with_attachment":
+            #     messages = await merge_messages_with_attachment(message.data.messages, message.data.attachment_id)
+            #     await rtvi.handle_message(message)
+            # else:
+            logger.debug(f"on_bot_started message: {message}")
+            await rtvi.handle_message(message)
 
         # This is a single turn, so we just push an action to stop the running
         # pipeline task.
