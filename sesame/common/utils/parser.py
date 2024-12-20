@@ -58,9 +58,11 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid message format: {msg}"
             )
-        if 'type' not in msg['content'] or msg['content']['type'] != 'text':
-            continue
-        input_texts.append(msg['content']['text'])
+        
+        for content_item in msg['content']:
+            if isinstance(content_item, dict) and content_item.get('type') == 'text':
+                input_texts.append(content_item['text'])
+        
     logger.info(f"input_texts: {input_texts}")
     # 验证attachment
     if not attachment or not attachment.content:
@@ -110,9 +112,8 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
         content_json = json.dumps(processed_pages, ensure_ascii=False)
         
         # 组合输入文本和内容JSON
-        combined_text = f"{' '.join(input_texts)}\n\n{content_json}"
+        combined_text = f"{' '.join(input_texts)}\n\nwith uploaded file:\n```json\n{content_json}\n```"
 
-        logger.info(f"input_texts: {input_texts}")
         # 添加组合后的文本消息
         result_messages.append({
             'type': 'text',
