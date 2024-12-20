@@ -31,8 +31,8 @@ logger = get_bot_logger()
 
 for logger_name in logging.root.manager.loggerDict.keys():
     if logger_name.startswith('sqlalchemy'):
-        logging.getLogger(logger_name).setLevel(logging.ERROR)
-
+        logging.getLogger(logger_name).disabled = True
+        
 async def voice_bot_pipeline(
     params: BotParams,
     config: BotConfig,
