@@ -169,7 +169,7 @@ async def connect(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Missing API key for transport service",
         )
-
+    logger.info(f"Transport API key: {transport_api_key}")
     transport_api_url = ServiceFactory.get_service_defintion(
         ServiceType.ServiceTransport, getattr(transport_service, "service_provider")
     ).default_params.get("api_url")
