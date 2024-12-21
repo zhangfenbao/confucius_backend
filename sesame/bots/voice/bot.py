@@ -139,6 +139,8 @@ async def voice_bot_create(daily_api_key: str, daily_api_url: str):
             daily_api_url=daily_api_url,
             aiohttp_session=session,
         )
+        logger.info(f"Daily API key: {daily_api_key}")
+        logger.info(f"Daily API URL: {daily_api_url}")
 
         try:
             debug_room = os.getenv("DAILY_USE_DEBUG_ROOM", None)
