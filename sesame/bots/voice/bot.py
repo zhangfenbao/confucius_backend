@@ -23,7 +23,7 @@ from pipecat.transports.services.helpers.daily_rest import (
     DailyRoomParams,
 )
 
-MAX_SESSION_TIME = int(os.getenv("SESAME_MAX_VOICE_SESSION_TIME", 15 * 60)) or 15 * 60
+MAX_SESSION_TIME = int(os.getenv("SESAME_MAX_VOICE_SESSION_TIME", 60 * 60)) or 60 * 60
 
 
 async def _cleanup(room_url: str, config: BotConfig, services: dict[str, Service]):
@@ -146,6 +146,7 @@ async def voice_bot_create(daily_api_key: str, daily_api_url: str):
                 room = await daily_rest_helper.get_room_from_url(debug_room)
             else:
                 room = await daily_rest_helper.create_room(params=DailyRoomParams())
+            logger.info(f"Room: {room.url}")
             bot_token = await daily_rest_helper.get_token(room.url, MAX_SESSION_TIME)
             user_token = await daily_rest_helper.get_token(room.url, MAX_SESSION_TIME)
         except Exception as e:
