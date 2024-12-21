@@ -182,7 +182,7 @@ async def connect(
         )
 
     room, user_token, bot_token = await voice_bot_create(transport_api_key, transport_api_url)
-
+    logger.info(f"Room: {room}, User token: {user_token}, Bot token: {bot_token}")
     # Check if we are running on Modal and launch the voice bot as a separate function
     if os.getenv("MODAL_ENV"):
         logger.debug("Spawning voice bot on Modal")
