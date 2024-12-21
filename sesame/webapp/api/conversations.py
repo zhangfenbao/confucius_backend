@@ -337,9 +337,7 @@ async def create_attachment(
             content=markdown_content,
             db=db
         )
-        logger.info(f"Attachment created: {attachment.attachment_id}")
-        logger.info(f"Attachment content: {attachment.content}")
-        logger.info(f"first_page_image: {first_page_jpeg}")
+       
         return FileParseResponse(
             attachment_id=attachment.attachment_id,
             content=markdown_content,
