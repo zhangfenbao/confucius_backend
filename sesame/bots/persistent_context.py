@@ -47,6 +47,8 @@ class PersistentContextProcessor(FrameProcessor):
         if isinstance(frame, OpenAILLMContextFrame):
             id, items = await self._storage.save(frame.context)
             if items is not None:
+                logger.info(f"Saving {len(items)} items to persistent context") 
+                logger.info(f"Items: {items}")
                 await self._push_transport_save_message(id, items)
         elif isinstance(frame, EndFrame):
             await self._call_event_handler("endframe")
