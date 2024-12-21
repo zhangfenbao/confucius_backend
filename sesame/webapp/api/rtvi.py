@@ -173,7 +173,7 @@ async def connect(
     transport_api_url = ServiceFactory.get_service_defintion(
         ServiceType.ServiceTransport, getattr(transport_service, "service_provider")
     ).default_params.get("api_url")
-
+    logger.info(f"Transport API URL: {transport_api_url}")
     if not transport_api_url:
         logger.error("Missing API URL for transport service")
         raise HTTPException(
