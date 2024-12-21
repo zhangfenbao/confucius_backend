@@ -152,6 +152,7 @@ async def voice_bot_create(daily_api_key: str, daily_api_url: str):
             bot_token = await daily_rest_helper.get_token(room.url, MAX_SESSION_TIME)
             user_token = await daily_rest_helper.get_token(room.url, MAX_SESSION_TIME)
         except Exception as e:
+            logger.error(f"Error creating room: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Unable to run bot: {e}"
             )
