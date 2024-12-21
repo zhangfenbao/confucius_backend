@@ -15,9 +15,11 @@ from common.service_factory import (
 )
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse, StreamingResponse
-from loguru import logger
+from common.utils.logger import get_webapp_logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from webapp import get_db, get_user
+
+logger = get_webapp_logger()
 
 router = APIRouter(prefix="/rtvi")
 
@@ -135,7 +137,7 @@ async def stream_action(
 async def connect(
     params: BotParams, db: AsyncSession = Depends(get_db), user: Auth = Depends(get_user)
 ):
-    logger.debug(f"Connecting to conversation {params.conversation_id}")
+    logger.info(f"Connecting to conversation {params.conversation_id}")
     if not params.conversation_id:
         logger.error("No conversation ID passed to connect")
         raise HTTPException(
@@ -146,7 +148,7 @@ async def connect(
     config, conversation = await _get_config_and_conversation(params.conversation_id, db)
     services = await _validate_services(db, config, conversation)
 
-    logger.debug(
+    logger.info(
         "Connecting with services: " + ", ".join(f"{k}: {v}" for k, v in config.services.items())
     )
 
@@ -156,7 +158,7 @@ async def connect(
             detail="Missing transport service configuration",
         )
 
-    logger.debug("Retrieving transport service configuration from service factory")
+    logger.info("Retrieving transport service configuration from service factory")
 
     transport_service = services.get("transport")
     transport_api_key = getattr(transport_service, "api_key", None)
@@ -195,7 +197,7 @@ async def connect(
 
         launch_bot_modal.spawn(user, params, config, services, room.url, bot_token)
     else:
-        logger.debug("Spawning voice bot as process")
+        logger.info("Spawning voice bot as process")
         voice_bot_launch(user, params, config, services, room.url, bot_token)
 
     return JSONResponse(

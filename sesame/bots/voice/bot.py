@@ -124,9 +124,11 @@ def _voice_bot_process(
     room_token: str,
 ):
     # This is a different process so we need to make sure we have the right log level.
-    logger.remove()
+    try:
+        logger.remove()
+    except Exception as e:
+        pass
     logger.add(sys.stderr, level=os.getenv("SESAME_BOT_LOG_LEVEL", "INFO"))
-
     asyncio.run(_voice_bot_main(auth, params, config, services, room_url, room_token))
 
 
