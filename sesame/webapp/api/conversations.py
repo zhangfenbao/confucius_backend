@@ -17,7 +17,7 @@ from common.models import (
     AttachmentModel,
     FileParseResponse,
 )
-from common.utils.parser import parse_pdf_to_markdown
+from common.utils.parser import parse_pdf_to_markdown, convert_pdf_first_page_to_jpeg_base64
 from fastapi import APIRouter, Depends, HTTPException, Query, status, File, UploadFile
 from pydantic import ValidationError
 from sqlalchemy import delete, func, select
@@ -318,8 +318,11 @@ async def create_attachment(
         # 读取文件内容
         content = await file.read()
         
-        # 解析PDF
+        # 解析PDF为Markdown
         markdown_content = await parse_pdf_to_markdown(content)
+        
+        # 获取第一页的JPEG base64
+        first_page_jpeg = await convert_pdf_first_page_to_jpeg_base64(content)
         
         # 创建附件记录
         attachment = await Attachment.create_attachment(
@@ -334,7 +337,8 @@ async def create_attachment(
         
         return FileParseResponse(
             attachment_id=attachment.attachment_id,
-            content=markdown_content
+            content=markdown_content,
+            first_page_image=first_page_jpeg  # 添加第一页图像
         )
         
     except Exception as e:

@@ -3,6 +3,7 @@ import pymupdf4llm
 import io
 import re
 import json
+import base64
 from typing import List, Dict, Any
 from fastapi import HTTPException, status
 from common.utils.logger import get_webapp_logger
@@ -127,5 +128,40 @@ async def merge_messages_with_attachment(messages: list[Any], attachment: Any) -
         )
     
     return [{"role": "user", "content": result_messages}]
+
+async def convert_pdf_first_page_to_jpeg_base64(pdf_bytes: bytes) -> str:
+    """
+    将PDF文件的第一页转换为JPEG格式的base64字符串
+    
+    Args:
+        pdf_bytes: PDF文件的字节数据
+        
+    Returns:
+        str: base64编码的JPEG图像字符串
+    """
+    try:
+        # 使用BytesIO创建内存中的文件对象
+        pdf_stream = io.BytesIO(pdf_bytes)
+        doc = pymupdf.open(stream=pdf_stream, filetype="pdf")
+        
+        if doc.page_count < 1:
+            raise Exception("PDF文件为空")
+            
+        # 获取第一页
+        first_page = doc[0]
+        
+        # 将页面渲染为图像
+        pix = first_page.get_pixmap(matrix=pymupdf.Matrix(1.5, 1.5))
+        
+        # 将图像转换为JPEG格式
+        img_bytes = pix.tobytes("jpeg")
+        
+        # 转换为base64
+        base64_str = base64.b64encode(img_bytes).decode('utf-8')
+        
+        return f"data:image/jpeg;base64,{base64_str}"
+        
+    except Exception as e:
+        raise Exception(f"PDF首页转换JPEG失败: {str(e)}")
 
 
